@@ -12,9 +12,7 @@ storage/framework/views/*
 bootstrap/cache/*
 *.md
 .github
-tests
 .phpunit.cache
-phpunit.xml
 biome.json
 docker-compose*.yml
 install.sh
