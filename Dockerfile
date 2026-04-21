@@ -46,9 +46,11 @@ RUN apk add --no-cache \
     icu-dev \
     oniguruma-dev \
     libpng-dev \
+    libjpeg-turbo-dev \
     linux-headers \
     autoconf \
     build-base \
+    && docker-php-ext-configure gd --with-jpeg \
     && docker-php-ext-install \
         pdo \
         pdo_pgsql \
@@ -60,6 +62,7 @@ RUN apk add --no-cache \
         opcache \
         sockets \
         zip \
+        gd \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && apk del --no-cache build-base
