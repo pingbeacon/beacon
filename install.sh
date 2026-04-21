@@ -4,7 +4,7 @@ set -e
 REPO_OWNER="pingbeacon"
 REPO_NAME="beacon"
 RAW_BASE="https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main"
-INSTALL_DIR="${BEACON_DIR:-/opt/beacon}"
+INSTALL_DIR="${BEACON_DIR:-$HOME/.beacon}"
 
 # Colors
 RED='\033[0;31m'
@@ -13,10 +13,10 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-info()    { echo -e "${BLUE}[beacon]${NC} $1"; }
-success() { echo -e "${GREEN}[beacon]${NC} $1"; }
-warn()    { echo -e "${YELLOW}[beacon]${NC} $1"; }
-error()   { echo -e "${RED}[beacon]${NC} $1" >&2; exit 1; }
+info()    { printf "${BLUE}[beacon]${NC} %s\n" "$1"; }
+success() { printf "${GREEN}[beacon]${NC} %s\n" "$1"; }
+warn()    { printf "${YELLOW}[beacon]${NC} %s\n" "$1"; }
+error()   { printf "${RED}[beacon]${NC} %s\n" "$1" >&2; exit 1; }
 
 echo ""
 echo "  ██████╗ ███████╗ █████╗  ██████╗ ██████╗ ███╗   ██╗"
