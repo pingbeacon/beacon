@@ -1,0 +1,72 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-beacon}
+      POSTGRES_USER: ${DB_USERNAME:-beacon}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-beacon} -d ${DB_DATABASE:-beacon}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  app:
+    image: ghcr.io/pingbeacon/beacon:latest
+    ports:
+      - "${APP_PORT:-80}:80"
+    env_file: .env
+    volumes:
+      - app_storage:/var/www/html/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/up"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 60s
+    restart: unless-stopped
+
+  queue:
+    image: ghcr.io/pingbeacon/beacon:latest
+    command: ["php", "artisan", "queue:work", "--queue=monitors,ssl,notifications,default", "--tries=1", "--sleep=3"]
+    env_file: .env
+    volumes:
+      - app_storage:/var/www/html/storage
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+
+  reverb:
+    image: ghcr.io/pingbeacon/beacon:latest
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
+    ports:
+      - "${REVERB_PORT:-8080}:8080"
+    env_file: .env
+    volumes:
+      - app_storage:/var/www/html/storage
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+
+  scheduler:
+    image: ghcr.io/pingbeacon/beacon:latest
+    command: ["php", "artisan", "schedule:work"]
+    env_file: .env
+    volumes:
+      - app_storage:/var/www/html/storage
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  app_storage:

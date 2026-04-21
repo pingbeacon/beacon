@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    image: beacon:dev
+  queue:
+    image: beacon:dev
+  reverb:
+    image: beacon:dev
+  scheduler:
+    image: beacon:dev
