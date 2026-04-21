@@ -33,6 +33,7 @@ jobs:
         run: |
           docker run --rm \
             -e APP_KEY=base64:$(openssl rand -base64 32) \
+            -e APP_ENV=testing \
             beacon:test \
             php artisan test --compact
 
