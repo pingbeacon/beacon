@@ -1,4 +1,4 @@
-# Stage 1: Install PHP dependencies
+# Stage 1a: Install PHP dependencies (prod only)
 FROM composer:2 AS composer-builder
 WORKDIR /app
 COPY composer.json composer.lock ./
@@ -9,6 +9,17 @@ RUN composer install \
     --no-interaction
 COPY . .
 RUN composer dump-autoload --optimize --no-dev
+
+# Stage 1b: Install PHP dependencies (with dev, for testing)
+FROM composer:2 AS composer-builder-dev
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install \
+    --optimize-autoloader \
+    --no-scripts \
+    --no-interaction
+COPY . .
+RUN composer dump-autoload --optimize
 
 # Stage 2: Build frontend assets (needs PHP for wayfinder:generate)
 FROM php:8.4-cli-alpine AS node-builder
@@ -94,3 +105,7 @@ EXPOSE 80 8080
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["php-fpm"]
+
+# Test stage: same runtime but with dev dependencies (Pest/PHPUnit available)
+FROM runtime AS test
+COPY --from=composer-builder-dev --chown=www:www /app/vendor ./vendor

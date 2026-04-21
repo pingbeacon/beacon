@@ -25,6 +25,7 @@ jobs:
           context: .
           push: false
           load: true
+          target: test
           tags: beacon:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
