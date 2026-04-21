@@ -1,14 +1,4 @@
-# Stage 1: Build frontend assets
-FROM node:22-alpine AS node-builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY resources/ ./resources/
-COPY public/ ./public/
-COPY vite.config.ts tsconfig.json components.json ./
-RUN npm run build
-
-# Stage 2: Install PHP dependencies
+# Stage 1: Install PHP dependencies
 FROM composer:2 AS composer-builder
 WORKDIR /app
 COPY composer.json composer.lock ./
@@ -20,6 +10,16 @@ RUN composer install \
 COPY . .
 RUN composer dump-autoload --optimize --no-dev
 
+# Stage 2: Build frontend assets (needs PHP for wayfinder:generate)
+FROM php:8.4-cli-alpine AS node-builder
+RUN apk add --no-cache nodejs npm
+WORKDIR /app
+COPY --from=composer-builder /app/vendor ./vendor
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
 # Stage 3: Runtime image
 FROM php:8.4-fpm-alpine AS runtime
 
@@ -28,12 +28,15 @@ RUN apk add --no-cache \
     nginx \
     supervisor \
     postgresql-client \
+    postgresql-dev \
     curl \
     bash \
     libzip-dev \
     icu-dev \
     oniguruma-dev \
     libpng-dev \
+    linux-headers \
+    autoconf \
     build-base \
     && docker-php-ext-install \
         pdo \
@@ -61,8 +64,9 @@ RUN { \
     echo 'opcache.save_comments=1'; \
 } > /usr/local/etc/php/conf.d/opcache.ini
 
-# Non-root user
-RUN addgroup -g 1000 -S www && adduser -u 1000 -S www -G www
+# Non-root user; add nginx to www group so it can access php-fpm socket
+RUN addgroup -g 1000 -S www && adduser -u 1000 -S www -G www \
+    && addgroup nginx www
 
 WORKDIR /var/www/html
 
