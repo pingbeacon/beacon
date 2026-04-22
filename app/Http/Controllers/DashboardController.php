@@ -19,7 +19,7 @@ class DashboardController extends Controller
                 COUNT(*) as total,
                 SUM(CASE WHEN status = 'up' THEN 1 ELSE 0 END) as up,
                 SUM(CASE WHEN status = 'down' THEN 1 ELSE 0 END) as down,
-                SUM(CASE WHEN status = 'paused' OR is_active = 0 THEN 1 ELSE 0 END) as paused
+                SUM(CASE WHEN status = 'paused' OR is_active = false THEN 1 ELSE 0 END) as paused
             ")
             ->first();
 
