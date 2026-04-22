@@ -10,6 +10,16 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+        <!-- Runtime config (injected server-side so env vars don't need to be baked into the bundle) -->
+        <script>
+            window.__reverb__ = {
+                key: "{{ config('broadcasting.connections.reverb.key') }}",
+                host: "{{ config('broadcasting.connections.reverb.options.host') }}",
+                port: {{ config('broadcasting.connections.reverb.options.port', 443) }},
+                scheme: "{{ config('broadcasting.connections.reverb.options.scheme', 'https') }}",
+            };
+        </script>
+
         <!-- Scripts -->
         @viteReactRefresh
         @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
