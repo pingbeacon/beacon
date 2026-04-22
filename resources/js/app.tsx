@@ -4,7 +4,6 @@ import { createInertiaApp } from "@inertiajs/react"
 import { configureEcho } from "@laravel/echo-react"
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers"
 import { createRoot, hydrateRoot } from "react-dom/client"
-import { initializeTheme } from "./hooks/use-theme"
 
 const reverb = (window as Window & { __reverb__?: { key: string; host: string; port: number; scheme: string } }).__reverb__ ?? {}
 
@@ -41,5 +40,3 @@ createInertiaApp({
   },
   progress: false,
 })
-
-initializeTheme()

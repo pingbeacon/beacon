@@ -71,7 +71,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <Link href="/" aria-label="Goto homepage" className="flex items-center gap-2">
           <Logo />
-          <SidebarLabel className="font-semibold">Uptime Kuma</SidebarLabel>
+          <SidebarLabel className="font-semibold">Beacon</SidebarLabel>
         </Link>
       </SidebarHeader>
       <SidebarContent>

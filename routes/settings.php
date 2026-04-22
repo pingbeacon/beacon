@@ -15,7 +15,6 @@ Route::middleware('auth')->group(function () {
 
     Route::get('settings/password', [Settings\PasswordController::class, 'edit'])->name('password.edit');
     Route::put('settings/password', [Settings\PasswordController::class, 'update'])->name('password.update');
-    Route::get('settings/appearance', Settings\AppearanceController::class)->name('settings.appearance');
     Route::get('settings/delete-account', [Settings\DeleteAccountController::class, 'index'])->name('settings.index');
     Route::delete('settings/delete-account', [Settings\DeleteAccountController::class, 'destroy'])->name('settings.delete-account');
 
