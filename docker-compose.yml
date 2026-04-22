@@ -36,6 +36,10 @@ services:
     image: ghcr.io/pingbeacon/beacon:latest
     command: ["php", "artisan", "queue:work", "--queue=monitors,ssl,notifications,default", "--tries=1", "--sleep=3"]
     env_file: .env
+    environment:
+      REVERB_HOST: reverb
+      REVERB_PORT: "8080"
+      REVERB_SCHEME: http
     volumes:
       - app_storage:/var/www/html/storage
     depends_on:
@@ -60,6 +64,10 @@ services:
     image: ghcr.io/pingbeacon/beacon:latest
     command: ["php", "artisan", "schedule:work"]
     env_file: .env
+    environment:
+      REVERB_HOST: reverb
+      REVERB_PORT: "8080"
+      REVERB_SCHEME: http
     volumes:
       - app_storage:/var/www/html/storage
     depends_on:
