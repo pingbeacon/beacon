@@ -32,6 +32,7 @@
 - [x] Audit log for monitor changes
 - [x] Webhook notification channel (HMAC-SHA256 signing, custom headers)
 - [x] Public status page customization (custom domain, branding, logo, favicon, custom CSS)
+
 ## Phase 4 — Planned
 
 - [ ] API token management (personal access tokens)
