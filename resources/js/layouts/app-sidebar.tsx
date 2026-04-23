@@ -31,6 +31,7 @@ import {
   BellAlertIcon,
   ChartBarIcon,
   CheckCircleIcon,
+  Cog6ToothIcon,
   GlobeAltIcon,
   UserPlusIcon,
   WrenchScrewdriverIcon,
@@ -48,6 +49,7 @@ const secondaryNav = [
   { name: "Status Pages", href: "/status-pages", icon: GlobeAltIcon },
   { name: "Maintenance", href: "/maintenance-windows", icon: WrenchScrewdriverIcon },
   { name: "Notifications", href: "/notification-channels", icon: BellAlertIcon },
+  { name: "Settings", href: "/settings", icon: Cog6ToothIcon },
 ]
 
 interface HeartbeatPayload {
@@ -186,7 +188,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         </div>
 
         {/* Secondary nav */}
-        <div className="shrink-0 border-t border-border px-2 pb-1 pt-2">
+        <SidebarSection className="shrink-0 border-t border-border px-2 pb-1 pt-2">
           {secondaryNav.map((item) => (
             <SidebarItem
               key={item.href}
@@ -195,10 +197,10 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
               tooltip={item.name}
             >
               <item.icon data-slot="icon" />
-              <SidebarLabel className="text-xs">{item.name}</SidebarLabel>
+              <SidebarLabel>{item.name}</SidebarLabel>
             </SidebarItem>
           ))}
-        </div>
+        </SidebarSection>
 
         {/* Team switcher */}
         {auth.user && currentTeam && teams.length > 1 && (
