@@ -1,15 +1,9 @@
-import type React from "react"
-import { Avatar } from "@/components/ui/avatar"
-
-export function Logo({ className, ...props }: React.ComponentProps<typeof Avatar>) {
+export function Logo() {
   return (
-    <Avatar
-      size="sm"
-      src="https://design.intentui.com/logo"
-      className="outline-hidden"
-      isSquare
-      alt="Intent UI"
-      {...props}
-    />
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+      <path d="M11 2 L11 20 M2 11 L20 11" stroke="#f5a524" strokeWidth="1.5" />
+      <circle cx="11" cy="11" r="3" fill="#f5a524" />
+      <circle cx="11" cy="11" r="8" stroke="#f5a524" strokeWidth="1" opacity="0.4" />
+    </svg>
   )
 }
