@@ -187,8 +187,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           })}
         </div>
 
-        {/* Secondary nav */}
-        <SidebarSection className="shrink-0 border-t border-border px-2 pb-1 pt-2">
+      </SidebarContent>
+
+      {/* Secondary nav — outside scrollable content, above footer */}
+      <div className="shrink-0 border-t border-sidebar-border px-2 py-1">
+        <SidebarSection>
           {secondaryNav.map((item) => (
             <SidebarItem
               key={item.href}
@@ -202,30 +205,27 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           ))}
         </SidebarSection>
 
-        {/* Team switcher */}
         {auth.user && currentTeam && teams.length > 1 && (
-          <div className="shrink-0 border-t border-border px-3 py-2">
-            <Menu>
-              <Button intent="plain" className="w-full justify-start gap-2 text-xs text-muted-fg">
-                <span className="truncate">{currentTeam.name}</span>
-                <span className="ml-auto text-[10px] text-muted-fg/60">switch</span>
-              </Button>
-              <MenuContent placement="top start" className="sm:min-w-48">
-                <MenuHeader separator>Switch Team</MenuHeader>
-                {teams.map((team) => (
-                  <MenuItem
-                    key={team.id}
-                    onAction={() => router.post(`/switch-team/${team.id}`)}
-                  >
-                    <MenuLabel>{team.name}</MenuLabel>
-                    {team.id === currentTeam.id && <CheckCircleIcon className="size-4" />}
-                  </MenuItem>
-                ))}
-              </MenuContent>
-            </Menu>
-          </div>
+          <Menu>
+            <Button intent="plain" className="w-full justify-start gap-2 text-xs text-muted-fg">
+              <span className="truncate">{currentTeam.name}</span>
+              <span className="ml-auto text-[10px] text-muted-fg/60">switch</span>
+            </Button>
+            <MenuContent placement="top start" className="sm:min-w-48">
+              <MenuHeader separator>Switch Team</MenuHeader>
+              {teams.map((team) => (
+                <MenuItem
+                  key={team.id}
+                  onAction={() => router.post(`/switch-team/${team.id}`)}
+                >
+                  <MenuLabel>{team.name}</MenuLabel>
+                  {team.id === currentTeam.id && <CheckCircleIcon className="size-4" />}
+                </MenuItem>
+              ))}
+            </MenuContent>
+          </Menu>
         )}
-      </SidebarContent>
+      </div>
 
       <SidebarFooter>
         {auth.user ? (
