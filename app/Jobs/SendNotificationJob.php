@@ -12,7 +12,6 @@ use App\Services\Notifiers\TelegramNotifier;
 use App\Services\Notifiers\WebhookNotifier;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -31,19 +30,6 @@ class SendNotificationJob implements ShouldQueue
 
     public function handle(): void
     {
-        $cooldownKey = "notification_cooldown:{$this->monitor->id}:{$this->channel->id}";
-
-        if (Cache::has($cooldownKey)) {
-            Log::info('Notification skipped due to cooldown', [
-                'channel_id' => $this->channel->id,
-                'monitor_id' => $this->monitor->id,
-            ]);
-
-            return;
-        }
-
-        Cache::put($cooldownKey, true, now()->addMinutes(1));
-
         $notifier = $this->resolveNotifier();
 
         $notifier->send($this->channel, $this->monitor, $this->status, $this->message);
