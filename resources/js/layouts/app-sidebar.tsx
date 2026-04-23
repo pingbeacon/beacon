@@ -1,7 +1,9 @@
 import { router, usePage } from "@inertiajs/react"
+import { useEcho } from "@laravel/echo-react"
+import { useCallback, useState } from "react"
 import { Avatar } from "@/components/ui/avatar"
 import { Logo } from "@/components/logo"
-import type { SharedData } from "@/types/shared"
+import type { SharedData, SidebarMonitor } from "@/types/shared"
 import { Link } from "@/components/ui/link"
 import {
   Sidebar,
@@ -28,60 +30,170 @@ import {
   BellAlertIcon,
   ChartBarIcon,
   CheckCircleIcon,
-  ComputerDesktopIcon,
   GlobeAltIcon,
   UserPlusIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline"
 
-const navigations = [
-  {
-    name: "Dashboard",
-    href: "/dashboard",
-    icon: ChartBarIcon,
-  },
-  {
-    name: "Monitors",
-    href: "/monitors",
-    icon: ComputerDesktopIcon,
-  },
-  {
-    name: "Status Pages",
-    href: "/status-pages",
-    icon: GlobeAltIcon,
-  },
-  {
-    name: "Maintenance",
-    href: "/maintenance-windows",
-    icon: WrenchScrewdriverIcon,
-  },
-  {
-    name: "Notifications",
-    href: "/notification-channels",
-    icon: BellAlertIcon,
-  },
+const statusDot: Record<string, string> = {
+  up: "bg-success",
+  down: "bg-danger",
+  pending: "bg-warning",
+  paused: "bg-muted-fg",
+}
+
+const secondaryNav = [
+  { name: "Dashboard", href: "/dashboard", icon: ChartBarIcon },
+  { name: "Status Pages", href: "/status-pages", icon: GlobeAltIcon },
+  { name: "Maintenance", href: "/maintenance-windows", icon: WrenchScrewdriverIcon },
+  { name: "Notifications", href: "/notification-channels", icon: BellAlertIcon },
 ]
+
+interface HeartbeatPayload {
+  monitorId: number
+  monitorStatus: string
+}
+
+interface StatusChangedPayload {
+  monitorId: number
+  newStatus: string
+}
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const page = usePage()
-  const { auth, currentTeam, teams } = usePage<SharedData>().props
+  const { auth, currentTeam, teams, sidebarMonitors: initialMonitors } = usePage<SharedData>().props
+
+  const [monitors, setMonitors] = useState<SidebarMonitor[]>(initialMonitors ?? [])
+
+  const handleHeartbeat = useCallback((payload: HeartbeatPayload) => {
+    setMonitors((prev) =>
+      prev.map((m) =>
+        m.id === payload.monitorId
+          ? { ...m, status: payload.monitorStatus as SidebarMonitor["status"] }
+          : m,
+      ),
+    )
+  }, [])
+
+  const handleStatusChanged = useCallback((payload: StatusChangedPayload) => {
+    setMonitors((prev) =>
+      prev.map((m) =>
+        m.id === payload.monitorId
+          ? { ...m, status: payload.newStatus as SidebarMonitor["status"] }
+          : m,
+      ),
+    )
+  }, [])
+
+  useEcho(`monitors.${auth.user?.id}`, ".HeartbeatRecorded", handleHeartbeat)
+  useEcho(`monitors.${auth.user?.id}`, ".MonitorStatusChanged", handleStatusChanged)
 
   return (
     <Sidebar {...props}>
       <SidebarHeader>
-        <Link href="/" aria-label="Goto homepage" className="flex items-center gap-2">
-          <Logo />
-          <SidebarLabel className="font-semibold">Beacon</SidebarLabel>
+        <div className="flex items-center justify-between">
+          <Link href="/" aria-label="Goto homepage" className="flex items-center gap-2">
+            <Logo />
+            <SidebarLabel className="font-semibold">Beacon</SidebarLabel>
+          </Link>
+        </div>
+
+        {/* Search */}
+        <Link
+          href="/monitors"
+          className="mt-3 flex w-full items-center gap-2 rounded border border-border bg-transparent px-3 py-2 text-xs text-muted-fg transition-colors hover:border-primary/40 hover:text-fg"
+        >
+          <span className="text-sm leading-none">⌕</span>
+          <span className="flex-1">Search monitors…</span>
+          <kbd className="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-fg">
+            ⌘K
+          </kbd>
         </Link>
       </SidebarHeader>
-      <SidebarContent>
-        {auth.user && currentTeam && teams.length > 0 && (
-          <SidebarSection title="Team">
+
+      <SidebarContent className="flex flex-col overflow-hidden">
+        {/* Monitor list */}
+        <div className="flex shrink-0 items-center justify-between px-4 pb-1.5 pt-0.5">
+          <span className="text-[10px] font-medium uppercase tracking-widest text-muted-fg">
+            Monitors · {monitors.length}
+          </span>
+          <Link
+            href="/monitors/create"
+            className="text-[11px] font-medium text-primary transition-colors hover:text-primary/70"
+          >
+            + new
+          </Link>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-2 pb-2">
+          {monitors.length === 0 && (
+            <p className="px-3 py-4 text-xs text-muted-fg">No monitors yet.</p>
+          )}
+          {monitors.map((monitor) => {
+            const isActive =
+              page.url === `/monitors/${monitor.id}` ||
+              page.url.startsWith(`/monitors/${monitor.id}?`)
+            const dot = statusDot[monitor.status] ?? "bg-muted-fg"
+            const subtitle = monitor.url
+              ? monitor.url.replace(/^https?:\/\//, "")
+              : monitor.host
+                ? `${monitor.host}${monitor.port ? `:${monitor.port}` : ""}`
+                : monitor.type
+
+            return (
+              <Link
+                key={monitor.id}
+                href={`/monitors/${monitor.id}`}
+                className={[
+                  "mb-0.5 flex items-center gap-2.5 rounded px-3 py-2.5 transition-colors",
+                  "border-l-2",
+                  isActive
+                    ? "border-primary bg-primary/10"
+                    : "border-transparent hover:bg-primary/5",
+                ].join(" ")}
+              >
+                <span className={`size-2 shrink-0 rounded-full ${dot}`} />
+                <div className="min-w-0 flex-1">
+                  <div
+                    className={`truncate text-[13px] leading-tight ${
+                      isActive ? "font-medium text-primary" : "text-fg"
+                    }`}
+                  >
+                    {monitor.name}
+                  </div>
+                  <div className="mt-0.5 truncate text-[10px] text-muted-fg">
+                    {monitor.type} · {subtitle}
+                  </div>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+
+        {/* Secondary nav */}
+        <div className="shrink-0 border-t border-border px-2 pb-1 pt-2">
+          {secondaryNav.map((item) => (
+            <SidebarItem
+              key={item.href}
+              href={item.href}
+              isCurrent={page.url.startsWith(item.href)}
+              tooltip={item.name}
+            >
+              <item.icon data-slot="icon" />
+              <SidebarLabel className="text-xs">{item.name}</SidebarLabel>
+            </SidebarItem>
+          ))}
+        </div>
+
+        {/* Team switcher */}
+        {auth.user && currentTeam && teams.length > 1 && (
+          <div className="shrink-0 border-t border-border px-3 py-2">
             <Menu>
-              <Button intent="plain" className="w-full justify-start gap-2 text-sm">
-                <span className="truncate font-medium">{currentTeam.name}</span>
+              <Button intent="plain" className="w-full justify-start gap-2 text-xs text-muted-fg">
+                <span className="truncate">{currentTeam.name}</span>
+                <span className="ml-auto text-[10px] text-muted-fg/60">switch</span>
               </Button>
-              <MenuContent placement="bottom start" className="sm:min-w-48">
+              <MenuContent placement="top start" className="sm:min-w-48">
                 <MenuHeader separator>Switch Team</MenuHeader>
                 {teams.map((team) => (
                   <MenuItem
@@ -94,22 +206,10 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                 ))}
               </MenuContent>
             </Menu>
-          </SidebarSection>
+          </div>
         )}
-        <SidebarSection>
-          {navigations.map((item) => (
-            <SidebarItem
-              key={item.href}
-              href={item.href}
-              isCurrent={page.url.startsWith(item.href)}
-              tooltip={item.name}
-            >
-              <item.icon data-slot="icon" />
-              <SidebarLabel>{item.name}</SidebarLabel>
-            </SidebarItem>
-          ))}
-        </SidebarSection>
       </SidebarContent>
+
       <SidebarFooter>
         {auth.user ? (
           <UserMenu />
@@ -145,7 +245,7 @@ function UserMenu() {
         <MenuSection>
           <MenuHeader separator className="relative">
             <div>{auth.user.name}</div>
-            <div className="truncate whitespace-nowrap pr-6 font-normal text-muted-fg text-sm">
+            <div className="truncate whitespace-nowrap pr-6 text-sm font-normal text-muted-fg">
               {auth.user.email}
             </div>
           </MenuHeader>

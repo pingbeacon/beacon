@@ -1,9 +1,19 @@
 import type { Auth } from "./auth"
-import type { Team, TeamRole } from "./monitor"
+import type { MonitorStatus, MonitorType, Team, TeamRole } from "./monitor"
 
 export type FlashProps = {
   type: string
   message: string
+}
+
+export interface SidebarMonitor {
+  id: number
+  name: string
+  status: MonitorStatus
+  type: MonitorType
+  url: string | null
+  host: string | null
+  port: number | null
 }
 
 export interface SharedData {
@@ -15,6 +25,7 @@ export interface SharedData {
   teamRole: TeamRole | null
   sidebarOpen: boolean
   flash: FlashProps
+  sidebarMonitors: SidebarMonitor[]
 
   [key: string]: unknown
 }

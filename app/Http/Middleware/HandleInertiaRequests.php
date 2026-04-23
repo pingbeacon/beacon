@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Http\Resources\AuthenticatedUserResource;
+use App\Models\Monitor;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -41,6 +42,13 @@ class HandleInertiaRequests extends Middleware
             'teams' => $user ? $user->teams()->select('teams.id', 'teams.name', 'teams.slug', 'teams.personal_team')->get() : [],
             'teamRole' => $user?->currentTeam ? $user->teamRole($user->currentTeam)->value : null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'sidebarMonitors' => fn () => $user
+                ? Monitor::query()
+                    ->where('team_id', $user->current_team_id)
+                    ->select('id', 'name', 'status', 'type', 'url', 'host', 'port')
+                    ->latest()
+                    ->get()
+                : [],
             'flash' => fn () => [
                 'message' => $request->session()->get('message'),
                 'type' => $request->session()->get('type') ?? 'success',
