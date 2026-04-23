@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreMonitorRequest;
 use App\Http\Requests\UpdateMonitorRequest;
+use App\Jobs\CheckSslCertificateJob;
 use App\Models\Monitor;
 use App\Models\MonitorGroup;
 use App\Models\NotificationChannel;
@@ -101,6 +102,10 @@ class MonitorController extends Controller
 
         if (isset($validated['notification_channel_ids'])) {
             $monitor->notificationChannels()->sync($validated['notification_channel_ids']);
+        }
+
+        if ($monitor->type === 'http' && $monitor->ssl_monitoring_enabled && $monitor->url) {
+            CheckSslCertificateJob::dispatch($monitor);
         }
 
         flash(__('Monitor created successfully.'));
@@ -230,6 +235,10 @@ class MonitorController extends Controller
 
         $monitor->tags()->sync($validated['tag_ids'] ?? []);
         $monitor->notificationChannels()->sync($validated['notification_channel_ids'] ?? []);
+
+        if ($monitor->type === 'http' && $monitor->ssl_monitoring_enabled && $monitor->url) {
+            CheckSslCertificateJob::dispatch($monitor);
+        }
 
         flash(__('Monitor updated successfully.'));
 

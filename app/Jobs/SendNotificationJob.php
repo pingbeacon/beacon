@@ -42,7 +42,7 @@ class SendNotificationJob implements ShouldQueue
             return;
         }
 
-        Cache::put($cooldownKey, true, now()->addMinutes(5));
+        Cache::put($cooldownKey, true, now()->addMinutes(1));
 
         $notifier = $this->resolveNotifier();
 

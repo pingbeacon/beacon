@@ -22,7 +22,7 @@ class MonitorStatusMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "[UptimeRadar] {$this->monitorName} is {$this->status}",
+            subject: "[Beacon] {$this->monitorName} is {$this->status}",
         );
     }
 
