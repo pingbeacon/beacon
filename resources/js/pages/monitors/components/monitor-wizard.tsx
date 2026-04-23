@@ -151,7 +151,7 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
             {isEditing ? `Edit ${monitor.name}` : "New monitor"}
           </h1>
         </div>
-        <Button intent="outline" onPress={() => router.visit("/monitors")}>
+        <Button type="button" intent="outline" onPress={() => router.visit("/monitors")}>
           Cancel
         </Button>
       </div>
@@ -682,7 +682,7 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
 
             {/* footer nav */}
             <div className="mt-12 flex items-center justify-between border-t border-border pt-6">
-              <Button intent="outline" onPress={goPrev} isDisabled={isFirst}>
+              <Button type="button" intent="outline" onPress={goPrev} isDisabled={isFirst}>
                 ← Back
               </Button>
 
@@ -704,7 +704,7 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                   {isEditing ? "Save changes" : "Create monitor"}
                 </Button>
               ) : (
-                <Button onPress={goNext}>Continue →</Button>
+                <Button type="button" onPress={goNext}>Continue →</Button>
               )}
             </div>
           </div>
