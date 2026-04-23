@@ -32,7 +32,7 @@ class NotificationChannelTestController extends Controller
             $notificationChannel,
             $monitor ?? new Monitor(['name' => 'Test Monitor', 'type' => 'http']),
             'up',
-            "This is a test notification from UptimeRadar for channel \"{$notificationChannel->name}\".",
+            "This is a test notification from Beacon for channel \"{$notificationChannel->name}\".",
         );
 
         flash(__('Test notification sent successfully.'));

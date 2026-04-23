@@ -15,7 +15,7 @@ class HttpChecker implements MonitorChecker
 
         try {
             $response = Http::timeout($monitor->timeout)
-                ->withUserAgent('UptimeRadar/1.0')
+                ->withUserAgent('Beacon/1.0')
 
                 ->withHeaders($monitor->headers ?? [])
                 ->send($monitor->method ?? 'GET', $monitor->url);

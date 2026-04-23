@@ -12,7 +12,7 @@ class TelegramNotifier implements Notifier
     {
         $botToken = $channel->configuration['bot_token'];
         $chatId = $channel->configuration['chat_id'];
-        $text = $message ?? "UptimeRadar: Monitor \"{$monitor->name}\" is now {$status}.";
+        $text = $message ?? "Beacon: Monitor \"{$monitor->name}\" is now {$status}.";
 
         Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
             'chat_id' => $chatId,

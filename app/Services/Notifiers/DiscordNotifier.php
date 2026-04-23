@@ -17,7 +17,7 @@ class DiscordNotifier implements Notifier
         Http::post($webhookUrl, [
             'embeds' => [
                 [
-                    'title' => "UptimeRadar Alert: {$monitor->name}",
+                    'title' => "Beacon Alert: {$monitor->name}",
                     'description' => $description,
                     'color' => $color,
                 ],

@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { Pressable } from "react-aria-components"
 import { twJoin, twMerge } from "tailwind-merge"
 import { Tooltip, TooltipContent } from "./tooltip"
 
@@ -31,17 +30,19 @@ const Block = ({
     </div>
   ) : (
     <Tooltip isOpen={open} onOpenChange={setOpen} delay={0} closeDelay={0}>
-      <Pressable onClick={() => setOpen(true)}>
-        <div className="size-full overflow-hidden px-[0.5px] transition hover:scale-y-[1.3] first:rounded-s-sm first:ps-0 last:rounded-e-sm last:pe-0 sm:px-px">
-          <div
-            className={twJoin(
-              "size-full rounded-[1px] transition-[filter] duration-100",
-              color || defaultBackgroundColor,
-              "hover:brightness-125",
-            )}
-          />
-        </div>
-      </Pressable>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="size-full cursor-default overflow-hidden px-[0.5px] transition hover:scale-y-[1.3] first:rounded-s-sm first:ps-0 last:rounded-e-sm last:pe-0 sm:px-px"
+      >
+        <div
+          className={twJoin(
+            "size-full rounded-[1px] transition-[filter] duration-100",
+            color || defaultBackgroundColor,
+            "hover:brightness-125",
+          )}
+        />
+      </button>
       <TooltipContent
         arrow={false}
         offset={10}

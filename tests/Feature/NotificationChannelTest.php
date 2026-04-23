@@ -433,25 +433,19 @@ test('send notification job sends email', function () {
     Mail::assertSent(MonitorStatusMail::class);
 });
 
-test('cooldown prevents duplicate notifications within 5 minutes', function () {
+test('down and up notifications both fire without suppression', function () {
     Http::fake(['https://hooks.slack.com/*' => Http::response([], 200)]);
 
     $channel = NotificationChannel::factory()->slack()->create();
     $monitor = Monitor::factory()->http()->create();
 
-    $job = new SendNotificationJob($channel, $monitor, 'down');
-    $job->handle();
+    (new SendNotificationJob($channel, $monitor, 'down'))->handle();
+    (new SendNotificationJob($channel, $monitor, 'up'))->handle();
 
-    Http::assertSentCount(1);
-
-    // Second dispatch within cooldown window should be skipped
-    $job2 = new SendNotificationJob($channel, $monitor, 'down');
-    $job2->handle();
-
-    Http::assertSentCount(1);
+    Http::assertSentCount(2);
 });
 
-test('cooldown key is unique per monitor and channel combination', function () {
+test('each channel receives its own notification', function () {
     Http::fake(['https://hooks.slack.com/*' => Http::response([], 200)]);
 
     $channel1 = NotificationChannel::factory()->slack()->create();

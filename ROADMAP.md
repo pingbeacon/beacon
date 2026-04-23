@@ -12,6 +12,10 @@
 - Soft-delete and trash management
 - Dashboard with summary cards
 
+## Nice to have
+
+- When a monitor goes down or up, display a live toast notification in the ui
+
 ## Phase 1 — Completed
 
 - [x] Response time chart on monitor detail page (Recharts area chart, 24h window)
@@ -32,6 +36,7 @@
 - [x] Audit log for monitor changes
 - [x] Webhook notification channel (HMAC-SHA256 signing, custom headers)
 - [x] Public status page customization (custom domain, branding, logo, favicon, custom CSS)
+
 ## Phase 4 — Planned
 
 - [ ] API token management (personal access tokens)

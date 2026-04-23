@@ -83,7 +83,7 @@ test('http checker sends custom user agent header', function () {
     (new HttpChecker)->check($monitor);
 
     Http::assertSent(function ($request) {
-        return $request->hasHeader('User-Agent', 'UptimeRadar/1.0');
+        return $request->hasHeader('User-Agent', 'Beacon/1.0');
     });
 });
 
