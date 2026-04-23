@@ -1,10 +1,11 @@
 import { router, usePage } from "@inertiajs/react"
 import { useEcho } from "@laravel/echo-react"
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Avatar } from "@/components/ui/avatar"
 import { Logo } from "@/components/logo"
 import type { SharedData, SidebarMonitor } from "@/types/shared"
 import { Link } from "@/components/ui/link"
+import { MonitorCommandPalette } from "@/components/monitor-command-palette"
 import {
   Sidebar,
   SidebarContent,
@@ -64,6 +65,19 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const { auth, currentTeam, teams, sidebarMonitors: initialMonitors } = usePage<SharedData>().props
 
   const [monitors, setMonitors] = useState<SidebarMonitor[]>(initialMonitors ?? [])
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/.test(navigator.platform)
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault()
+        setPaletteOpen((prev) => !prev)
+      }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [])
 
   const handleHeartbeat = useCallback((payload: HeartbeatPayload) => {
     setMonitors((prev) =>
@@ -99,16 +113,17 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         </div>
 
         {/* Search */}
-        <Link
-          href="/monitors"
-          className="mt-3 flex w-full items-center gap-2 rounded border border-border bg-transparent px-3 py-2 text-xs text-muted-fg transition-colors hover:border-primary/40 hover:text-fg"
+        <button
+          type="button"
+          onClick={() => setPaletteOpen(true)}
+          className="mt-3 flex w-full cursor-pointer items-center gap-2 rounded border border-border bg-transparent px-3 py-2 text-xs text-muted-fg transition-colors hover:border-primary/40 hover:text-fg"
         >
           <span className="text-sm leading-none">⌕</span>
-          <span className="flex-1">Search monitors…</span>
+          <span className="flex-1 text-left">Search monitors…</span>
           <kbd className="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-fg">
-            ⌘K
+            {isMac ? "⌘K" : "Ctrl K"}
           </kbd>
-        </Link>
+        </button>
       </SidebarHeader>
 
       <SidebarContent className="flex flex-col overflow-hidden">
@@ -226,6 +241,12 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           </div>
         )}
       </SidebarFooter>
+
+      <MonitorCommandPalette
+        isOpen={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        monitors={monitors}
+      />
     </Sidebar>
   )
 }
