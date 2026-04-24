@@ -141,16 +141,25 @@ class Monitor extends Model
 
     public function uptimePercentage(int $hours = 24): float
     {
-        $heartbeats = $this->heartbeats()
-            ->where('created_at', '>=', now()->subHours($hours))
-            ->selectRaw('COUNT(*) as total, SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as up_count', ['up'])
-            ->first();
+        $windowStart = now()->subHours($hours);
+        // Don't count time before the monitor existed
+        $effectiveStart = $this->created_at->greaterThan($windowStart) ? $this->created_at : $windowStart;
+        $windowSeconds = (int) $effectiveStart->diffInSeconds(now());
+        $expectedChecks = (int) floor($windowSeconds / $this->interval);
 
-        if (! $heartbeats || $heartbeats->total === 0) {
+        // Not enough time has elapsed for even one check — no data expected yet
+        if ($expectedChecks === 0) {
             return 100.0;
         }
 
-        return round(($heartbeats->up_count / $heartbeats->total) * 100, 2);
+        $result = $this->heartbeats()
+            ->where('created_at', '>=', $effectiveStart)
+            ->selectRaw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as up_count', ['up'])
+            ->first();
+
+        $upCount = (int) ($result?->up_count ?? 0);
+
+        return round(min($upCount, $expectedChecks) / $expectedChecks * 100, 2);
     }
 
     public function averageResponseTime(int $hours = 24): ?float

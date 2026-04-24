@@ -101,7 +101,11 @@ test('status page belongs to user and has many monitors', function () {
 });
 
 test('monitor calculates uptime percentage', function () {
-    $monitor = Monitor::factory()->create();
+    // Monitor created 10 minutes ago, interval=60s → 10 expected checks
+    $monitor = Monitor::factory()->create([
+        'interval' => 60,
+        'created_at' => now()->subMinutes(10),
+    ]);
 
     Heartbeat::factory()->count(8)->up()->create([
         'monitor_id' => $monitor->id,
@@ -115,10 +119,27 @@ test('monitor calculates uptime percentage', function () {
     expect($monitor->uptimePercentage(24))->toBe(80.0);
 });
 
-test('monitor uptime returns 100 when no heartbeats', function () {
-    $monitor = Monitor::factory()->create();
+test('monitor uptime returns 100 when no heartbeats and monitor just created', function () {
+    // Created just now — no check expected yet within interval
+    $monitor = Monitor::factory()->create(['interval' => 60]);
 
     expect($monitor->uptimePercentage(24))->toBe(100.0);
+});
+
+test('monitor uptime counts data gap as downtime', function () {
+    // Monitor created 24h ago, interval=60s → 1440 expected checks, only 8 recorded
+    $monitor = Monitor::factory()->create([
+        'interval' => 60,
+        'created_at' => now()->subHours(24),
+    ]);
+
+    Heartbeat::factory()->count(8)->up()->create([
+        'monitor_id' => $monitor->id,
+        'created_at' => now()->subMinutes(5),
+    ]);
+
+    // 8 up / 1440 expected = 0.56%
+    expect($monitor->uptimePercentage(24))->toBe(0.56);
 });
 
 test('monitor calculates average response time', function () {

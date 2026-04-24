@@ -29,30 +29,29 @@ test('uptimeStats returns 100% when no heartbeats exist', function () {
         ->and($stats['uptime_30d'])->toBe(100.0);
 });
 
-test('uptimeStats calculates correctly for different time ranges', function () {
-    $monitor = Monitor::factory()->create();
+test('uptimeStats calculates correctly using expected checks as denominator', function () {
+    // interval=60s, created 10 minutes ago → 10 expected checks per window
+    $monitor = Monitor::factory()->create([
+        'interval' => 60,
+        'created_at' => now()->subMinutes(10),
+    ]);
 
-    // Create heartbeats within 24h: 8 up, 2 down = 80%
+    // 8 up + 2 down = 10 actual = 10 expected → 80%
     Heartbeat::factory()->for($monitor)->up()->count(8)->create([
-        'created_at' => now()->subHours(1),
+        'created_at' => now()->subMinutes(5),
         'response_time' => 100,
     ]);
     Heartbeat::factory()->for($monitor)->down()->count(2)->create([
-        'created_at' => now()->subHours(1),
+        'created_at' => now()->subMinutes(5),
         'response_time' => null,
-    ]);
-
-    // Create heartbeats within 7d but outside 24h: 10 up = pushes 7d uptime higher
-    Heartbeat::factory()->for($monitor)->up()->count(10)->create([
-        'created_at' => now()->subDays(3),
-        'response_time' => 200,
     ]);
 
     $stats = $monitor->uptimeStats();
 
+    // All windows capped to monitor age (10 min) → same expected count → same result
     expect($stats['uptime_24h'])->toBe(80.0)
-        ->and($stats['uptime_7d'])->toBeGreaterThan(80.0)
-        ->and($stats['uptime_30d'])->toBeGreaterThan(80.0);
+        ->and($stats['uptime_7d'])->toBe(80.0)
+        ->and($stats['uptime_30d'])->toBe(80.0);
 });
 
 test('uptimeStats returns null avg response time when no response times', function () {

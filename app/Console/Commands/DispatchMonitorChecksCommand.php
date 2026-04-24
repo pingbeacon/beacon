@@ -8,7 +8,6 @@ use App\Jobs\CheckMonitorJob;
 use App\Models\Monitor;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 class DispatchMonitorChecksCommand extends Command
 {
@@ -52,7 +51,7 @@ class DispatchMonitorChecksCommand extends Command
     {
         $now = now();
 
-        $monitors = Monitor::query()
+        $candidates = Monitor::query()
             ->where('is_active', true)
             ->where('type', '!=', 'push')
             ->where(function ($query) use ($now) {
@@ -60,6 +59,26 @@ class DispatchMonitorChecksCommand extends Command
                     ->orWhere('next_check_at', '<=', $now);
             })
             ->get();
+
+        if ($candidates->isEmpty()) {
+            return 0;
+        }
+
+        // Atomically claim each monitor by updating next_check_at only if it hasn't changed.
+        // This prevents double-dispatch if two processes run concurrently.
+        $monitors = $candidates->filter(function (Monitor $monitor) use ($now) {
+            $affected = Monitor::where('id', $monitor->id)
+                ->where(function ($query) use ($monitor) {
+                    if (is_null($monitor->next_check_at)) {
+                        $query->whereNull('next_check_at');
+                    } else {
+                        $query->where('next_check_at', $monitor->next_check_at);
+                    }
+                })
+                ->update(['next_check_at' => $now->copy()->addSeconds($monitor->interval)]);
+
+            return $affected > 0;
+        });
 
         if ($monitors->isEmpty()) {
             return 0;
@@ -74,13 +93,6 @@ class DispatchMonitorChecksCommand extends Command
         foreach ($otherMonitors as $monitor) {
             CheckMonitorJob::dispatch($monitor)->onQueue('monitors');
         }
-
-        DB::transaction(function () use ($monitors, $now) {
-            foreach ($monitors as $monitor) {
-                Monitor::where('id', $monitor->id)
-                    ->update(['next_check_at' => $now->copy()->addSeconds($monitor->interval)]);
-            }
-        });
 
         return $monitors->count();
     }
