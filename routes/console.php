@@ -9,4 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('monitors:check')->everyMinute();
-Schedule::command('monitors:check-ssl')->everySixHours();
+Schedule::command('monitors:check-ssl')->hourly();

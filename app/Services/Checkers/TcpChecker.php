@@ -10,32 +10,43 @@ class TcpChecker implements MonitorChecker
     public function check(Monitor $monitor): CheckResult
     {
         $start = microtime(true);
-        $errno = 0;
-        $errstr = '';
 
-        $connection = @fsockopen(
-            $monitor->host,
-            $monitor->port,
-            $errno,
-            $errstr,
-            $monitor->timeout
-        );
+        try {
+            $errno = 0;
+            $errstr = '';
 
-        $responseTime = (int) round((microtime(true) - $start) * 1000);
+            $connection = @fsockopen(
+                $monitor->host,
+                (int) $monitor->port,
+                $errno,
+                $errstr,
+                (float) $monitor->timeout
+            );
 
-        if ($connection !== false) {
-            fclose($connection);
+            $responseTime = (int) round((microtime(true) - $start) * 1000);
+
+            if ($connection !== false) {
+                fclose($connection);
+
+                return new CheckResult(
+                    status: 'up',
+                    responseTime: $responseTime,
+                );
+            }
 
             return new CheckResult(
-                status: 'up',
+                status: 'down',
                 responseTime: $responseTime,
+                message: $errstr ?: "Connection refused on port {$monitor->port}",
+            );
+        } catch (\Throwable $e) {
+            $responseTime = (int) round((microtime(true) - $start) * 1000);
+
+            return new CheckResult(
+                status: 'down',
+                responseTime: $responseTime,
+                message: $e->getMessage(),
             );
         }
-
-        return new CheckResult(
-            status: 'down',
-            responseTime: $responseTime,
-            message: $errstr ?: "Connection refused on port {$monitor->port}",
-        );
     }
 }

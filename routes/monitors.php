@@ -3,6 +3,7 @@
 use App\Http\Controllers\BulkDeleteMonitorsController;
 use App\Http\Controllers\BulkPauseMonitorsController;
 use App\Http\Controllers\BulkResumeMonitorsController;
+use App\Http\Controllers\CheckSslCertificateController;
 use App\Http\Controllers\ExportMonitorsController;
 use App\Http\Controllers\ImportMonitorsController;
 use App\Http\Controllers\MaintenanceWindowController;
@@ -31,6 +32,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('monitors', MonitorController::class);
     Route::post('monitors/{monitor}/toggle', MonitorToggleController::class)->name('monitors.toggle');
+    Route::post('monitors/{monitor}/check-ssl', CheckSslCertificateController::class)->name('monitors.check-ssl');
     Route::get('monitors-trashed', [MonitorController::class, 'trashed'])->name('monitors.trashed');
     Route::post('monitors/{monitor}/restore', MonitorRestoreController::class)->name('monitors.restore');
     Route::delete('monitors/{monitor}/force-delete', [MonitorController::class, 'forceDelete'])->name('monitors.force-delete');

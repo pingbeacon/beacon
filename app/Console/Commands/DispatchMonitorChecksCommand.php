@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Actions\HandleStatusChangeAction;
 use App\Jobs\CheckMonitorJob;
 use App\Models\Monitor;
 use Carbon\Carbon;
@@ -77,6 +78,8 @@ class DispatchMonitorChecksCommand extends Command
             ->where('status', '!=', 'down')
             ->get();
 
+        $handleStatusChange = new HandleStatusChangeAction;
+
         foreach ($pushMonitors as $monitor) {
             $threshold = $now->copy()->subSeconds($monitor->interval * 2);
 
@@ -85,13 +88,17 @@ class DispatchMonitorChecksCommand extends Command
                 ->exists();
 
             if (! $recentHeartbeat) {
+                $message = 'No push heartbeat received within expected interval.';
+
                 $monitor->heartbeats()->create([
                     'status' => 'down',
                     'response_time' => 0,
-                    'message' => 'No push heartbeat received within expected interval.',
+                    'message' => $message,
                 ]);
 
-                $monitor->update(['status' => 'down', 'last_checked_at' => $now]);
+                $monitor->update(['last_checked_at' => $now]);
+
+                $handleStatusChange->execute($monitor, 'down', $message);
             }
         }
     }

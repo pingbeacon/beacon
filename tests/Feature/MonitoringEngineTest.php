@@ -5,6 +5,7 @@ use App\Jobs\CheckMonitorJob;
 use App\Jobs\SendNotificationJob;
 use App\Models\Heartbeat;
 use App\Models\Incident;
+use App\Models\MaintenanceWindow;
 use App\Models\Monitor;
 use App\Models\NotificationChannel;
 use App\Models\User;
@@ -153,6 +154,18 @@ test('dns checker returns down when no records are found', function () {
     expect($result->message)->toContain('nonexistent.invalid');
 });
 
+test('dns checker returns down for invalid record type without throwing', function () {
+    $monitor = Monitor::factory()->dns()->create([
+        'host' => 'example.com',
+        'dns_record_type' => 'INVALID',
+    ]);
+
+    $result = (new DnsChecker)->check($monitor);
+
+    expect($result->status)->toBe('down');
+    expect($result->message)->not->toBeEmpty();
+});
+
 // --- CheckMonitorJob ---
 
 test('check monitor job creates a heartbeat record', function () {
@@ -261,6 +274,38 @@ test('check monitor job dispatches notification for linked channels on status ch
     (new CheckMonitorJob($monitor))->handle(new HandleStatusChangeAction);
 
     Queue::assertPushedOn('notifications', SendNotificationJob::class);
+});
+
+test('check monitor job updates last_checked_at and creates down heartbeat when checker throws', function () {
+    $monitor = Monitor::factory()->create([
+        'type' => 'unsupported_type',
+        'status' => 'up',
+        'last_checked_at' => null,
+    ]);
+
+    expect(fn () => (new CheckMonitorJob($monitor))->handle(new HandleStatusChangeAction))->toThrow(InvalidArgumentException::class);
+
+    expect($monitor->fresh()->last_checked_at)->not->toBeNull();
+    expect($monitor->heartbeats()->where('status', 'down')->count())->toBe(1);
+});
+
+test('handle status change does not create incident or notify when in maintenance', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $monitor = Monitor::factory()->http()->for($user)->create(['status' => 'up']);
+
+    $channel = NotificationChannel::factory()->for($user)->create();
+    $monitor->notificationChannels()->attach($channel);
+
+    $window = MaintenanceWindow::factory()->active()->create();
+    $monitor->maintenanceWindows()->attach($window);
+
+    (new HandleStatusChangeAction)->execute($monitor, 'down', 'test');
+
+    expect($monitor->fresh()->status)->toBe('down');
+    expect(Incident::where('monitor_id', $monitor->id)->count())->toBe(0);
+    Queue::assertNotPushed(SendNotificationJob::class);
 });
 
 test('check monitor job does not create incident when status stays down', function () {
@@ -372,6 +417,31 @@ test('monitors:check marks push monitors as down when no heartbeat received', fu
 
     expect($monitor->fresh()->status)->toBe('down');
     expect($monitor->heartbeats()->latest('created_at')->first()->status)->toBe('down');
+});
+
+test('monitors:check marks overdue push monitor as down and creates incident and notifies', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $monitor = Monitor::factory()->push()->for($user)->create([
+        'is_active' => true,
+        'status' => 'up',
+        'interval' => 60,
+    ]);
+
+    $channel = NotificationChannel::factory()->for($user)->create();
+    $monitor->notificationChannels()->attach($channel);
+
+    Heartbeat::factory()->for($monitor)->create([
+        'created_at' => now()->subMinutes(5),
+        'status' => 'up',
+    ]);
+
+    $this->artisan('monitors:check')->assertSuccessful();
+
+    expect($monitor->fresh()->status)->toBe('down');
+    expect(Incident::where('monitor_id', $monitor->id)->count())->toBe(1);
+    Queue::assertPushedOn('notifications', SendNotificationJob::class);
 });
 
 test('monitors:check does not mark push monitors as down when heartbeat received within interval', function () {

@@ -16,12 +16,13 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { Monitor, Heartbeat, Incident, UptimeStats, ChartDataPoint, SslCertificate } from "@/types/monitor"
-import { PencilIcon, PauseIcon, PlayIcon, TrashIcon } from "@heroicons/react/20/solid"
+import { PencilIcon, PauseIcon, PlayIcon, TrashIcon, ArrowPathIcon } from "@heroicons/react/20/solid"
 import ConfirmDeleteModal from "@/components/confirm-delete-modal"
 import { TagBadge } from "@/components/tag-badge"
 import { Heading } from "@/components/ui/heading"
 import { uptimeColor, statusBadgeIntent } from "@/lib/color"
 import monitorRoutes from "@/routes/monitors"
+import CheckSslCertificateController from "@/actions/App/Http/Controllers/CheckSslCertificateController"
 import { heartbeatsToTracker, formatInterval } from "@/lib/heartbeats"
 import { Chart, CartesianGrid, XAxis, YAxis, ChartTooltip } from "@/components/ui/chart"
 import { Area, AreaChart } from "recharts"
@@ -138,6 +139,7 @@ export default function MonitorsShow({
   const [incidents, setIncidents] = useState(initialIncidents)
   const [chartData, setChartData] = useState(initialChartData)
   const [chartPeriod, setChartPeriod] = useState(initialChartPeriod ?? "24h")
+  const [scanningSSL, setScanningSSL] = useState(false)
 
   useEffect(() => {
     setMonitor(initialMonitor)
@@ -500,7 +502,24 @@ export default function MonitorsShow({
                 {/* SSL Certificate */}
                 {monitor.type === "http" && monitor.ssl_monitoring_enabled && (
                   <div className="border border-border p-4">
-                    <SectionLabel>SSL Certificate</SectionLabel>
+                    <div className="flex items-center justify-between">
+                      <SectionLabel>SSL Certificate</SectionLabel>
+                      <Button
+                        intent="plain"
+                        size="sm"
+                        isDisabled={scanningSSL}
+                        onPress={() => {
+                          setScanningSSL(true)
+                          router.post(CheckSslCertificateController.url(monitor.id), {}, {
+                            preserveScroll: true,
+                            onFinish: () => setScanningSSL(false),
+                          })
+                        }}
+                      >
+                        <ArrowPathIcon data-slot="icon" className={scanningSSL ? "animate-spin" : ""} />
+                        {scanningSSL ? "Scanning…" : "Scan now"}
+                      </Button>
+                    </div>
                     <WhenVisible
                       data="sslCertificate"
                       fallback={<div className="mt-3 h-20 animate-pulse rounded-sm bg-muted" />}
@@ -813,6 +832,24 @@ export default function MonitorsShow({
           {monitor.type === "http" && monitor.ssl_monitoring_enabled && (
             <TabPanel id="ssl" className="pt-4">
               <div className="border border-border p-4">
+                <div className="mb-4 flex items-center justify-between">
+                  <SectionLabel>SSL Certificate</SectionLabel>
+                  <Button
+                    intent="outline"
+                    size="sm"
+                    isDisabled={scanningSSL}
+                    onPress={() => {
+                      setScanningSSL(true)
+                      router.post(CheckSslCertificateController.url(monitor.id), {}, {
+                        preserveScroll: true,
+                        onFinish: () => setScanningSSL(false),
+                      })
+                    }}
+                  >
+                    <ArrowPathIcon data-slot="icon" className={scanningSSL ? "animate-spin" : ""} />
+                    {scanningSSL ? "Scanning…" : "Scan now"}
+                  </Button>
+                </div>
                 <WhenVisible
                   fallback={<div className="h-32 animate-pulse rounded-sm bg-muted" />}
                   data="sslCertificate"

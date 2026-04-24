@@ -14,10 +14,13 @@ use App\Services\Checkers\PingChecker;
 use App\Services\Checkers\TcpChecker;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Throwable;
 
 class CheckMonitorJob implements ShouldQueue
 {
     use Queueable;
+
+    public int $timeout = 300;
 
     public function __construct(public Monitor $monitor)
     {
@@ -28,8 +31,25 @@ class CheckMonitorJob implements ShouldQueue
     {
         MonitorChecking::dispatch($this->monitor);
 
-        $checker = $this->resolveChecker();
-        $result = $this->runWithRetry($checker);
+        try {
+            $checker = $this->resolveChecker();
+            $result = $this->runWithRetry($checker);
+        } catch (Throwable $e) {
+            $heartbeat = $this->monitor->heartbeats()->create([
+                'status' => 'down',
+                'response_time' => 0,
+                'message' => $e->getMessage(),
+            ]);
+
+            $this->monitor->update([
+                'last_checked_at' => now(),
+                'status' => 'down',
+            ]);
+
+            HeartbeatRecorded::dispatch($this->monitor->fresh(), $heartbeat);
+
+            throw $e;
+        }
 
         $heartbeat = $this->monitor->heartbeats()->create([
             'status' => $result->status,
@@ -74,6 +94,10 @@ class CheckMonitorJob implements ShouldQueue
             }
 
             $lastResult = $result;
+
+            if ($i < $attempts - 1) {
+                sleep(1);
+            }
         }
 
         return $lastResult;

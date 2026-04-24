@@ -12,9 +12,15 @@ class HandleStatusChangeAction
     public function execute(Monitor $monitor, string $newStatus, ?string $message = null): void
     {
         $oldStatus = $monitor->status;
+        $inMaintenance = $monitor->isInMaintenance();
+
         $monitor->update(['status' => $newStatus]);
 
         MonitorStatusChanged::dispatch($monitor, $oldStatus, $newStatus, $message);
+
+        if ($inMaintenance) {
+            return;
+        }
 
         if ($newStatus === 'down' && $oldStatus !== 'down') {
             Incident::create([
@@ -28,10 +34,6 @@ class HandleStatusChangeAction
             $monitor->incidents()
                 ->whereNull('resolved_at')
                 ->update(['resolved_at' => now()]);
-        }
-
-        if ($monitor->isInMaintenance()) {
-            return;
         }
 
         foreach ($monitor->notificationChannels as $channel) {
