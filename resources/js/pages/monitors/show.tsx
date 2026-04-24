@@ -762,7 +762,7 @@ export default function MonitorsShow({
                             <TableCell>
                               {new Date(hb.created_at).toLocaleString(undefined, {
                                 dateStyle: "medium",
-                                timeStyle: "short",
+                                timeStyle: "medium",
                               })}
                             </TableCell>
                           </TableRow>
