@@ -425,10 +425,18 @@ export default function MonitorsShow({
                       {chartData && chartData.length > 0 ? (
                         (() => {
                           const chartPoints = chartData.map((d) => ({
-                            time: formatTime(d.created_at),
+                            time: new Date(d.created_at).getTime(),
                             response_time: d.response_time,
                           }))
                           const percentiles = computePercentiles(chartData)
+                          const minTime = chartPoints[0]?.time ?? 0
+                          const maxTime = chartPoints[chartPoints.length - 1]?.time ?? 0
+                          const TICK_COUNT = 5
+                          const xTicks = chartPoints.length <= TICK_COUNT
+                            ? chartPoints.map((p) => p.time)
+                            : Array.from({ length: TICK_COUNT }, (_, i) =>
+                                chartPoints[Math.round(i * (chartPoints.length - 1) / (TICK_COUNT - 1))].time
+                              )
                           return (
                             <>
                               <Chart
@@ -439,7 +447,15 @@ export default function MonitorsShow({
                               >
                                 <AreaChart data={chartPoints} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
                                   <CartesianGrid />
-                                  <XAxis dataKey="time" tick={{ transform: "translate(0, 6)" }} padding={{ left: 12, right: 12 }} intervalType="equidistantPreserveStart" />
+                                  <XAxis
+                                    dataKey="time"
+                                    type="number"
+                                    domain={[minTime, maxTime]}
+                                    ticks={xTicks}
+                                    tickFormatter={(v: number) => formatTime(new Date(v).toISOString())}
+                                    tick={{ transform: "translate(0, 6)" }}
+                                    padding={{ left: 12, right: 12 }}
+                                  />
                                   <YAxis tickFormatter={(v: number) => `${Math.round(v)}ms`} width={56} />
                                   <ChartTooltip
                                     content={({ active, payload }) => {
@@ -447,7 +463,7 @@ export default function MonitorsShow({
                                       const point = payload[0]
                                       return (
                                         <div className="border border-border bg-secondary px-3 py-2 font-mono text-xs">
-                                          <p className="text-muted-fg">{point?.payload?.time}</p>
+                                          <p className="text-muted-fg">{point?.payload?.time ? formatTime(new Date(point.payload.time).toISOString()) : null}</p>
                                           <p className="font-semibold text-primary">{point?.value}ms</p>
                                         </div>
                                       )
