@@ -50,6 +50,7 @@ class HeartbeatRecorded implements ShouldBroadcast
                 'created_at' => $this->heartbeat->created_at->toISOString(),
             ],
             'monitorStatus' => $this->monitor->status,
+            'lastCheckedAt' => $this->monitor->last_checked_at?->toISOString(),
             'uptimePercentage' => $this->monitor->uptimePercentage(),
             'averageResponseTime' => $this->monitor->averageResponseTime(),
         ];

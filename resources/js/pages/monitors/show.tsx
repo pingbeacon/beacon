@@ -58,6 +58,7 @@ interface HeartbeatPayload {
   monitorId: number
   heartbeat: Heartbeat
   monitorStatus: string
+  lastCheckedAt: string
   uptimePercentage: number
   averageResponseTime: number | null
 }
@@ -202,6 +203,7 @@ export default function MonitorsShow({
       setMonitor((prev) => ({
         ...prev,
         status: payload.monitorStatus as Monitor["status"],
+        last_checked_at: payload.lastCheckedAt,
       }))
       setHeartbeats((prev) => {
         if (!prev) return prev
