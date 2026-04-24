@@ -68,6 +68,10 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 
   const [monitors, setMonitors] = useState<SidebarMonitor[]>(initialMonitors ?? [])
   const [paletteOpen, setPaletteOpen] = useState(false)
+
+  useEffect(() => {
+    setMonitors(initialMonitors ?? [])
+  }, [initialMonitors])
   const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/.test(navigator.platform)
 
   useEffect(() => {

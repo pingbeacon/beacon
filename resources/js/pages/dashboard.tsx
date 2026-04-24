@@ -768,9 +768,6 @@ export default function Dashboard({
     <>
       <Head title="Dashboard" />
       <Container className="space-y-4 pt-2 pb-8">
-        <div className="flex items-center justify-between">
-          <Heading>Dashboard</Heading>
-        </div>
 
         {counts.total > 0 && (
           <KPIStrip
