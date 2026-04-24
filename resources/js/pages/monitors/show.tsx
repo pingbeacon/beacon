@@ -438,7 +438,7 @@ export default function MonitorsShow({
                                 <AreaChart data={chartPoints} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
                                   <CartesianGrid />
                                   <XAxis dataKey="time" tick={{ transform: "translate(0, 6)" }} padding={{ left: 12, right: 12 }} intervalType="equidistantPreserveStart" />
-                                  <YAxis tickFormatter={(v: number) => `${v}ms`} width={48} />
+                                  <YAxis tickFormatter={(v: number) => `${Math.round(v)}ms`} width={56} />
                                   <ChartTooltip
                                     content={({ active, payload }) => {
                                       if (!active || !payload?.length) return null

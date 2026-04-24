@@ -361,11 +361,11 @@ const YAxis = ({
   return (
     <YAxisPrimitive
       className={twMerge("text-muted-fg text-xs **:[text]:fill-muted-fg", className)}
-      width={(width ?? layout === "horizontal") ? 40 : 80}
+      width={width ?? (layout === "horizontal" ? 40 : 80)}
       domain={domain}
       tick={tick}
       dataKey={layout === "horizontal" ? undefined : dataKey}
-      type={type || layout === "horizontal" ? "number" : "category"}
+      type={type ?? (layout === "horizontal" ? "number" : "category")}
       interval={layout === "horizontal" ? undefined : "equidistantPreserveStart"}
       axisLine={false}
       tickLine={false}
