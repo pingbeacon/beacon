@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\HandleStatusChangeAction;
+use App\Jobs\CheckHttpMonitorsBatchJob;
 use App\Jobs\CheckMonitorJob;
 use App\Jobs\SendNotificationJob;
 use App\Models\Heartbeat;
@@ -333,7 +334,7 @@ test('check monitor job does not create incident when status stays down', functi
 
 // --- DispatchMonitorChecksCommand ---
 
-test('monitors:check dispatches jobs for due monitors', function () {
+test('monitors:check dispatches batch job for due http monitors', function () {
     Queue::fake();
 
     Monitor::factory()->http()->create([
@@ -343,10 +344,11 @@ test('monitors:check dispatches jobs for due monitors', function () {
 
     $this->artisan('monitors:check')->assertSuccessful();
 
-    Queue::assertPushedOn('monitors', CheckMonitorJob::class);
+    Queue::assertPushedOn('monitors', CheckHttpMonitorsBatchJob::class);
+    Queue::assertNotPushed(CheckMonitorJob::class);
 });
 
-test('monitors:check dispatches jobs for monitors with null next_check_at', function () {
+test('monitors:check dispatches batch job for http monitors with null next_check_at', function () {
     Queue::fake();
 
     Monitor::factory()->http()->create([
@@ -356,7 +358,21 @@ test('monitors:check dispatches jobs for monitors with null next_check_at', func
 
     $this->artisan('monitors:check')->assertSuccessful();
 
+    Queue::assertPushedOn('monitors', CheckHttpMonitorsBatchJob::class);
+});
+
+test('monitors:check dispatches individual job for non-http monitors', function () {
+    Queue::fake();
+
+    Monitor::factory()->ping()->create([
+        'is_active' => true,
+        'next_check_at' => now()->subMinute(),
+    ]);
+
+    $this->artisan('monitors:check')->assertSuccessful();
+
     Queue::assertPushedOn('monitors', CheckMonitorJob::class);
+    Queue::assertNotPushed(CheckHttpMonitorsBatchJob::class);
 });
 
 test('monitors:check does not dispatch jobs for inactive monitors', function () {
@@ -369,6 +385,7 @@ test('monitors:check does not dispatch jobs for inactive monitors', function () 
     $this->artisan('monitors:check')->assertSuccessful();
 
     Queue::assertNotPushed(CheckMonitorJob::class);
+    Queue::assertNotPushed(CheckHttpMonitorsBatchJob::class);
 });
 
 test('monitors:check does not dispatch jobs for monitors not yet due', function () {
@@ -382,6 +399,7 @@ test('monitors:check does not dispatch jobs for monitors not yet due', function 
     $this->artisan('monitors:check')->assertSuccessful();
 
     Queue::assertNotPushed(CheckMonitorJob::class);
+    Queue::assertNotPushed(CheckHttpMonitorsBatchJob::class);
 });
 
 test('monitors:check updates next_check_at after dispatching', function () {
@@ -441,6 +459,91 @@ test('monitors:check marks overdue push monitor as down and creates incident and
 
     expect($monitor->fresh()->status)->toBe('down');
     expect(Incident::where('monitor_id', $monitor->id)->count())->toBe(1);
+    Queue::assertPushedOn('notifications', SendNotificationJob::class);
+});
+
+// --- CheckHttpMonitorsBatchJob ---
+
+test('batch http job creates heartbeats for all monitors', function () {
+    Http::fake(['*' => Http::response('OK', 200)]);
+
+    $monitors = Monitor::factory()->http()->count(3)->create([
+        'url' => 'https://example.com',
+        'method' => 'GET',
+        'accepted_status_codes' => [200],
+        'timeout' => 5,
+        'headers' => [],
+        'status' => 'up',
+    ]);
+
+    (new CheckHttpMonitorsBatchJob($monitors->pluck('id')->toArray()))
+        ->handle(new HandleStatusChangeAction);
+
+    foreach ($monitors as $monitor) {
+        expect($monitor->heartbeats()->count())->toBe(1);
+        expect($monitor->heartbeats()->first()->status)->toBe('up');
+    }
+});
+
+test('batch http job detects status change from up to down', function () {
+    Http::fake(['*' => Http::response('Server Error', 500)]);
+
+    $monitor = Monitor::factory()->http()->create([
+        'url' => 'https://example.com',
+        'method' => 'GET',
+        'accepted_status_codes' => [200],
+        'timeout' => 5,
+        'headers' => [],
+        'status' => 'up',
+    ]);
+
+    (new CheckHttpMonitorsBatchJob([$monitor->id]))
+        ->handle(new HandleStatusChangeAction);
+
+    expect($monitor->fresh()->status)->toBe('down');
+    expect(Incident::where('monitor_id', $monitor->id)->count())->toBe(1);
+});
+
+test('batch http job handles connection failure as down', function () {
+    Http::fake(['*' => fn () => throw new Exception('Connection refused')]);
+
+    $monitor = Monitor::factory()->http()->create([
+        'url' => 'https://example.com',
+        'method' => 'GET',
+        'accepted_status_codes' => [200],
+        'timeout' => 5,
+        'headers' => [],
+        'status' => 'up',
+    ]);
+
+    (new CheckHttpMonitorsBatchJob([$monitor->id]))
+        ->handle(new HandleStatusChangeAction);
+
+    $heartbeat = $monitor->heartbeats()->first();
+    expect($heartbeat->status)->toBe('down');
+    expect($heartbeat->message)->toContain('Connection refused');
+});
+
+test('batch http job dispatches notifications on status change', function () {
+    Queue::fake();
+    Http::fake(['*' => Http::response('Server Error', 500)]);
+
+    $user = User::factory()->create();
+    $monitor = Monitor::factory()->http()->for($user)->create([
+        'url' => 'https://example.com',
+        'method' => 'GET',
+        'accepted_status_codes' => [200],
+        'timeout' => 5,
+        'headers' => [],
+        'status' => 'up',
+    ]);
+
+    $channel = NotificationChannel::factory()->for($user)->create();
+    $monitor->notificationChannels()->attach($channel);
+
+    (new CheckHttpMonitorsBatchJob([$monitor->id]))
+        ->handle(new HandleStatusChangeAction);
+
     Queue::assertPushedOn('notifications', SendNotificationJob::class);
 });
 

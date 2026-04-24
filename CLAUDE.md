@@ -47,6 +47,11 @@ This project has domain-specific skills available. You MUST activate the relevan
 - Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
 - Check for existing components to reuse before writing a new one.
 
+## Test-Driven Development
+
+- Always work in TDD: write the failing test first, then implement the code to make it pass. Red → green → refactor.
+- Write tests before implementation, not after.
+
 ## Verification Scripts
 
 - Do not create verification scripts or tinker when tests cover that functionality and prove they work. Unit and feature tests are more important.

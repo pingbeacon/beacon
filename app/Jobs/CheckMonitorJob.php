@@ -46,7 +46,7 @@ class CheckMonitorJob implements ShouldQueue
                 'status' => 'down',
             ]);
 
-            HeartbeatRecorded::dispatch($this->monitor->fresh(), $heartbeat);
+            HeartbeatRecorded::dispatch($this->monitor->refresh(), $heartbeat);
 
             throw $e;
         }
@@ -67,7 +67,7 @@ class CheckMonitorJob implements ShouldQueue
             $this->monitor->update(['status' => $result->status]);
         }
 
-        HeartbeatRecorded::dispatch($this->monitor->fresh(), $heartbeat);
+        HeartbeatRecorded::dispatch($this->monitor->refresh(), $heartbeat);
     }
 
     private function resolveChecker(): MonitorChecker
@@ -95,9 +95,6 @@ class CheckMonitorJob implements ShouldQueue
 
             $lastResult = $result;
 
-            if ($i < $attempts - 1) {
-                sleep(1);
-            }
         }
 
         return $lastResult;

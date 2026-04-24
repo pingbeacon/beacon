@@ -3,10 +3,12 @@
 namespace App\Console\Commands;
 
 use App\Actions\HandleStatusChangeAction;
+use App\Jobs\CheckHttpMonitorsBatchJob;
 use App\Jobs\CheckMonitorJob;
 use App\Models\Monitor;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class DispatchMonitorChecksCommand extends Command
 {
@@ -59,13 +61,26 @@ class DispatchMonitorChecksCommand extends Command
             })
             ->get();
 
-        foreach ($monitors as $monitor) {
-            CheckMonitorJob::dispatch($monitor)->onQueue('monitors');
-
-            $monitor->update([
-                'next_check_at' => $now->copy()->addSeconds($monitor->interval),
-            ]);
+        if ($monitors->isEmpty()) {
+            return 0;
         }
+
+        [$httpMonitors, $otherMonitors] = $monitors->partition(fn ($m) => $m->type === 'http');
+
+        $httpMonitors->chunk(10)->each(
+            fn ($chunk) => CheckHttpMonitorsBatchJob::dispatch($chunk->pluck('id')->toArray())
+        );
+
+        foreach ($otherMonitors as $monitor) {
+            CheckMonitorJob::dispatch($monitor)->onQueue('monitors');
+        }
+
+        DB::transaction(function () use ($monitors, $now) {
+            foreach ($monitors as $monitor) {
+                Monitor::where('id', $monitor->id)
+                    ->update(['next_check_at' => $now->copy()->addSeconds($monitor->interval)]);
+            }
+        });
 
         return $monitors->count();
     }
@@ -76,30 +91,34 @@ class DispatchMonitorChecksCommand extends Command
             ->where('is_active', true)
             ->where('type', 'push')
             ->where('status', '!=', 'down')
+            ->withMax('heartbeats', 'created_at')
             ->get();
+
+        if ($pushMonitors->isEmpty()) {
+            return;
+        }
 
         $handleStatusChange = new HandleStatusChangeAction;
 
         foreach ($pushMonitors as $monitor) {
             $threshold = $now->copy()->subSeconds($monitor->interval * 2);
+            $lastHeartbeatAt = $monitor->heartbeats_max_created_at;
 
-            $recentHeartbeat = $monitor->heartbeats()
-                ->where('created_at', '>=', $threshold)
-                ->exists();
-
-            if (! $recentHeartbeat) {
-                $message = 'No push heartbeat received within expected interval.';
-
-                $monitor->heartbeats()->create([
-                    'status' => 'down',
-                    'response_time' => 0,
-                    'message' => $message,
-                ]);
-
-                $monitor->update(['last_checked_at' => $now]);
-
-                $handleStatusChange->execute($monitor, 'down', $message);
+            if ($lastHeartbeatAt && Carbon::parse($lastHeartbeatAt)->greaterThanOrEqualTo($threshold)) {
+                continue;
             }
+
+            $message = 'No push heartbeat received within expected interval.';
+
+            $monitor->heartbeats()->create([
+                'status' => 'down',
+                'response_time' => 0,
+                'message' => $message,
+            ]);
+
+            $monitor->update(['last_checked_at' => $now]);
+
+            $handleStatusChange->execute($monitor, 'down', $message);
         }
     }
 }
