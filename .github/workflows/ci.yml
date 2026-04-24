@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   test:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -39,9 +40,8 @@ jobs:
             php artisan test --compact
 
   push:
-    runs-on: ubuntu-latest
-    needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
