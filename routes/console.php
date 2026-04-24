@@ -8,5 +8,5 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('monitors:check')->everyMinute()->withoutOverlapping(2);
+Schedule::command('monitors:check')->everyMinute();
 Schedule::command('monitors:check-ssl')->hourly();
