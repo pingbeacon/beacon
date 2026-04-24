@@ -26,7 +26,7 @@ class MonitorSeeder extends Seeder
             $monitor = Monitor::create($definition);
 
             foreach ($heartbeats as $hb) {
-                Heartbeat::create(['monitor_id' => $monitor->id, ...$hb]);
+                (new Heartbeat)->forceFill(['monitor_id' => $monitor->id, ...$hb])->save();
             }
 
             foreach ($incidents as $inc) {
@@ -45,7 +45,7 @@ class MonitorSeeder extends Seeder
     /**
      * Generate evenly-spaced heartbeats over a window, with optional down bursts.
      *
-     * @param  array<array{at: Carbon, status: string}>  $downBursts
+     * @param  array<array{from: Carbon, to: Carbon}>  $downBursts
      * @return array<int, array{status: string, status_code: int|null, response_time: int|null, message: string|null, created_at: Carbon}>
      */
     private function heartbeatHistory(
@@ -407,7 +407,7 @@ class MonitorSeeder extends Seeder
                         'status_code' => null,
                         'response_time' => null,
                         'message' => 'Backup completed successfully',
-                        'created_at' => now()->subDays($i)->setTime(3, 0),
+                        'created_at' => ($ts = now()->subDays($i)->setTime(3, 0))->isFuture() ? now() : $ts,
                     ],
                     range(0, 6)
                 ),

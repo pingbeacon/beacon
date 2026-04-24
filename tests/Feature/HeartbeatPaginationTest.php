@@ -74,3 +74,15 @@ test('heartbeats pagination scopes to the monitors team', function () {
             ->etc()
         );
 });
+
+test('user cannot access another teams monitor heartbeats', function () {
+    $user = User::factory()->create();
+    $other = User::factory()->create();
+
+    $otherMonitor = Monitor::factory()->for($other)->create();
+
+    $this->actingAs($user)
+        ->withHeaders(inertiaPartialHeaders('monitors/show', 'heartbeats'))
+        ->get("/monitors/{$otherMonitor->id}")
+        ->assertForbidden();
+});
