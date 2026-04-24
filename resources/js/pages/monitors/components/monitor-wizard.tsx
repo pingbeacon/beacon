@@ -1,6 +1,5 @@
 import { useState } from "react"
 import { useForm, router, Link } from "@inertiajs/react"
-import { Form } from "react-aria-components"
 import { TextField } from "@/components/ui/text-field"
 import { Button } from "@/components/ui/button"
 import { FieldError, Label } from "@/components/ui/field"
@@ -121,8 +120,7 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
   const isFirst = activeIndex === 0
   const isLast = activeIndex === visibleKeys.length - 1
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = () => {
     if (isEditing) {
       put(`/monitors/${monitor.id}`, { preserveScroll: true })
     } else {
@@ -238,7 +236,7 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
         </aside>
 
         {/* step content */}
-        <Form validationErrors={errors} onSubmit={submit} className="min-h-[calc(100dvh-73px)] flex-1 px-10 py-8">
+        <div className="min-h-[calc(100dvh-73px)] flex-1 px-10 py-8">
           <div className="mx-auto max-w-2xl">
             {/* step header */}
             <div className="mb-8">
@@ -700,15 +698,15 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
               </div>
 
               {isLast ? (
-                <Button type="submit" isDisabled={processing}>
+                <Button key="submit" type="button" onPress={handleSubmit} isDisabled={processing}>
                   {isEditing ? "Save changes" : "Create monitor"}
                 </Button>
               ) : (
-                <Button type="button" onPress={goNext}>Continue →</Button>
+                <Button key="continue" type="button" onPress={goNext}>Continue →</Button>
               )}
             </div>
           </div>
-        </Form>
+        </div>
       </div>
     </div>
   )
