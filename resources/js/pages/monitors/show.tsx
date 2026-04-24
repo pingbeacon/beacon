@@ -141,6 +141,21 @@ export default function MonitorsShow({
   const [chartPeriod, setChartPeriod] = useState(initialChartPeriod ?? "24h")
   const [scanningSSL, setScanningSSL] = useState(false)
 
+  const validTabs = ["overview", "heartbeats", "incidents", "ssl"]
+  const getInitialTab = () => {
+    const tab = new URLSearchParams(window.location.search).get("tab")
+    return validTabs.includes(tab ?? "") ? tab! : "overview"
+  }
+  const [activeTab, setActiveTab] = useState(getInitialTab)
+
+  const handleTabChange = (key: React.Key) => {
+    const tab = String(key)
+    setActiveTab(tab)
+    const params = new URLSearchParams(window.location.search)
+    params.set("tab", tab)
+    window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`)
+  }
+
   useEffect(() => {
     setMonitor(initialMonitor)
   }, [initialMonitor])
@@ -365,7 +380,7 @@ export default function MonitorsShow({
         </div>
 
         {/* ── Tabs ── */}
-        <Tabs className="mt-6">
+        <Tabs className="mt-6" selectedKey={activeTab} onSelectionChange={handleTabChange}>
           <TabList>
             <Tab id="overview">Overview</Tab>
             <Tab id="heartbeats">Heartbeats</Tab>
