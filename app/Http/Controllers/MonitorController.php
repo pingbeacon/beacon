@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreMonitorRequest;
 use App\Http\Requests\UpdateMonitorRequest;
+use App\Http\Resources\HeartbeatResource;
 use App\Jobs\CheckSslCertificateJob;
 use App\Models\Monitor;
 use App\Models\MonitorGroup;
@@ -142,7 +143,7 @@ class MonitorController extends Controller
                 fn () => $monitor->sslCertificate
             ),
             'heartbeats' => Inertia::defer(
-                fn () => $monitor->heartbeats()->latest()->paginate(50)
+                fn () => HeartbeatResource::collection($monitor->heartbeats()->latest()->paginate(50))
             ),
             'incidents' => Inertia::defer(
                 fn () => $monitor->incidents()->latest('started_at')->get()
