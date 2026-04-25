@@ -18,22 +18,22 @@ function inertiaPartialHeaders(string $component, string $data): array
     ];
 }
 
-test('heartbeats are paginated at 50 per page on monitor show', function () {
+test('heartbeats are paginated at 10 per page on monitor show', function () {
     $user = User::factory()->create();
     $monitor = Monitor::factory()->for($user)->create();
 
-    Heartbeat::factory()->count(55)->for($monitor)->create();
+    Heartbeat::factory()->count(15)->for($monitor)->create();
 
     $this->actingAs($user)
         ->withHeaders(inertiaPartialHeaders('monitors/show', 'heartbeats'))
         ->get("/monitors/{$monitor->id}")
         ->assertOk()
         ->assertJson(fn ($json) => $json
-            ->where('props.heartbeats.meta.total', 55)
-            ->where('props.heartbeats.meta.per_page', 50)
+            ->where('props.heartbeats.meta.total', 15)
+            ->where('props.heartbeats.meta.per_page', 10)
             ->where('props.heartbeats.meta.last_page', 2)
             ->where('props.heartbeats.meta.current_page', 1)
-            ->has('props.heartbeats.data', 50)
+            ->has('props.heartbeats.data', 10)
             ->etc()
         );
 });
@@ -42,7 +42,7 @@ test('heartbeats page 2 returns remaining records', function () {
     $user = User::factory()->create();
     $monitor = Monitor::factory()->for($user)->create();
 
-    Heartbeat::factory()->count(55)->for($monitor)->create();
+    Heartbeat::factory()->count(15)->for($monitor)->create();
 
     $this->actingAs($user)
         ->withHeaders(inertiaPartialHeaders('monitors/show', 'heartbeats'))

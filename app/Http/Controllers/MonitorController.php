@@ -143,7 +143,7 @@ class MonitorController extends Controller
                 fn () => $monitor->sslCertificate
             ),
             'heartbeats' => Inertia::defer(
-                fn () => HeartbeatResource::collection($monitor->heartbeats()->latest()->paginate(50))
+                fn () => HeartbeatResource::collection($monitor->heartbeats()->latest()->paginate(10))
             ),
             'incidents' => Inertia::defer(
                 fn () => $monitor->incidents()->latest('started_at')->get()
