@@ -335,8 +335,7 @@ Clean & modern SaaS — polished and professional, sitting naturally alongside L
 - **Text rendering**: `optimizeLegibility` globally, with `opsz` variation set.
 - **Scrollbar**: Thin, uses `--border` color on transparent track — unobtrusive.
 
-### Color System (OKLCH)
-All colors use OKLCH for perceptual uniformity.
+### Color System
 
 **Primary (amber):**
 - `--primary`: `#f5a524` — used for CTAs, ring focus, charts, accent icons

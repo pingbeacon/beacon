@@ -1,11 +1,11 @@
-import GuestLayout from "@/layouts/guest-layout"
-import { Head, Form } from "@inertiajs/react"
-import { Button } from "@/components/ui/button"
-import { TextField } from "@/components/ui/text-field"
-import { Loader } from "@/components/ui/loader"
+import { Form, Head } from "@inertiajs/react"
 import ConfirmablePasswordController from "@/actions/App/Http/Controllers/Auth/ConfirmablePasswordController"
-import { FieldError, Label } from "@/components/ui/field"
 import { PasswordInput } from "@/components/password-input"
+import { Button } from "@/components/ui/button"
+import { FieldError, Label } from "@/components/ui/field"
+import { Loader } from "@/components/ui/loader"
+import { TextField } from "@/components/ui/text-field"
+import GuestLayout from "@/layouts/guest-layout"
 
 export default function ConfirmPassword() {
   return (
@@ -38,4 +38,6 @@ export default function ConfirmPassword() {
   )
 }
 
-ConfirmPassword.layout = (page: React.ReactNode) => <GuestLayout header="Confirm password" children={page} />
+ConfirmPassword.layout = (page: React.ReactNode) => (
+  <GuestLayout header="Confirm password" children={page} />
+)
