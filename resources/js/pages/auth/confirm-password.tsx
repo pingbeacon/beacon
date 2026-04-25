@@ -5,7 +5,7 @@ import { TextField } from "@/components/ui/text-field"
 import { Loader } from "@/components/ui/loader"
 import ConfirmablePasswordController from "@/actions/App/Http/Controllers/Auth/ConfirmablePasswordController"
 import { FieldError, Label } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/password-input"
 
 export default function ConfirmPassword() {
   return (
@@ -21,7 +21,7 @@ export default function ConfirmPassword() {
           <>
             <TextField id="password" name="password" autoFocus>
               <Label>Password</Label>
-              <Input type="password" />
+              <PasswordInput autoComplete="current-password" />
               <FieldError>{errors.password}</FieldError>
             </TextField>
 

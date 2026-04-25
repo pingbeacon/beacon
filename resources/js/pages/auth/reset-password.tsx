@@ -6,6 +6,7 @@ import { Loader } from "@/components/ui/loader"
 import NewPasswordController from "@/actions/App/Http/Controllers/Auth/NewPasswordController"
 import { FieldError, Label } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/password-input"
 
 interface ResetPasswordProps {
   token: string
@@ -34,13 +35,13 @@ export default function ResetPassword(args: ResetPasswordProps) {
 
             <TextField name="password" isRequired autoFocus>
               <Label>Password</Label>
-              <Input type="password" autoComplete="new-password" />
+              <PasswordInput autoComplete="new-password" />
               <FieldError>{errors.password}</FieldError>
             </TextField>
 
             <TextField name="password_confirmation" isRequired>
               <Label>Confirm Password</Label>
-              <Input type="password" autoComplete="new-password" />
+              <PasswordInput autoComplete="new-password" />
               <FieldError>{errors.password_confirmation}</FieldError>
             </TextField>
 

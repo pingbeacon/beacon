@@ -315,7 +315,7 @@ Clean & modern SaaS — polished and professional, sitting naturally alongside L
 - **Dark-mode-first**: Deep neutral backgrounds, sharp borders, precise typography. Light mode available as user preference.
 - **Reference**: Linear / Vercel — minimal chrome, very high contrast text, tight spacing, sharp edges (avoid excessive rounding), restrained animation.
 - **Anti-reference**: Avoid the Uptime Kuma original's "hacker energy" aesthetic. No neon accents, no glassmorphism, no bouncy animations.
-- **Color**: Purple-primary (already established) used sparingly as a signal color, not decoration. Status colors (green/red/yellow) carry the most visual weight — they are the product.
+- **Color**: Amber-primary (`#f5a524`) used sparingly as a signal color, not decoration. Status colors (green/red/yellow) carry the most visual weight — they are the product.
 - **Typography**: Clean, weight-varied hierarchy. Data density is a feature, not a bug.
 - **Motion**: Purposeful only. State changes (status flips, data loading) deserve subtle animation. Background decoration does not.
 
@@ -331,28 +331,28 @@ Clean & modern SaaS — polished and professional, sitting naturally alongside L
 ## Design Tokens & Technical Reference
 
 ### Typography
-- **Font**: Figtree (variable, sans-serif) with advanced feature settings: `cv02`, `cv03`, `cv04`, `cv11` for the sans stack; `ss02`, `zero` for mono.
+- **Font**: JetBrains Mono (`--font-sans`) with `calt`, `liga` features; `ss02`, `zero` for mono contexts.
 - **Text rendering**: `optimizeLegibility` globally, with `opsz` variation set.
 - **Scrollbar**: Thin, uses `--border` color on transparent track — unobtrusive.
 
 ### Color System (OKLCH)
 All colors use OKLCH for perceptual uniformity.
 
-**Primary (purple):**
-- `--primary`: `oklch(0.546 0.245 262.881)` — used for CTAs, ring focus, charts
-- `--primary-subtle`: `oklch(0.623 0.214 259.815 / 0.15)` — tinted backgrounds
+**Primary (amber):**
+- `--primary`: `#f5a524` — used for CTAs, ring focus, charts, accent icons
+- `--primary-subtle`: `rgba(245, 165, 36, 0.12)` — tinted backgrounds
 
 **Status colors (carry the most visual weight):**
-- `--success`: `oklch(0.596 0.145 163.225)` — green
-- `--danger`: `oklch(0.577 0.245 27.325)` — red
-- `--warning`: `oklch(0.828 0.189 84.429)` — amber
+- `--success`: `#3ecf8e` — green
+- `--danger`: `#ff5a5a` — red
+- `--warning`: `#f5a524` — amber (same as primary)
 
-**Dark mode background scale:**
-- `--bg`: `oklch(0.181 0.005 285.823)` — deepest base
-- `--sidebar`: `oklch(0.21 0.006 285.885)` — slightly lighter
-- `--navbar`: `oklch(0.190 0.006 285.885)` — nav surface
-- `--overlay`: `oklch(0.210 0.006 285.885)` — modal/dialog backgrounds
-- `--border`: `oklch(0.342 0.017 285.786)` — subtle but visible dividers
+**Background scale:**
+- `--bg`: `#0e0d0b` — deepest base
+- `--sidebar`: `#17150f` — slightly lighter (used for left panel in auth layout)
+- `--navbar`: `#0e0d0b` — nav surface
+- `--overlay`: `#1e1b13` — modal/dialog backgrounds
+- `--border`: `rgba(255, 180, 60, 0.12)` — subtle warm amber dividers
 
 ### Border Radius
 - Base unit: `--radius-lg: 0.5rem` — all radii derive from this
@@ -369,4 +369,4 @@ All colors use OKLCH for perceptual uniformity.
 ### Interaction & Animation
 - Library: `tw-animate-css` for utility-driven animations
 - Motion: Only for state changes — no decorative or ambient animation
-- Focus: `focus-visible` rings using `--ring` (purple), always offset from background
+- Focus: `focus-visible` rings using `--ring` (amber), always offset from background
