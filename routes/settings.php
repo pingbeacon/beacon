@@ -24,4 +24,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('settings/teams/{team}/members/{user}', [TeamMemberController::class, 'destroy'])->name('teams.members.destroy');
     Route::post('switch-team/{team}', SwitchTeamController::class)->name('teams.switch');
     Route::get('settings/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+
+    Route::get('settings/api-tokens', [Settings\ApiTokenController::class, 'index'])->name('settings.api-tokens.index');
+    Route::post('settings/api-tokens', [Settings\ApiTokenController::class, 'store'])
+        ->middleware('throttle:api-token-management')
+        ->name('settings.api-tokens.store');
+    Route::delete('settings/api-tokens/all', [Settings\ApiTokenController::class, 'destroyAll'])
+        ->middleware('throttle:api-token-management')
+        ->name('settings.api-tokens.destroy-all');
+    Route::delete('settings/api-tokens/{token}', [Settings\ApiTokenController::class, 'destroy'])
+        ->middleware('throttle:api-token-management')
+        ->name('settings.api-tokens.destroy');
 });

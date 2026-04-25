@@ -7,6 +7,7 @@ const navItems = [
   { name: "Profile", href: "/settings/profile" },
   { name: "Password", href: "/settings/password" },
   { name: "Teams", href: "/settings/teams" },
+  { name: "API Tokens", href: "/settings/api-tokens" },
   { name: "Audit Log", href: "/settings/audit-log" },
   { name: "Danger Zone", href: "/settings/delete-account" },
 ]
