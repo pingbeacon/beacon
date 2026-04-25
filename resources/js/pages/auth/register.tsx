@@ -1,12 +1,13 @@
-import GuestLayout from "@/layouts/guest-layout"
 import { Form, Head } from "@inertiajs/react"
+import type React from "react"
+import { PasswordInput } from "@/components/password-input"
 import { Button } from "@/components/ui/button"
-import { Link } from "@/components/ui/link"
-import { TextField } from "@/components/ui/text-field"
-import { Loader } from "@/components/ui/loader"
 import { FieldError, Label } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import type React from "react"
+import { Link } from "@/components/ui/link"
+import { Loader } from "@/components/ui/loader"
+import { TextField } from "@/components/ui/text-field"
+import GuestLayout from "@/layouts/guest-layout"
 
 export default function Register() {
   return (
@@ -33,15 +34,15 @@ export default function Register() {
               <Input type="email" placeholder="you@domain.com" />
               <FieldError>{errors.email}</FieldError>
             </TextField>
-            <TextField name="password" autoComplete="current-password">
+            <TextField name="password" autoComplete="new-password">
               <Label>Password</Label>
-              <Input type="password" placeholder="Shhh, it's secret" />
+              <PasswordInput autoComplete="new-password" />
               <FieldError>{errors.password}</FieldError>
             </TextField>
 
             <TextField name="password_confirmation">
               <Label>Confirm password</Label>
-              <Input type="password" placeholder="Shhh, it's secret" />
+              <PasswordInput autoComplete="new-password" />
               <FieldError>{errors.password_confirmation}</FieldError>
             </TextField>
             <Button type="submit" className="w-full" isPending={processing}>

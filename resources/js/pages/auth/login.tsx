@@ -1,13 +1,14 @@
-import GuestLayout from "@/layouts/guest-layout"
-import { Head, Form } from "@inertiajs/react"
+import { Form, Head } from "@inertiajs/react"
 import type React from "react"
+import { PasswordInput } from "@/components/password-input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Link } from "@/components/ui/link"
-import { TextField } from "@/components/ui/text-field"
-import { Loader } from "@/components/ui/loader"
 import { FieldError, Label } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { Link } from "@/components/ui/link"
+import { Loader } from "@/components/ui/loader"
+import { TextField } from "@/components/ui/text-field"
+import GuestLayout from "@/layouts/guest-layout"
 
 interface LoginProps {
   status: string
@@ -37,7 +38,7 @@ export default function Login(args: LoginProps) {
             </TextField>
             <TextField name="password" autoComplete="current-password">
               <Label>Password</Label>
-              <Input type="password" />
+              <PasswordInput autoComplete="current-password" />
               <FieldError>{errors.password}</FieldError>
             </TextField>
             <div className="flex items-center justify-between">
@@ -71,9 +72,5 @@ export default function Login(args: LoginProps) {
 }
 
 Login.layout = (page: React.ReactNode) => (
-  <GuestLayout
-    header="Login"
-    description="Sign in with your email or continue with a connected account."
-    children={page}
-  />
+  <GuestLayout header="Welcome back" description="Sign in to your account." children={page} />
 )
