@@ -21,8 +21,8 @@ export default function GuestLayout({
   children,
 }: PropsWithChildren<GuestLayoutProps>) {
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-2">
-      <div className="hidden lg:flex lg:flex-col lg:justify-between border-r border-border bg-sidebar px-12 py-10">
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      <div className="hidden lg:flex w-[420px] shrink-0 flex-col justify-between border-r border-border bg-sidebar px-12 py-10 sticky top-0 h-screen">
         <Link href="/" aria-label="Go to homepage" className="flex w-fit items-center gap-2.5">
           <Logo />
           <span className="font-semibold text-fg">Beacon</span>
@@ -47,14 +47,14 @@ export default function GuestLayout({
         <p className="text-xs text-muted-fg">© {new Date().getFullYear()} Beacon</p>
       </div>
 
-      <div className="flex min-h-screen flex-col items-center justify-center px-6 py-12">
+      <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
         <div className="mb-8 lg:hidden">
           <Link href="/" aria-label="Go to homepage">
             <Logo />
           </Link>
         </div>
 
-        <div className="w-full max-w-sm space-y-6">
+        <div className="w-full max-w-md space-y-6">
           {(header || description) && (
             <div>
               {header && <h2 className="text-xl font-semibold text-fg">{header}</h2>}
