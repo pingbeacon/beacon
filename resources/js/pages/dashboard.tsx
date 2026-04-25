@@ -201,14 +201,14 @@ function ActiveIncidentBanner({ incidents }: { incidents: OpenIncident[] }) {
 }
 
 function IncidentGantt({ monitors }: { monitors: Monitor[] }) {
-  const now = useMemo(() => Date.now(), [])
+  const now = Date.now()
   const windowMs = 24 * 60 * 60 * 1000
   const windowStart = now - windowMs
 
   const rows = useMemo(
     () =>
       monitors
-        .filter((m) => m.heartbeats?.some((hb) => hb.status === "down"))
+        .filter((m) => m.has_incidents_24h || m.heartbeats?.some((hb) => hb.status === "down"))
         .slice(0, 8),
     [monitors],
   )
@@ -244,17 +244,20 @@ function IncidentGantt({ monitors }: { monitors: Monitor[] }) {
 
           type Seg = { start: number; end: number; status: string }
           const segs: Seg[] = []
-          const slotWidth = hbs.length > 0 ? 100 / hbs.length : 0
 
           for (let i = 0; i < hbs.length; i++) {
             const hb = hbs[i]
             const t = new Date(hb.created_at).getTime()
             const pct = ((t - windowStart) / windowMs) * 100
+            const nextHb = hbs[i + 1]
+            const nextPct = nextHb
+              ? ((new Date(nextHb.created_at).getTime() - windowStart) / windowMs) * 100
+              : 100
             const last = segs[segs.length - 1]
             if (!last || last.status !== hb.status) {
-              segs.push({ start: Math.max(0, pct), end: Math.min(100, pct + slotWidth), status: hb.status })
+              segs.push({ start: Math.max(0, pct), end: Math.min(100, nextPct), status: hb.status })
             } else {
-              last.end = Math.min(100, pct + slotWidth)
+              last.end = Math.min(100, nextPct)
             }
           }
 
@@ -719,7 +722,13 @@ export default function Dashboard({
     (payload: StatusChangedPayload) => {
       setMonitors((prev) =>
         prev?.map((m) =>
-          m.id === payload.monitorId ? { ...m, status: payload.newStatus as Monitor["status"] } : m,
+          m.id === payload.monitorId
+            ? {
+                ...m,
+                status: payload.newStatus as Monitor["status"],
+                has_incidents_24h: m.has_incidents_24h || payload.newStatus === "down",
+              }
+            : m,
         ),
       )
       setCounts((prev) => {

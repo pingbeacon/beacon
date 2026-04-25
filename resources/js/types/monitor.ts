@@ -49,6 +49,7 @@ export interface Monitor {
     notification_channels?: NotificationChannel[]
     uptime_percentage?: number
     average_response_time?: number | null
+    has_incidents_24h?: boolean
 }
 
 export interface Heartbeat {
