@@ -1,7 +1,7 @@
 import { Link, usePage } from "@inertiajs/react"
+import { twMerge } from "tailwind-merge"
 import { Container } from "@/components/ui/container"
 import { Heading } from "@/components/ui/heading"
-import { twMerge } from "tailwind-merge"
 
 const navItems = [
   { name: "Profile", href: "/settings/profile" },
@@ -28,7 +28,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                   <Link
                     href={item.href}
                     className={twMerge(
-                      "block whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                      "block whitespace-nowrap rounded-lg px-3 py-2 font-medium text-sm transition-colors",
                       isActive
                         ? "bg-secondary text-secondary-fg"
                         : "text-muted-fg hover:bg-secondary/50 hover:text-fg",

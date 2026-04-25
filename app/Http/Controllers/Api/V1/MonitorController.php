@@ -17,10 +17,12 @@ class MonitorController extends Controller
     {
         abort_unless($request->user()->tokenCan('monitors:read'), 403, 'Insufficient token scope.');
 
+        $perPage = max(1, min((int) $request->query('per_page', 15), 100));
+
         $monitors = Monitor::query()
             ->where('team_id', $request->user()->current_team_id)
             ->latest()
-            ->paginate(min((int) $request->query('per_page', 15), 100));
+            ->paginate($perPage);
 
         return MonitorResource::collection($monitors);
     }

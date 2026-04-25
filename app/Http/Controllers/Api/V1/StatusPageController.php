@@ -17,10 +17,12 @@ class StatusPageController extends Controller
     {
         abort_unless($request->user()->tokenCan('status-pages:read'), 403, 'Insufficient token scope.');
 
+        $perPage = max(1, min((int) $request->query('per_page', 15), 100));
+
         $statusPages = StatusPage::query()
             ->where('team_id', $request->user()->current_team_id)
             ->latest()
-            ->paginate(min((int) $request->query('per_page', 15), 100));
+            ->paginate($perPage);
 
         return StatusPageResource::collection($statusPages);
     }

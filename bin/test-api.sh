@@ -32,6 +32,8 @@ API_TOKEN="${API_TOKEN:?API_TOKEN not set in $ENV_FILE}"
 BASE_URL="${BASE_URL:-http://localhost}"
 CLEANUP="${CLEANUP:-true}"
 API="$BASE_URL/api/v1"
+RUN_ID="$(date +%s)-$$"
+SP_SLUG="test-api-sh-sp-${RUN_ID}"
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -89,7 +91,7 @@ extract() {
 # ---------------------------------------------------------------------------
 header "Auth"
 
-echo -e "${YELLOW}Token:${RESET} ${API_TOKEN:0:12}..."
+echo -e "${YELLOW}Auth:${RESET} token loaded"
 
 bad_response=$(curl -s -o /dev/null -w "%{http_code}" \
   --max-redirs 0 \
@@ -232,7 +234,7 @@ run "GET /status-pages" "$API/status-pages"
 sp_response=$(run "POST /status-pages" -X POST "$API/status-pages" \
   -d '{
     "title": "test-api-sh Status Page",
-    "slug": "test-api-sh-status-page",
+    "slug": "$SP_SLUG",
     "description": "Created by test-api.sh",
     "is_published": false
   }')

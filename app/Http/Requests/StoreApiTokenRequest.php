@@ -28,4 +28,20 @@ class StoreApiTokenRequest extends FormRequest
             'expires_at' => ['nullable', 'string', 'in:30d,90d,1y'],
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Token name is required.',
+            'team_id.required' => 'Please select a team.',
+            'team_id.exists' => 'The selected team is invalid.',
+            'scopes.required' => 'Select at least one scope.',
+            'scopes.min' => 'Select at least one scope.',
+            'scopes.*.in' => 'One or more selected scopes are invalid.',
+            'expires_at.in' => 'Expiration must be one of: 30d, 90d, or 1y.',
+        ];
+    }
 }

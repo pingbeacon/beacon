@@ -148,7 +148,7 @@ test('token limit of 10 per team is enforced', function () {
             'scopes' => ['monitors:read'],
             'expires_at' => null,
         ])
-        ->assertStatus(422);
+        ->assertSessionHasErrors('team_id');
 });
 
 // --- Delete token ---
@@ -175,7 +175,8 @@ test('user cannot revoke another users token', function () {
     $tokenId = $other->tokens()->first()->id;
 
     $this->actingAs($user)
-        ->delete("/settings/api-tokens/{$tokenId}");
+        ->delete("/settings/api-tokens/{$tokenId}")
+        ->assertForbidden();
 
     expect($other->tokens()->count())->toBe(1);
 });

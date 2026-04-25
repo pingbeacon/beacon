@@ -9,7 +9,7 @@ Replace `TOKEN` with your personal access token from `/settings/api-tokens`.
 ## Authentication
 
 All requests require:
-```
+```http
 Authorization: Bearer TOKEN
 Accept: application/json
 ```

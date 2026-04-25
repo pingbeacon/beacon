@@ -41,4 +41,17 @@ class UpdateStatusPageRequest extends FormRequest
             'show_powered_by' => ['sometimes', 'boolean'],
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'title.required' => 'A title is required.',
+            'slug.alpha_dash' => 'The slug may only contain letters, numbers, dashes, and underscores.',
+            'slug.unique' => 'This slug is already in use.',
+            'custom_domain.unique' => 'This custom domain is already in use.',
+        ];
+    }
 }

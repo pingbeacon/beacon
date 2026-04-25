@@ -11,6 +11,22 @@ class MonitorResource extends ApiResource
      *
      * @return array<string, mixed>
      */
+    private const SENSITIVE_HEADERS = ['authorization', 'x-api-key', 'x-auth-token', 'cookie', 'proxy-authorization'];
+
+    /** @return array<string, string>|null */
+    private function redactedHeaders(): ?array
+    {
+        if (! is_array($this->headers)) {
+            return $this->headers;
+        }
+
+        return collect($this->headers)
+            ->mapWithKeys(fn ($value, $key) => [
+                $key => in_array(strtolower($key), self::SENSITIVE_HEADERS) ? '[REDACTED]' : $value,
+            ])
+            ->all();
+    }
+
     public function toArray(Request $request): array
     {
         return [
@@ -23,7 +39,7 @@ class MonitorResource extends ApiResource
             'dns_record_type' => $this->dns_record_type,
             'method' => $this->method,
             'body' => $this->body,
-            'headers' => $this->headers,
+            'headers' => $this->redactedHeaders(),
             'accepted_status_codes' => $this->accepted_status_codes,
             'interval' => $this->interval,
             'timeout' => $this->timeout,

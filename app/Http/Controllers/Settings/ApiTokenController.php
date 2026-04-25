@@ -8,6 +8,7 @@ use App\Http\Resources\Api\V1\ApiTokenResource;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Response;
 
 class ApiTokenController extends Controller
@@ -38,7 +39,11 @@ class ApiTokenController extends Controller
             ->where('abilities', 'like', "%\"team:{$teamId}\"%")
             ->count();
 
-        abort_if($existingCount >= self::TOKEN_LIMIT, 422, 'Token limit reached for this team.');
+        if ($existingCount >= self::TOKEN_LIMIT) {
+            throw ValidationException::withMessages([
+                'team_id' => 'Token limit reached for this team.',
+            ]);
+        }
 
         $expiresAt = match ($validated['expires_at'] ?? null) {
             '30d' => Carbon::now()->addDays(30),
@@ -62,6 +67,8 @@ class ApiTokenController extends Controller
 
     public function destroy(Request $request, int $tokenId): RedirectResponse
     {
+        abort_unless($request->user()->tokens()->where('id', $tokenId)->exists(), 403);
+
         $request->user()->tokens()->where('id', $tokenId)->delete();
 
         return to_route('settings.api-tokens.index');

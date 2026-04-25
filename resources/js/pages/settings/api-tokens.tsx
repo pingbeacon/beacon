@@ -1,29 +1,29 @@
-import AppLayout from "@/layouts/app-layout"
-import SettingsLayout from "@/layouts/settings-layout"
+import { ClipboardDocumentCheckIcon, ClipboardDocumentIcon } from "@heroicons/react/24/outline"
 import { Head, router, useForm, usePage } from "@inertiajs/react"
-import type { SharedData } from "@/types/shared"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { useState } from "react"
+import { Form } from "react-aria-components"
 import { Badge } from "@/components/ui/badge"
-import { TextField } from "@/components/ui/text-field"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox, CheckboxGroup } from "@/components/ui/checkbox"
+import { FieldError, Label } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Label, FieldError } from "@/components/ui/field"
 import {
   Modal,
+  ModalBody,
   ModalClose,
   ModalContent,
+  ModalDescription,
+  ModalFooter,
   ModalHeader,
   ModalTitle,
-  ModalDescription,
-  ModalBody,
-  ModalFooter,
 } from "@/components/ui/modal"
-import { Checkbox, CheckboxGroup } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { Form } from "react-aria-components"
-import { useState } from "react"
-import { ClipboardDocumentIcon, ClipboardDocumentCheckIcon } from "@heroicons/react/24/outline"
+import { TextField } from "@/components/ui/text-field"
+import AppLayout from "@/layouts/app-layout"
+import SettingsLayout from "@/layouts/settings-layout"
+import type { SharedData } from "@/types/shared"
 
 interface ApiToken {
   id: number
@@ -73,7 +73,9 @@ function isExpired(expiresAt: string | null): boolean {
 }
 
 export default function ApiTokensPage({ tokens }: Props) {
-  const { teams, flash } = usePage<SharedData & { flash: { type: string; data?: { token?: string } } }>().props
+  const { teams, flash } = usePage<
+    SharedData & { flash: { type: string; data?: { token?: string } } }
+  >().props
 
   const newToken = flash?.data?.token ?? null
 
@@ -130,15 +132,10 @@ export default function ApiTokensPage({ tokens }: Props) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <code className="block break-all rounded-lg border border-success/30 bg-bg p-3 font-mono text-sm select-all">
+            <code className="block select-all break-all rounded-lg border border-success/30 bg-bg p-3 font-mono text-sm">
               {newToken}
             </code>
-            <Button
-              intent="outline"
-              size="sm"
-              onPress={copyToken}
-              className="gap-1.5"
-            >
+            <Button intent="outline" size="sm" onPress={copyToken} className="gap-1.5">
               {copied ? (
                 <>
                   <ClipboardDocumentCheckIcon className="size-4 text-success" />
@@ -176,11 +173,7 @@ export default function ApiTokensPage({ tokens }: Props) {
               </ModalHeader>
               <Form validationErrors={errors} onSubmit={submit}>
                 <ModalBody className="space-y-5">
-                  <TextField
-                    value={data.name}
-                    onChange={(v) => setData("name", v)}
-                    autoFocus
-                  >
+                  <TextField value={data.name} onChange={(v) => setData("name", v)} autoFocus>
                     <Label>Token name</Label>
                     <Input placeholder="e.g. CI Deploy" />
                     <FieldError>{errors.name}</FieldError>
@@ -205,9 +198,7 @@ export default function ApiTokensPage({ tokens }: Props) {
                         ))}
                       </SelectContent>
                     </Select>
-                    {errors.team_id && (
-                      <p className="text-danger text-sm">{errors.team_id}</p>
-                    )}
+                    {errors.team_id && <p className="text-danger text-sm">{errors.team_id}</p>}
                   </div>
 
                   <div className="space-y-1.5">
@@ -229,19 +220,14 @@ export default function ApiTokensPage({ tokens }: Props) {
 
                   <div className="space-y-2">
                     <Label>Scopes</Label>
-                    <CheckboxGroup
-                      value={data.scopes}
-                      onChange={(v) => setData("scopes", v)}
-                    >
+                    <CheckboxGroup value={data.scopes} onChange={(v) => setData("scopes", v)}>
                       {ALL_SCOPES.map((scope) => (
                         <Checkbox key={scope} value={scope}>
                           {SCOPE_LABELS[scope]}
                         </Checkbox>
                       ))}
                     </CheckboxGroup>
-                    {errors.scopes && (
-                      <p className="text-danger text-sm">{errors.scopes}</p>
-                    )}
+                    {errors.scopes && <p className="text-danger text-sm">{errors.scopes}</p>}
                   </div>
                 </ModalBody>
                 <ModalFooter>
@@ -257,17 +243,12 @@ export default function ApiTokensPage({ tokens }: Props) {
 
         <CardContent className="p-0">
           {tokens.length === 0 ? (
-            <p className="px-6 pb-6 text-center text-sm text-muted-fg">
-              No tokens yet.
-            </p>
+            <p className="px-6 pb-6 text-center text-muted-fg text-sm">No tokens yet.</p>
           ) : (
             <>
               <div className="divide-y divide-border">
                 {tokens.map((token) => (
-                  <div
-                    key={token.id}
-                    className="flex items-start justify-between gap-4 px-6 py-4"
-                  >
+                  <div key={token.id} className="flex items-start justify-between gap-4 px-6 py-4">
                     <div className="min-w-0 space-y-1.5">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="truncate font-medium text-sm">{token.name}</span>
@@ -292,11 +273,7 @@ export default function ApiTokensPage({ tokens }: Props) {
                           : " · Never used"}
                       </p>
                     </div>
-                    <Button
-                      intent="danger"
-                      size="sm"
-                      onPress={() => revokeToken(token.id)}
-                    >
+                    <Button intent="danger" size="sm" onPress={() => revokeToken(token.id)}>
                       Revoke
                     </Button>
                   </div>
@@ -306,11 +283,7 @@ export default function ApiTokensPage({ tokens }: Props) {
               <Separator />
               <div className="flex justify-end px-6 py-4">
                 <Modal isOpen={revokeAllOpen} onOpenChange={setRevokeAllOpen}>
-                  <Button
-                    intent="danger"
-                    size="sm"
-                    onPress={() => setRevokeAllOpen(true)}
-                  >
+                  <Button intent="danger" size="sm" onPress={() => setRevokeAllOpen(true)}>
                     Revoke All Tokens
                   </Button>
                   <ModalContent role="alertdialog" size="sm">
