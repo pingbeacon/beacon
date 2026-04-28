@@ -29,7 +29,10 @@ class MonitorController extends Controller
             ->where('team_id', $teamId)
             ->with(['tags', 'monitorGroup', 'heartbeats' => fn ($q) => $q->latest()->limit(20)])
             ->latest()
-            ->get();
+            ->get()
+            ->each(function (Monitor $monitor) {
+                $monitor->setRelation('heartbeats', $monitor->heartbeats->reverse()->values());
+            });
 
         $tags = Tag::query()
             ->where('team_id', $teamId)
@@ -142,9 +145,12 @@ class MonitorController extends Controller
             'sslCertificate' => Inertia::defer(
                 fn () => $monitor->sslCertificate
             ),
-            'heartbeats' => Inertia::defer(
-                fn () => HeartbeatResource::collection($monitor->heartbeats()->latest()->paginate(10))
-            ),
+            'heartbeats' => Inertia::defer(function () use ($monitor) {
+                $paginator = $monitor->heartbeats()->latest()->paginate(10);
+                $paginator->setCollection($paginator->getCollection()->reverse()->values());
+
+                return HeartbeatResource::collection($paginator);
+            }),
             'incidents' => Inertia::defer(
                 fn () => $monitor->incidents()->latest('started_at')->get()
             ),

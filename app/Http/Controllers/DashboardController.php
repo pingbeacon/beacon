@@ -106,11 +106,15 @@ class DashboardController extends Controller
                 ->with(['tags', 'heartbeats' => fn ($q) => $q->latest('created_at')->limit(90)])
                 ->latest()
                 ->get()
-                ->map(fn (Monitor $monitor) => [
-                    ...$monitor->toArray(),
-                    'uptime_percentage' => $monitor->uptimePercentage(24),
-                    'average_response_time' => $monitor->averageResponseTime(24),
-                ])
+                ->map(function (Monitor $monitor) {
+                    $monitor->setRelation('heartbeats', $monitor->heartbeats->reverse()->values());
+
+                    return [
+                        ...$monitor->toArray(),
+                        'uptime_percentage' => $monitor->uptimePercentage(24),
+                        'average_response_time' => $monitor->averageResponseTime(24),
+                    ];
+                })
             ),
         ]);
     }
