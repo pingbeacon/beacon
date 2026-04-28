@@ -352,7 +352,7 @@ export default function MonitorsShow({
           </div>
 
           {/* KPI strip */}
-          <div className="mt-5 grid grid-cols-2 border border-border sm:grid-cols-4">
+          <div className="mt-5 grid grid-cols-2 border border-border rounded-lg sm:grid-cols-4">
             <WhenVisible
               data="uptimeStats"
               fallback={
@@ -425,7 +425,7 @@ export default function MonitorsShow({
               {/* Left: main content */}
               <div className="space-y-4 lg:col-span-2">
                 {/* Uptime Tracker */}
-                <div className="border border-border p-4">
+                <div className="border border-border rounded-lg p-4">
                   <SectionLabel>Uptime Tracker</SectionLabel>
                   <p className="mt-1 mb-3 text-muted-fg text-xs">Last 90 heartbeats</p>
                   <WhenVisible
@@ -440,7 +440,7 @@ export default function MonitorsShow({
                 </div>
 
                 {/* Response Time + Distribution */}
-                <div className="border border-border">
+                <div className="border border-border rounded-lg">
                   <div className="flex items-center justify-between border-border border-b px-4 py-3">
                     <SectionLabel>
                       Response Time · {periodLabels[chartPeriod] ?? chartPeriod}
@@ -517,7 +517,7 @@ export default function MonitorsShow({
                                       if (!active || !payload?.length) return null
                                       const point = payload[0]
                                       return (
-                                        <div className="border border-border bg-secondary px-3 py-2 font-mono text-xs">
+                                        <div className="border border-border rounded-lg bg-secondary px-3 py-2 font-mono text-xs">
                                           <p className="text-muted-fg">
                                             {point?.payload?.time
                                               ? formatTime(
@@ -582,7 +582,7 @@ export default function MonitorsShow({
               <div className="space-y-4">
                 {/* SSL Certificate */}
                 {monitor.type === "http" && monitor.ssl_monitoring_enabled && (
-                  <div className="border border-border p-4">
+                  <div className="border border-border rounded-lg p-4">
                     <div className="flex items-center justify-between">
                       <SectionLabel>SSL Certificate</SectionLabel>
                       <Button
@@ -691,7 +691,7 @@ export default function MonitorsShow({
                 )}
 
                 {/* Recent Incidents */}
-                <div className="border border-border p-4">
+                <div className="border border-border rounded-lg p-4">
                   <SectionLabel>Incidents</SectionLabel>
                   <WhenVisible
                     data="incidents"
@@ -731,7 +731,7 @@ export default function MonitorsShow({
 
                 {/* Notification Channels */}
                 {monitor.notification_channels && monitor.notification_channels.length > 0 && (
-                  <div className="border border-border p-4">
+                  <div className="border border-border rounded-lg p-4">
                     <SectionLabel>Notification channels</SectionLabel>
                     <div className="mt-3 space-y-1.5">
                       {monitor.notification_channels.map((ch) => (
@@ -745,7 +745,7 @@ export default function MonitorsShow({
                 )}
 
                 {/* Live Log */}
-                <div className="border border-border p-4">
+                <div className="border border-border rounded-lg p-4">
                   <SectionLabel>Live log</SectionLabel>
                   <WhenVisible
                     data="heartbeats"
@@ -786,7 +786,7 @@ export default function MonitorsShow({
 
           {/* ── Heartbeats tab ── */}
           <TabPanel id="heartbeats" className="pt-4">
-            <div className="border border-border">
+            <div className="border border-border rounded-lg">
               <WhenVisible
                 fallback={<div className="m-4 h-64 animate-pulse rounded-sm bg-muted" />}
                 data="heartbeats"
@@ -883,7 +883,7 @@ export default function MonitorsShow({
 
           {/* ── Incidents tab ── */}
           <TabPanel id="incidents" className="pt-4">
-            <div className="border border-border p-4">
+            <div className="border border-border rounded-lg p-4">
               <WhenVisible
                 fallback={<div className="h-64 animate-pulse rounded-sm bg-muted" />}
                 data="incidents"
@@ -893,7 +893,7 @@ export default function MonitorsShow({
                     {incidents.map((incident) => (
                       <div
                         key={incident.id}
-                        className="flex items-center justify-between border border-border p-4"
+                        className="flex items-center justify-between border border-border rounded-lg p-4"
                       >
                         <div>
                           <p className="font-medium text-sm">{incident.cause ?? "Unknown cause"}</p>
@@ -928,7 +928,7 @@ export default function MonitorsShow({
           {/* ── SSL tab ── */}
           {monitor.type === "http" && monitor.ssl_monitoring_enabled && (
             <TabPanel id="ssl" className="pt-4">
-              <div className="border border-border p-4">
+              <div className="border border-border rounded-lg p-4">
                 <div className="mb-4 flex items-center justify-between">
                   <SectionLabel>SSL Certificate</SectionLabel>
                   <Button
@@ -958,7 +958,7 @@ export default function MonitorsShow({
                   {sslCertificate ? (
                     <div className="space-y-4">
                       <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="border border-border p-4">
+                        <div className="border border-border rounded-lg p-4">
                           <p className="text-muted-fg text-sm">Status</p>
                           <p
                             className={`mt-1 font-semibold text-lg ${sslCertificate.is_valid ? "text-success" : "text-danger"}`}
@@ -966,7 +966,7 @@ export default function MonitorsShow({
                             {sslCertificate.is_valid ? "Valid" : "Invalid"}
                           </p>
                         </div>
-                        <div className="border border-border p-4">
+                        <div className="border border-border rounded-lg p-4">
                           <p className="text-muted-fg text-sm">Days Until Expiry</p>
                           <p
                             className={`mt-1 font-semibold text-lg ${sslExpiryColor(sslCertificate.days_until_expiry)}`}

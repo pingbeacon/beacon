@@ -205,7 +205,7 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
           </div>
 
           {/* summary */}
-          <div className="mt-5 rounded-lg border border-border bg-sidebar p-3.5">
+          <div className="mt-5 rounded-lg border border-border rounded-lg bg-sidebar p-3.5">
             <p className="mb-2 text-xs font-medium text-fg">Summary</p>
             <div className="space-y-1 text-[11px] leading-relaxed text-muted-fg">
               <p>
@@ -351,7 +351,7 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                     {/* headers table */}
                     <div>
                       <Label>Headers</Label>
-                      <div className="mt-2 overflow-hidden rounded-lg border border-border">
+                      <div className="mt-2 overflow-hidden rounded-lg border border-border rounded-lg">
                         {headerRows.length > 0 && (
                           <div className="grid grid-cols-[1fr_1fr_36px] bg-sidebar text-[11px] uppercase tracking-wider text-muted-fg">
                             <div className="border-b border-border px-3 py-2">Key</div>
@@ -446,7 +446,7 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                 )}
 
                 {data.type === "push" && (
-                  <div className="rounded-lg border border-border bg-sidebar p-4">
+                  <div className="rounded-lg border border-border rounded-lg bg-sidebar p-4">
                     <p className="text-sm text-muted-fg">
                       After creating this monitor, you'll receive a unique push URL. Your cron job or worker should POST
                       to it on each successful run. If no ping is received within the check interval, Beacon will fire
@@ -577,7 +577,7 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-border bg-sidebar p-4">
+                <div className="rounded-lg border border-border rounded-lg bg-sidebar p-4">
                   <p className="font-mono text-xs text-muted-fg">
                     // monitor is DOWN when status code is not in the accepted list, or when the request times out
                   </p>
@@ -637,7 +637,7 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                     </div>
                   </fieldset>
                 ) : (
-                  <div className="rounded-lg border border-border bg-sidebar p-5 text-center">
+                  <div className="rounded-lg border border-border rounded-lg bg-sidebar p-5 text-center">
                     <p className="text-sm text-muted-fg">No notification channels configured.</p>
                     <Link
                       href="/notification-channels/create"

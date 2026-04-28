@@ -122,11 +122,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         <button
           type="button"
           onClick={() => setPaletteOpen(true)}
-          className="mt-3 flex w-full cursor-pointer items-center gap-2 rounded border border-border bg-transparent px-3 py-2 text-xs text-muted-fg transition-colors hover:border-primary/40 hover:text-fg"
+          className="mt-3 flex w-full cursor-pointer items-center gap-2 rounded border border-border rounded-lg bg-transparent px-3 py-2 text-xs text-muted-fg transition-colors hover:border-primary/40 hover:text-fg"
         >
           <span className="text-sm leading-none">⌕</span>
           <span className="flex-1 text-left">Search monitors…</span>
-          <kbd className="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-fg">
+          <kbd className="rounded border border-border rounded-lg px-1.5 py-0.5 font-mono text-[10px] text-muted-fg">
             {isMac ? "⌘K" : "Ctrl K"}
           </kbd>
         </button>

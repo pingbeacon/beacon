@@ -244,7 +244,7 @@ function MonitorRow({
 
       {/* type */}
       <div>
-        <span className="border border-border text-muted-fg text-xs px-2 py-0.5 rounded-sm font-mono">
+        <span className="border border-border rounded-lg text-muted-fg text-xs px-2 py-0.5 rounded-sm font-mono">
           {monitor.type.toUpperCase()}
         </span>
       </div>
@@ -354,7 +354,7 @@ function MonitorToolbar({
                 "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors",
                 active
                   ? "bg-primary text-primary-fg"
-                  : "border border-border text-muted-fg hover:text-fg hover:border-fg/30",
+                  : "border border-border rounded-lg text-muted-fg hover:text-fg hover:border-fg/30",
               ].join(" ")}
             >
               <span>{label}</span>
@@ -378,7 +378,7 @@ function MonitorToolbar({
                     "px-3 py-1 rounded-full text-xs transition-colors",
                     active
                       ? "border-2 font-medium"
-                      : "border border-border text-muted-fg hover:text-fg hover:border-fg/30",
+                      : "border border-border rounded-lg text-muted-fg hover:text-fg hover:border-fg/30",
                   ].join(" ")}
                   style={
                     active
@@ -403,9 +403,9 @@ function MonitorToolbar({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="name, url, tag…"
-            className="pl-8 pr-8 py-1.5 text-xs rounded-md border border-border bg-transparent text-fg placeholder:text-muted-fg focus:outline-none focus:ring-1 focus:ring-ring w-52"
+            className="pl-8 pr-8 py-1.5 text-xs rounded-md border border-border rounded-lg bg-transparent text-fg placeholder:text-muted-fg focus:outline-none focus:ring-1 focus:ring-ring w-52"
           />
-          <span className="absolute right-2 text-[10px] text-muted-fg border border-border rounded px-1 pointer-events-none">
+          <span className="absolute right-2 text-[10px] text-muted-fg border border-border rounded-lg rounded px-1 pointer-events-none">
             /
           </span>
         </div>
