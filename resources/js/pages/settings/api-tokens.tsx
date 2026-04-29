@@ -216,6 +216,9 @@ export default function ApiTokensPage({ tokens }: Props) {
                         ))}
                       </SelectContent>
                     </Select>
+                    {errors.expires_at && (
+                      <p className="text-danger text-sm">{errors.expires_at}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -227,7 +230,11 @@ export default function ApiTokensPage({ tokens }: Props) {
                         </Checkbox>
                       ))}
                     </CheckboxGroup>
-                    {errors.scopes && <p className="text-danger text-sm">{errors.scopes}</p>}
+                    {(errors.scopes ?? errors["scopes.0"]) && (
+                      <p className="text-danger text-sm">
+                        {errors.scopes ?? errors["scopes.0"]}
+                      </p>
+                    )}
                   </div>
                 </ModalBody>
                 <ModalFooter>

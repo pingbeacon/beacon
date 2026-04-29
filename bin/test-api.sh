@@ -34,6 +34,7 @@ CLEANUP="${CLEANUP:-true}"
 API="$BASE_URL/api/v1"
 RUN_ID="$(date +%s)-$$"
 SP_SLUG="test-api-sh-sp-${RUN_ID}"
+CURL_OPTS=(--connect-timeout 5 --max-time 30)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -60,7 +61,7 @@ run() {
   shift
   local response http_code body
 
-  response=$(curl -s -w "\n__HTTP_CODE__%{http_code}" \
+  response=$(curl -s "${CURL_OPTS[@]}" -w "\n__HTTP_CODE__%{http_code}" \
     -H "Authorization: Bearer $API_TOKEN" \
     -H "Accept: application/json" \
     -H "Content-Type: application/json" \
@@ -93,7 +94,7 @@ header "Auth"
 
 echo -e "${YELLOW}Auth:${RESET} token loaded"
 
-bad_response=$(curl -s -o /dev/null -w "%{http_code}" \
+bad_response=$(curl -s "${CURL_OPTS[@]}" -o /dev/null -w "%{http_code}" \
   --max-redirs 0 \
   -H "Accept: application/json" \
   "$API/monitors")
@@ -176,7 +177,7 @@ PUSH_MONITOR_ID=$(extract id "$push_response")
 # Validation error test
 header "Monitor Validation"
 
-validation_response=$(curl -s -w "\n__HTTP_CODE__%{http_code}" \
+validation_response=$(curl -s "${CURL_OPTS[@]}" -w "\n__HTTP_CODE__%{http_code}" \
   -X POST "$API/monitors" \
   -H "Authorization: Bearer $API_TOKEN" \
   -H "Accept: application/json" \
@@ -232,12 +233,12 @@ run "GET /status-pages" "$API/status-pages"
 
 # Create
 sp_response=$(run "POST /status-pages" -X POST "$API/status-pages" \
-  -d '{
-    "title": "test-api-sh Status Page",
-    "slug": "$SP_SLUG",
-    "description": "Created by test-api.sh",
-    "is_published": false
-  }')
+  -d "{
+    \"title\": \"test-api-sh Status Page\",
+    \"slug\": \"$SP_SLUG\",
+    \"description\": \"Created by test-api.sh\",
+    \"is_published\": false
+  }")
 
 STATUS_PAGE_ID=$(extract id "$sp_response")
 
@@ -254,7 +255,7 @@ else
   run "PUT /status-pages/$STATUS_PAGE_ID" -X PUT "$API/status-pages/$STATUS_PAGE_ID" \
     -d "{
       \"title\": \"test-api-sh Status Page (updated)\",
-      \"slug\": \"test-api-sh-status-page\",
+      \"slug\": \"$SP_SLUG\",
       \"is_published\": true
     }"
 fi
@@ -271,7 +272,7 @@ run "GET /tags" "$API/tags"
 # ---------------------------------------------------------------------------
 header "Error Handling"
 
-not_found_response=$(curl -s -w "\n__HTTP_CODE__%{http_code}" \
+not_found_response=$(curl -s "${CURL_OPTS[@]}" -w "\n__HTTP_CODE__%{http_code}" \
   -H "Authorization: Bearer $API_TOKEN" \
   -H "Accept: application/json" \
   "$API/monitors/999999")
