@@ -20,9 +20,9 @@ import type { SidebarMonitor } from "@/types/shared"
 
 const statusDot: Record<string, string> = {
   up: "bg-success",
-  down: "bg-danger",
+  down: "bg-destructive",
   pending: "bg-warning",
-  paused: "bg-muted-fg",
+  paused: "bg-muted-foreground",
 }
 
 const pages = [
@@ -58,9 +58,9 @@ export function MonitorCommandPalette({ isOpen, onOpenChange, monitors }: Props)
                 textValue={monitor.name}
                 onAction={() => navigate(`/monitors/${monitor.id}`)}
               >
-                <span className={`size-2 shrink-0 rounded-full ${statusDot[monitor.status] ?? "bg-muted-fg"}`} />
+                <span className={`size-2 shrink-0 rounded-full ${statusDot[monitor.status] ?? "bg-muted-foreground"}`} />
                 <CommandMenuLabel>{monitor.name}</CommandMenuLabel>
-                <span className="ml-auto text-[10px] text-muted-fg">
+                <span className="ml-auto text-[10px] text-muted-foreground">
                   {monitor.type}
                 </span>
               </CommandMenuItem>
@@ -75,7 +75,7 @@ export function MonitorCommandPalette({ isOpen, onOpenChange, monitors }: Props)
               textValue={page.name}
               onAction={() => navigate(page.href)}
             >
-              <page.icon className="size-4 shrink-0 text-muted-fg" />
+              <page.icon className="size-4 shrink-0 text-muted-foreground" />
               <CommandMenuLabel>{page.name}</CommandMenuLabel>
             </CommandMenuItem>
           ))}
@@ -86,7 +86,7 @@ export function MonitorCommandPalette({ isOpen, onOpenChange, monitors }: Props)
             textValue="New monitor"
             onAction={() => navigate("/monitors/create")}
           >
-            <PlusCircleIcon className="size-4 shrink-0 text-muted-fg" />
+            <PlusCircleIcon className="size-4 shrink-0 text-muted-foreground" />
             <CommandMenuLabel>New monitor</CommandMenuLabel>
           </CommandMenuItem>
         </CommandMenuSection>

@@ -102,8 +102,8 @@ const chartConfig = {
 }
 
 function sslExpiryColor(days: number | null): string {
-  if (days === null) return "text-muted-fg"
-  if (days <= 0) return "text-danger"
+  if (days === null) return "text-muted-foreground"
+  if (days <= 0) return "text-destructive"
   if (days <= 14) return "text-warning"
   return "text-success"
 }
@@ -270,7 +270,7 @@ export default function MonitorsShow({
                   {monitor.name}
                 </Heading>
               </div>
-              <p className="mt-0.5 text-muted-fg text-sm">
+              <p className="mt-0.5 text-muted-foreground text-sm">
                 {monitor.url || `${monitor.host}${monitor.port ? `:${monitor.port}` : ""}`}
                 {" · "}
                 {monitor.type.toUpperCase()}
@@ -332,28 +332,28 @@ export default function MonitorsShow({
                 ))}
             >
               <div className="border-border border-r p-4">
-                <p className="text-muted-fg text-xs uppercase tracking-widest">30d Uptime</p>
+                <p className="text-muted-foreground text-xs uppercase tracking-widest">30d Uptime</p>
                 <p
-                  className={`mt-1 font-medium text-2xl ${uptimeStats ? uptimeColor(uptimeStats.uptime_30d) : "text-fg"}`}
+                  className={`mt-1 font-medium text-2xl ${uptimeStats ? uptimeColor(uptimeStats.uptime_30d) : "text-foreground"}`}
                 >
                   {uptimeStats ? `${uptimeStats.uptime_30d}%` : "—"}
                 </p>
               </div>
               <div className="border-border border-r p-4">
-                <p className="text-muted-fg text-xs uppercase tracking-widest">
+                <p className="text-muted-foreground text-xs uppercase tracking-widest">
                   Avg Response · 24h
                 </p>
-                <p className="mt-1 font-medium text-2xl text-fg">
+                <p className="mt-1 font-medium text-2xl text-foreground">
                   {uptimeStats?.avg_response_24h != null
                     ? `${Math.round(uptimeStats.avg_response_24h)} ms`
                     : "—"}
                 </p>
               </div>
               <div className="border-border border-r p-4">
-                <p className="text-muted-fg text-xs uppercase tracking-widest">
+                <p className="text-muted-foreground text-xs uppercase tracking-widest">
                   Avg Response · 30d
                 </p>
-                <p className="mt-1 font-medium text-2xl text-fg">
+                <p className="mt-1 font-medium text-2xl text-foreground">
                   {uptimeStats?.avg_response_30d != null
                     ? `${Math.round(uptimeStats.avg_response_30d)} ms`
                     : "—"}
@@ -361,8 +361,8 @@ export default function MonitorsShow({
               </div>
             </WhenVisible>
             <div className="p-4">
-              <p className="text-muted-fg text-xs uppercase tracking-widest">Last Check</p>
-              <p className="mt-1 font-medium text-2xl text-fg">
+              <p className="text-muted-foreground text-xs uppercase tracking-widest">Last Check</p>
+              <p className="mt-1 font-medium text-2xl text-foreground">
                 {monitor.last_checked_at ? formatTimeAgo(monitor.last_checked_at) : "Never"}
               </p>
             </div>
@@ -388,7 +388,7 @@ export default function MonitorsShow({
                 {/* Uptime Tracker */}
                 <div className="rounded-lg border border-border p-4">
                   <SectionLabel>Uptime Tracker</SectionLabel>
-                  <p className="mt-1 mb-3 text-muted-fg text-xs">Last 90 heartbeats</p>
+                  <p className="mt-1 mb-3 text-muted-foreground text-xs">Last 90 heartbeats</p>
                   <WhenVisible
                     fallback={<div className="h-8 animate-pulse rounded-sm bg-muted" />}
                     data="heartbeats"
@@ -479,7 +479,7 @@ export default function MonitorsShow({
                                       const point = payload[0]
                                       return (
                                         <div className="rounded-lg border border-border bg-secondary px-3 py-2 font-mono text-xs">
-                                          <p className="text-muted-fg">
+                                          <p className="text-muted-foreground">
                                             {point?.payload?.time
                                               ? formatTime(
                                                   new Date(point.payload.time).toISOString(),
@@ -518,8 +518,8 @@ export default function MonitorsShow({
                                       key={label}
                                       className={i > 0 ? "border-border border-l" : ""}
                                     >
-                                      <p className="font-medium text-fg text-xl">{value} ms</p>
-                                      <p className="mt-0.5 text-muted-fg text-xs uppercase tracking-widest">
+                                      <p className="font-medium text-foreground text-xl">{value} ms</p>
+                                      <p className="mt-0.5 text-muted-foreground text-xs uppercase tracking-widest">
                                         {label}
                                       </p>
                                     </div>
@@ -530,7 +530,7 @@ export default function MonitorsShow({
                           )
                         })()
                       ) : (
-                        <p className="py-8 text-center text-muted-fg text-sm">
+                        <p className="py-8 text-center text-muted-foreground text-sm">
                           No response time data available yet.
                         </p>
                       )}
@@ -577,7 +577,7 @@ export default function MonitorsShow({
                         <div className="mt-3 space-y-3">
                           <div className="flex items-center justify-between">
                             <span
-                              className={`font-medium text-sm ${sslCertificate.is_valid ? "text-success" : "text-danger"}`}
+                              className={`font-medium text-sm ${sslCertificate.is_valid ? "text-success" : "text-destructive"}`}
                             >
                               {sslCertificate.is_valid ? "Valid" : "Invalid"}
                             </span>
@@ -616,7 +616,7 @@ export default function MonitorsShow({
                                   <div
                                     className={`h-full rounded-full ${
                                       sslCertificate.days_until_expiry <= 14
-                                        ? "bg-danger"
+                                        ? "bg-destructive"
                                         : sslCertificate.days_until_expiry <= 30
                                           ? "bg-warning"
                                           : "bg-success"
@@ -629,14 +629,14 @@ export default function MonitorsShow({
 
                           {sslCertificate.issuer && (
                             <div>
-                              <p className="text-muted-fg text-xs">Issuer</p>
-                              <p className="truncate text-fg text-sm">{sslCertificate.issuer}</p>
+                              <p className="text-muted-foreground text-xs">Issuer</p>
+                              <p className="truncate text-foreground text-sm">{sslCertificate.issuer}</p>
                             </div>
                           )}
                           {sslCertificate.valid_to && (
                             <div>
-                              <p className="text-muted-fg text-xs">Expires</p>
-                              <p className="text-fg text-sm">
+                              <p className="text-muted-foreground text-xs">Expires</p>
+                              <p className="text-foreground text-sm">
                                 {new Date(sslCertificate.valid_to).toLocaleDateString(undefined, {
                                   dateStyle: "medium",
                                 })}
@@ -645,7 +645,7 @@ export default function MonitorsShow({
                           )}
                         </div>
                       ) : (
-                        <p className="mt-3 text-muted-fg text-sm">No SSL data yet.</p>
+                        <p className="mt-3 text-muted-foreground text-sm">No SSL data yet.</p>
                       )}
                     </WhenVisible>
                   </div>
@@ -666,17 +666,17 @@ export default function MonitorsShow({
                             className="flex items-start justify-between gap-2 py-1"
                           >
                             <div className="min-w-0">
-                              <p className="truncate text-fg text-sm">
+                              <p className="truncate text-foreground text-sm">
                                 {incident.cause ?? "Outage"}
                               </p>
-                              <p className="text-muted-fg text-xs">
+                              <p className="text-muted-foreground text-xs">
                                 {formatDuration(incident.started_at, incident.resolved_at)}
                                 {incident.resolved_at ? " · resolved" : " · ongoing"}
                               </p>
                             </div>
                             <span
                               className={`mt-0.5 shrink-0 font-bold text-xs ${
-                                incident.resolved_at ? "text-success" : "text-danger"
+                                incident.resolved_at ? "text-success" : "text-destructive"
                               }`}
                             >
                               {incident.resolved_at ? "✓" : "●"}
@@ -685,7 +685,7 @@ export default function MonitorsShow({
                         ))}
                       </div>
                     ) : (
-                      <p className="mt-3 text-muted-fg text-sm">No incidents recorded.</p>
+                      <p className="mt-3 text-muted-foreground text-sm">No incidents recorded.</p>
                     )}
                   </WhenVisible>
                 </div>
@@ -697,8 +697,8 @@ export default function MonitorsShow({
                     <div className="mt-3 space-y-1.5">
                       {monitor.notification_channels.map((ch) => (
                         <div key={ch.id} className="flex items-center justify-between">
-                          <span className="text-fg text-sm">{ch.name}</span>
-                          <span className="text-muted-fg text-xs">{ch.type}</span>
+                          <span className="text-foreground text-sm">{ch.name}</span>
+                          <span className="text-muted-foreground text-xs">{ch.type}</span>
                         </div>
                       ))}
                     </div>
@@ -712,7 +712,7 @@ export default function MonitorsShow({
                     <div className="mt-3 space-y-1.5 font-mono">
                       {liveHeartbeatsNewestFirst.slice(0, 15).map((hb) => (
                         <div key={hb.id} className="flex items-start gap-2.5 text-xs">
-                          <span className="shrink-0 text-muted-fg">
+                          <span className="shrink-0 text-muted-foreground">
                             {new Date(hb.created_at).toLocaleTimeString([], {
                               hour: "2-digit",
                               minute: "2-digit",
@@ -721,12 +721,12 @@ export default function MonitorsShow({
                           </span>
                           <span
                             className={`shrink-0 font-semibold ${
-                              hb.status === "up" ? "text-success" : "text-danger"
+                              hb.status === "up" ? "text-success" : "text-destructive"
                             }`}
                           >
                             {hb.status.toUpperCase()}
                           </span>
-                          <span className="truncate text-muted-fg">
+                          <span className="truncate text-muted-foreground">
                             {hb.response_time != null
                               ? `${hb.response_time}ms`
                               : (hb.message ?? "—")}
@@ -735,7 +735,7 @@ export default function MonitorsShow({
                       ))}
                     </div>
                   ) : (
-                    <p className="mt-3 text-muted-fg text-sm">No heartbeats yet.</p>
+                    <p className="mt-3 text-muted-foreground text-sm">No heartbeats yet.</p>
                   )}
                 </div>
               </div>
@@ -789,7 +789,7 @@ export default function MonitorsShow({
                       </TableBody>
                     </Table>
                     {(heartbeats.meta?.last_page ?? 1) > 1 && (
-                      <div className="flex items-center justify-between border-border border-t px-4 py-3 text-muted-fg text-sm">
+                      <div className="flex items-center justify-between border-border border-t px-4 py-3 text-muted-foreground text-sm">
                         <span>
                           Page {heartbeats.meta?.current_page} of {heartbeats.meta?.last_page}
                           {(heartbeats.meta?.total ?? 0) > 0 && ` · ${heartbeats.meta.total} total`}
@@ -831,7 +831,7 @@ export default function MonitorsShow({
                     )}
                   </div>
                 ) : (
-                  <p className="py-8 text-center text-muted-fg text-sm">
+                  <p className="py-8 text-center text-muted-foreground text-sm">
                     No heartbeats recorded yet.
                   </p>
                 )}
@@ -855,7 +855,7 @@ export default function MonitorsShow({
                       >
                         <div>
                           <p className="font-medium text-sm">{incident.cause ?? "Unknown cause"}</p>
-                          <p className="text-muted-fg text-xs">
+                          <p className="text-muted-foreground text-xs">
                             Started:{" "}
                             {new Date(incident.started_at).toLocaleString(undefined, {
                               dateStyle: "medium",
@@ -867,7 +867,7 @@ export default function MonitorsShow({
                           <Badge intent={incident.resolved_at ? "success" : "danger"}>
                             {incident.resolved_at ? "Resolved" : "Ongoing"}
                           </Badge>
-                          <p className="mt-1 text-muted-fg text-xs">
+                          <p className="mt-1 text-muted-foreground text-xs">
                             Duration: {formatDuration(incident.started_at, incident.resolved_at)}
                           </p>
                         </div>
@@ -875,7 +875,7 @@ export default function MonitorsShow({
                     ))}
                   </div>
                 ) : (
-                  <p className="py-8 text-center text-muted-fg text-sm">
+                  <p className="py-8 text-center text-muted-foreground text-sm">
                     No incidents — this service has been running clean.
                   </p>
                 )}
@@ -917,15 +917,15 @@ export default function MonitorsShow({
                     <div className="space-y-4">
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div className="rounded-lg border border-border p-4">
-                          <p className="text-muted-fg text-sm">Status</p>
+                          <p className="text-muted-foreground text-sm">Status</p>
                           <p
-                            className={`mt-1 font-semibold text-lg ${sslCertificate.is_valid ? "text-success" : "text-danger"}`}
+                            className={`mt-1 font-semibold text-lg ${sslCertificate.is_valid ? "text-success" : "text-destructive"}`}
                           >
                             {sslCertificate.is_valid ? "Valid" : "Invalid"}
                           </p>
                         </div>
                         <div className="rounded-lg border border-border p-4">
-                          <p className="text-muted-fg text-sm">Days Until Expiry</p>
+                          <p className="text-muted-foreground text-sm">Days Until Expiry</p>
                           <p
                             className={`mt-1 font-semibold text-lg ${sslExpiryColor(sslCertificate.days_until_expiry)}`}
                           >
@@ -939,15 +939,15 @@ export default function MonitorsShow({
                       </div>
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div>
-                          <p className="text-muted-fg text-sm">Issuer</p>
+                          <p className="text-muted-foreground text-sm">Issuer</p>
                           <p className="font-medium">{sslCertificate.issuer ?? "Unknown"}</p>
                         </div>
                         <div>
-                          <p className="text-muted-fg text-sm">Subject</p>
+                          <p className="text-muted-foreground text-sm">Subject</p>
                           <p className="font-medium">{sslCertificate.subject ?? "Unknown"}</p>
                         </div>
                         <div>
-                          <p className="text-muted-fg text-sm">Valid From</p>
+                          <p className="text-muted-foreground text-sm">Valid From</p>
                           <p className="font-medium">
                             {sslCertificate.valid_from
                               ? new Date(sslCertificate.valid_from).toLocaleDateString(undefined, {
@@ -957,7 +957,7 @@ export default function MonitorsShow({
                           </p>
                         </div>
                         <div>
-                          <p className="text-muted-fg text-sm">Valid To</p>
+                          <p className="text-muted-foreground text-sm">Valid To</p>
                           <p className="font-medium">
                             {sslCertificate.valid_to
                               ? new Date(sslCertificate.valid_to).toLocaleDateString(undefined, {
@@ -968,12 +968,12 @@ export default function MonitorsShow({
                         </div>
                       </div>
                       {sslCertificate.error_message && (
-                        <div className="border border-danger/30 bg-danger/5 p-4">
-                          <p className="text-danger text-sm">{sslCertificate.error_message}</p>
+                        <div className="border border-destructive/30 bg-destructive/5 p-4">
+                          <p className="text-destructive text-sm">{sslCertificate.error_message}</p>
                         </div>
                       )}
                       {sslCertificate.last_checked_at && (
-                        <p className="text-muted-fg text-xs">
+                        <p className="text-muted-foreground text-xs">
                           Last checked:{" "}
                           {new Date(sslCertificate.last_checked_at).toLocaleString(undefined, {
                             dateStyle: "medium",
@@ -983,7 +983,7 @@ export default function MonitorsShow({
                       )}
                     </div>
                   ) : (
-                    <p className="py-8 text-center text-muted-fg text-sm">
+                    <p className="py-8 text-center text-muted-foreground text-sm">
                       No SSL certificate data available yet. The next check will run automatically.
                     </p>
                   )}

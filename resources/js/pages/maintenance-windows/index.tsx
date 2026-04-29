@@ -30,12 +30,12 @@ function WindowCard({ window }: { window: MaintenanceWindow }) {
           )}
         </div>
         {window.description && (
-          <p className="mt-1 text-muted-fg text-xs">{window.description}</p>
+          <p className="mt-1 text-muted-foreground text-xs">{window.description}</p>
         )}
-        <p className="mt-1 text-muted-fg text-xs">
+        <p className="mt-1 text-muted-foreground text-xs">
           {new Date(window.start_time).toLocaleString()} — {new Date(window.end_time).toLocaleString()}
         </p>
-        <p className="text-muted-fg text-xs">
+        <p className="text-muted-foreground text-xs">
           {window.monitors?.length ?? 0} monitors, {window.monitor_groups?.length ?? 0} groups
         </p>
       </div>
@@ -98,26 +98,26 @@ export default function MaintenanceWindowsIndex({ maintenanceWindows }: Props) {
                   {active.length > 0 ? (
                     active.map((w) => <WindowCard key={w.id} window={w} />)
                   ) : (
-                    <p className="py-8 text-center text-muted-fg">No active maintenance windows.</p>
+                    <p className="py-8 text-center text-muted-foreground">No active maintenance windows.</p>
                   )}
                 </TabPanel>
                 <TabPanel id="upcoming" className="space-y-2 pt-4">
                   {upcoming.length > 0 ? (
                     upcoming.map((w) => <WindowCard key={w.id} window={w} />)
                   ) : (
-                    <p className="py-8 text-center text-muted-fg">No upcoming maintenance windows.</p>
+                    <p className="py-8 text-center text-muted-foreground">No upcoming maintenance windows.</p>
                   )}
                 </TabPanel>
                 <TabPanel id="past" className="space-y-2 pt-4">
                   {past.length > 0 ? (
                     past.map((w) => <WindowCard key={w.id} window={w} />)
                   ) : (
-                    <p className="py-8 text-center text-muted-fg">No past maintenance windows.</p>
+                    <p className="py-8 text-center text-muted-foreground">No past maintenance windows.</p>
                   )}
                 </TabPanel>
               </Tabs>
             ) : (
-              <div className="py-12 text-center text-muted-fg">
+              <div className="py-12 text-center text-muted-foreground">
                 <p className="font-medium text-lg">No maintenance windows</p>
                 <p className="mt-1 text-sm">
                   Schedule maintenance to suppress notifications during planned downtime.

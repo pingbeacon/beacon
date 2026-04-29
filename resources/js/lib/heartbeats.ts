@@ -47,7 +47,7 @@ export function heartbeatsToTracker(heartbeats?: Heartbeat[], count = 90): Track
       const slow = isSlow(hb, avg)
       const color =
         hb.status === "down"
-          ? "bg-danger"
+          ? "bg-destructive"
           : slow
             ? "bg-warning"
             : hb.status === "up"

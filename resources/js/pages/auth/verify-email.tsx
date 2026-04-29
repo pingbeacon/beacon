@@ -32,7 +32,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
               routerOptions={{
                 method: "post",
               }}
-              className="text-primary-subtle-fg"
+              className="text-primary"
             >
               Log Out
             </Link>

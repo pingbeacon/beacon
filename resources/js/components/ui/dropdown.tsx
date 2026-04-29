@@ -24,7 +24,7 @@ const dropdownSectionStyles = tv({
   slots: {
     section: "col-span-full grid grid-cols-[auto_1fr]",
     header:
-      "col-span-full px-3 py-2 font-medium text-muted-fg text-sm/6 sm:px-2.5 sm:py-1.5 sm:text-xs/3",
+      "col-span-full px-3 py-2 font-medium text-muted-foreground text-sm/6 sm:px-2.5 sm:py-1.5 sm:text-xs/3",
   },
 })
 
@@ -54,11 +54,11 @@ const dropdownItemStyles = tv({
     "not-has-[[slot=description]]:items-center",
     "group relative cursor-default select-none rounded-[calc(var(--radius-xl)-(--spacing(1)))] outline-0",
     // text
-    "text-base/6 text-fg sm:text-sm/6 forced-colors:text-[CanvasText]",
+    "text-base/6 text-foreground sm:text-sm/6 forced-colors:text-[CanvasText]",
     // avatar
     "*:data-[slot=avatar]:*:me-(--me-icon) *:data-[slot=avatar]:me-(--me-icon) has-[[slot=description]]:*:data-[slot=avatar]:row-span-2 *:data-[slot=avatar]:[--avatar-size:--spacing(5)] sm:*:data-[slot=avatar]:[--avatar-size:--spacing(4)]",
     // icon
-    "*:data-[slot=icon]:col-start-1 *:data-[slot=icon]:row-start-1 *:data-[slot=icon]:-ms-0.5 *:data-[slot=icon]:me-(--me-icon) *:data-[slot=icon]:shrink-0 [&_[data-slot='icon']:not([class*='text-'])]:text-muted-fg",
+    "*:data-[slot=icon]:col-start-1 *:data-[slot=icon]:row-start-1 *:data-[slot=icon]:-ms-0.5 *:data-[slot=icon]:me-(--me-icon) *:data-[slot=icon]:shrink-0 [&_[data-slot='icon']:not([class*='text-'])]:text-muted-foreground",
     "not-has-[[slot=description]]:*:data-[slot=icon]:size-5 sm:not-has-[[slot=description]]:*:data-[slot=icon]:size-4",
     "has-[[slot=description]]:*:data-[slot=icon]:h-lh has-[[slot=description]]:[&_[data-slot='icon']:not([class*='w-'])]:w-5 sm:has-[[slot=description]]:[&_[data-slot='icon']:not([class*='w-'])]:w-4",
     "[&>[slot=label]+[data-slot=icon]]:absolute [&>[slot=label]+[data-slot=icon]]:end-0 [&>[slot=label]+[data-slot=icon]]:top-1",
@@ -73,36 +73,36 @@ const dropdownItemStyles = tv({
   variants: {
     intent: {
       danger: [
-        "text-danger-subtle-fg focus:text-danger-subtle-fg [&_[data-slot='icon']:not([class*='text-'])]:text-danger-subtle-fg/70",
-        "*:[[slot=description]]:text-danger-subtle-fg/80 focus:*:[[slot=description]]:text-danger-subtle-fg focus:*:[[slot=label]]:text-danger-subtle-fg",
-        "focus:bg-danger-subtle focus:text-danger-subtle-fg forced-colors:focus:text-[Mark] focus:[&_[data-slot='icon']:not([class*='text-'])]:text-danger-subtle-fg",
-        "*:data-[slot=keyboard]:text-danger-subtle-fg/70 focus:*:data-[slot=keyboard]:text-danger-subtle-fg",
+        "text-destructive focus:text-destructive [&_[data-slot='icon']:not([class*='text-'])]:text-destructive/70",
+        "*:[[slot=description]]:text-destructive/80 focus:*:[[slot=description]]:text-destructive focus:*:[[slot=label]]:text-destructive",
+        "focus:bg-destructive/12 focus:text-destructive forced-colors:focus:text-[Mark] focus:[&_[data-slot='icon']:not([class*='text-'])]:text-destructive",
+        "*:data-[slot=keyboard]:text-destructive/70 focus:*:data-[slot=keyboard]:text-destructive",
       ],
       warning: [
-        "text-warning-subtle-fg focus:text-warning-subtle-fg [&_[data-slot='icon']:not([class*='text-'])]:text-warning-subtle-fg/70",
-        "*:[[slot=description]]:text-warning-subtle-fg/80 focus:*:[[slot=description]]:text-warning-subtle-fg focus:*:[[slot=label]]:text-warning-subtle-fg",
-        "focus:bg-warning-subtle focus:text-warning-subtle-fg focus:[&_[data-slot='icon']:not([class*='text-'])]:text-warning-subtle-fg",
-        "*:data-[slot=keyboard]:text-warning-subtle-fg/70 focus:*:data-[slot=keyboard]:text-warning-subtle-fg",
+        "text-warning focus:text-warning [&_[data-slot='icon']:not([class*='text-'])]:text-warning/70",
+        "*:[[slot=description]]:text-warning/80 focus:*:[[slot=description]]:text-warning focus:*:[[slot=label]]:text-warning",
+        "focus:bg-warning/12 focus:text-warning focus:[&_[data-slot='icon']:not([class*='text-'])]:text-warning",
+        "*:data-[slot=keyboard]:text-warning/70 focus:*:data-[slot=keyboard]:text-warning",
       ],
     },
     isDisabled: {
       true: "opacity-50 forced-colors:text-[GrayText]",
     },
     isSelected: {
-      true: "[&_[data-slot='icon']:not([class*='text-'])]:text-accent-fg",
+      true: "[&_[data-slot='icon']:not([class*='text-'])]:text-accent-foreground",
     },
     isFocused: {
       true: [
-        "*:data-[slot=keyboard]:text-accent-fg [&_[data-slot='icon']:not([class*='text-'])]:text-accent-fg",
-        "bg-accent text-accent-fg forced-colors:bg-[Highlight] forced-colors:text-[HighlightText]",
-        "[&_.text-muted-fg]:text-accent-fg/80 *:[[slot=description]]:text-accent-fg *:[[slot=label]]:text-accent-fg",
+        "*:data-[slot=keyboard]:text-accent-foreground [&_[data-slot='icon']:not([class*='text-'])]:text-accent-foreground",
+        "bg-accent text-accent-foreground forced-colors:bg-[Highlight] forced-colors:text-[HighlightText]",
+        "[&_.text-muted-foreground]:text-accent-foreground/80 *:[[slot=description]]:text-accent-foreground *:[[slot=label]]:text-accent-foreground",
       ],
     },
     isHovered: {
       true: [
-        "*:data-[slot=keyboard]:text-accent-fg [&_[data-slot='icon']:not([class*='text-'])]:text-accent-fg",
-        "bg-accent text-accent-fg forced-colors:bg-[Highlight] forced-colors:text-[HighlightText]",
-        "[&_.text-muted-fg]:text-accent-fg/80 *:[[slot=description]]:text-accent-fg *:[[slot=label]]:text-accent-fg",
+        "*:data-[slot=keyboard]:text-accent-foreground [&_[data-slot='icon']:not([class*='text-'])]:text-accent-foreground",
+        "bg-accent text-accent-foreground forced-colors:bg-[Highlight] forced-colors:text-[HighlightText]",
+        "[&_.text-muted-foreground]:text-accent-foreground/80 *:[[slot=description]]:text-accent-foreground *:[[slot=label]]:text-accent-foreground",
       ],
     },
   },
@@ -152,7 +152,7 @@ const DropdownLabel = ({ className, ...props }: TextProps) => (
 const DropdownDescription = ({ className, ...props }: TextProps) => (
   <Text
     slot="description"
-    className={twMerge("col-start-2 font-normal text-muted-fg text-sm", className)}
+    className={twMerge("col-start-2 font-normal text-muted-foreground text-sm", className)}
     {...props}
   />
 )
@@ -160,7 +160,7 @@ const DropdownDescription = ({ className, ...props }: TextProps) => (
 const DropdownSeparator = ({ className, ...props }: Omit<SeparatorProps, "orientation">) => (
   <Separator
     orientation="horizontal"
-    className={twMerge("col-span-full -mx-1 h-px bg-fg/10", className)}
+    className={twMerge("col-span-full -mx-1 h-px bg-foreground/10", className)}
     {...props}
   />
 )
@@ -169,7 +169,7 @@ const DropdownKeyboard = ({ className, ...props }: React.ComponentProps<typeof K
   return (
     <Keyboard
       className={twMerge(
-        "absolute end-2 ps-2 group-hover:text-primary-fg group-focus:text-primary-fg",
+        "absolute end-2 ps-2 group-hover:text-primary-foreground group-focus:text-primary-foreground",
         className,
       )}
       {...props}

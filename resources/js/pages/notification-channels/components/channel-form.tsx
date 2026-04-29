@@ -80,7 +80,7 @@ export default function ChannelForm({ channel }: ChannelFormProps) {
       {isEditing ? (
         <div>
           <p className="mb-1 font-medium text-sm">Type</p>
-          <p className="text-muted-fg text-sm capitalize">{data.type}</p>
+          <p className="text-muted-foreground text-sm capitalize">{data.type}</p>
         </div>
       ) : (
         <Select selectedKey={data.type} onSelectionChange={handleTypeChange}>

@@ -163,14 +163,14 @@ export default function MonitorWizard({
   return (
     <div className="flex flex-col">
       {/* page header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between border-border border-b bg-bg px-6 py-4">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-border border-b bg-background px-6 py-4">
         <div>
-          <div className="flex items-center gap-1.5 text-muted-fg text-xs">
-            <Link href="/monitors" className="transition-colors hover:text-fg">
+          <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+            <Link href="/monitors" className="transition-colors hover:text-foreground">
               monitors
             </Link>
             <span>/</span>
-            <span className="text-fg">{isEditing ? monitor.name : "new"}</span>
+            <span className="text-foreground">{isEditing ? monitor.name : "new"}</span>
           </div>
           <h1 className="mt-0.5 font-semibold text-xl tracking-tight">
             {isEditing ? `Edit ${monitor.name}` : "New monitor"}
@@ -185,7 +185,7 @@ export default function MonitorWizard({
       <div className="flex gap-0">
         {/* step rail */}
         <aside className="sticky top-[73px] h-[calc(100dvh-73px)] w-64 shrink-0 overflow-y-auto border-border border-r p-5">
-          <p className="mb-3 text-[11px] text-muted-fg uppercase tracking-widest">{"// setup"}</p>
+          <p className="mb-3 text-[11px] text-muted-foreground uppercase tracking-widest">{"// setup"}</p>
           <div className="flex flex-col gap-0.5">
             {visibleSteps.map((s) => {
               const state = stepState(s.key)
@@ -197,7 +197,7 @@ export default function MonitorWizard({
                   className={[
                     "flex cursor-pointer items-start gap-3 rounded-lg border-l-2 px-3 py-3 text-left transition-colors",
                     state === "active"
-                      ? "border-primary bg-primary-subtle"
+                      ? "border-primary bg-primary/12"
                       : state === "done"
                         ? "border-primary/30 hover:bg-sidebar"
                         : "border-transparent hover:bg-sidebar",
@@ -207,10 +207,10 @@ export default function MonitorWizard({
                     className={[
                       "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border font-semibold text-[10px]",
                       state === "active"
-                        ? "border-primary bg-primary text-primary-fg"
+                        ? "border-primary bg-primary text-primary-foreground"
                         : state === "done"
                           ? "border-primary text-primary"
-                          : "border-border text-muted-fg",
+                          : "border-border text-muted-foreground",
                     ].join(" ")}
                   >
                     {state === "done" ? <CheckIcon className="size-2.5" /> : s.n}
@@ -219,12 +219,12 @@ export default function MonitorWizard({
                     <p
                       className={[
                         "font-medium text-sm",
-                        state === "active" ? "text-fg" : "text-muted-fg",
+                        state === "active" ? "text-foreground" : "text-muted-foreground",
                       ].join(" ")}
                     >
                       {s.title}
                     </p>
-                    <p className="mt-0.5 text-[11px] text-muted-fg leading-relaxed">{s.blurb}</p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground leading-relaxed">{s.blurb}</p>
                   </div>
                 </button>
               )
@@ -233,8 +233,8 @@ export default function MonitorWizard({
 
           {/* summary */}
           <div className="mt-5 rounded-lg rounded-lg border border-border bg-sidebar p-3.5">
-            <p className="mb-2 font-medium text-fg text-xs">Summary</p>
-            <div className="space-y-1 text-[11px] text-muted-fg leading-relaxed">
+            <p className="mb-2 font-medium text-foreground text-xs">Summary</p>
+            <div className="space-y-1 text-[11px] text-muted-foreground leading-relaxed">
               <p>
                 <span className="font-mono text-primary uppercase">{data.type}</span>
                 {data.name && <span> · {data.name}</span>}
@@ -272,7 +272,7 @@ export default function MonitorWizard({
                 step {currentStep.n} / {String(visibleSteps.length).padStart(2, "0")}
               </p>
               <h2 className="font-semibold text-2xl tracking-tight">{currentStep.title}</h2>
-              <p className="mt-1 text-muted-fg text-sm">{currentStep.blurb}</p>
+              <p className="mt-1 text-muted-foreground text-sm">{currentStep.blurb}</p>
             </div>
 
             {/* — Step: type — */}
@@ -290,7 +290,7 @@ export default function MonitorWizard({
                     className={[
                       "rounded-lg border p-4 text-left transition-colors",
                       data.type === t.id
-                        ? "border-primary bg-primary-subtle"
+                        ? "border-primary bg-primary/12"
                         : "border-border bg-sidebar hover:border-primary/40",
                     ].join(" ")}
                   >
@@ -298,7 +298,7 @@ export default function MonitorWizard({
                       <span
                         className={[
                           "font-mono font-semibold text-sm tracking-wide",
-                          data.type === t.id ? "text-primary" : "text-fg",
+                          data.type === t.id ? "text-primary" : "text-foreground",
                         ].join(" ")}
                       >
                         {t.label}
@@ -310,11 +310,11 @@ export default function MonitorWizard({
                         ].join(" ")}
                       >
                         {data.type === t.id && (
-                          <div className="size-1.5 rounded-full bg-primary-fg" />
+                          <div className="size-1.5 rounded-full bg-primary-foreground" />
                         )}
                       </div>
                     </div>
-                    <p className="mt-2 text-[11px] text-muted-fg leading-relaxed">{t.desc}</p>
+                    <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">{t.desc}</p>
                   </button>
                 ))}
               </div>
@@ -383,7 +383,7 @@ export default function MonitorWizard({
                       <Label>Headers</Label>
                       <div className="mt-2 overflow-hidden rounded-lg rounded-lg border border-border">
                         {headerRows.length > 0 && (
-                          <div className="grid grid-cols-[1fr_1fr_36px] bg-sidebar text-[11px] text-muted-fg uppercase tracking-wider">
+                          <div className="grid grid-cols-[1fr_1fr_36px] bg-sidebar text-[11px] text-muted-foreground uppercase tracking-wider">
                             <div className="border-border border-b px-3 py-2">Key</div>
                             <div className="border-border border-b border-l px-3 py-2">Value</div>
                             <div className="border-border border-b border-l" />
@@ -392,7 +392,7 @@ export default function MonitorWizard({
                         {headerRows.map((row, i) => (
                           <div key={i} className="grid grid-cols-[1fr_1fr_36px]">
                             <input
-                              className="border-border border-b bg-transparent px-3 py-2.5 text-fg text-sm outline-none placeholder:text-muted-fg focus:bg-sidebar"
+                              className="border-border border-b bg-transparent px-3 py-2.5 text-foreground text-sm outline-none placeholder:text-muted-foreground focus:bg-sidebar"
                               placeholder="Authorization"
                               value={row.key}
                               onChange={(e) => {
@@ -402,7 +402,7 @@ export default function MonitorWizard({
                               }}
                             />
                             <input
-                              className="border-border border-b border-l bg-transparent px-3 py-2.5 text-fg text-sm outline-none placeholder:text-muted-fg focus:bg-sidebar"
+                              className="border-border border-b border-l bg-transparent px-3 py-2.5 text-foreground text-sm outline-none placeholder:text-muted-foreground focus:bg-sidebar"
                               placeholder="Bearer …"
                               value={row.value}
                               onChange={(e) => {
@@ -416,7 +416,7 @@ export default function MonitorWizard({
                               onClick={() =>
                                 updateHeaderRows(headerRows.filter((_, idx) => idx !== i))
                               }
-                              className="flex items-center justify-center border-border border-b border-l text-muted-fg hover:text-danger"
+                              className="flex items-center justify-center border-border border-b border-l text-muted-foreground hover:text-destructive"
                             >
                               <TrashIcon className="size-3.5" />
                             </button>
@@ -425,7 +425,7 @@ export default function MonitorWizard({
                         <button
                           type="button"
                           onClick={() => updateHeaderRows([...headerRows, { key: "", value: "" }])}
-                          className="flex w-full items-center gap-1.5 px-3 py-2.5 text-muted-fg text-xs hover:text-fg"
+                          className="flex w-full items-center gap-1.5 px-3 py-2.5 text-muted-foreground text-xs hover:text-foreground"
                         >
                           <PlusIcon className="size-3.5" />
                           Add header
@@ -481,7 +481,7 @@ export default function MonitorWizard({
 
                 {data.type === "push" && (
                   <div className="rounded-lg rounded-lg border border-border bg-sidebar p-4">
-                    <p className="text-muted-fg text-sm">
+                    <p className="text-muted-foreground text-sm">
                       After creating this monitor, you'll receive a unique push URL. Your cron job
                       or worker should POST to it on each successful run. If no ping is received
                       within the check interval, Beacon will fire an alert.
@@ -550,7 +550,7 @@ export default function MonitorWizard({
 
                     {data.ssl_monitoring_enabled && (
                       <fieldset className="pl-6">
-                        <legend className="mb-3 font-medium text-fg text-sm">
+                        <legend className="mb-3 font-medium text-foreground text-sm">
                           Alert when SSL expires within
                         </legend>
                         <div className="flex flex-wrap gap-3">
@@ -584,8 +584,8 @@ export default function MonitorWizard({
             {activeKey === "assertions" && (
               <div className="space-y-5">
                 <div>
-                  <p className="mb-1 font-medium text-fg text-sm">Accepted status codes</p>
-                  <p className="mb-4 text-muted-fg text-xs">
+                  <p className="mb-1 font-medium text-foreground text-sm">Accepted status codes</p>
+                  <p className="mb-4 text-muted-foreground text-xs">
                     Monitor is UP when the response matches any selected code.
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -605,8 +605,8 @@ export default function MonitorWizard({
                         className={[
                           "rounded-md border px-3 py-1.5 font-mono text-sm transition-colors",
                           (data.accepted_status_codes ?? []).includes(code)
-                            ? "border-primary bg-primary-subtle text-primary"
-                            : "border-border text-muted-fg hover:border-primary/40 hover:text-fg",
+                            ? "border-primary bg-primary/12 text-primary"
+                            : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
                         ].join(" ")}
                       >
                         {code}
@@ -616,7 +616,7 @@ export default function MonitorWizard({
                 </div>
 
                 <div className="rounded-lg rounded-lg border border-border bg-sidebar p-4">
-                  <p className="font-mono text-muted-fg text-xs">
+                  <p className="font-mono text-muted-foreground text-xs">
                     {
                       "// monitor is DOWN when status code is not in the accepted list, or when the request times out"
                     }
@@ -630,7 +630,7 @@ export default function MonitorWizard({
               <div className="space-y-6">
                 {notificationChannels.length > 0 ? (
                   <fieldset>
-                    <legend className="mb-3 font-medium text-fg text-sm">
+                    <legend className="mb-3 font-medium text-foreground text-sm">
                       Notification channels
                     </legend>
                     <div className="space-y-2">
@@ -658,7 +658,7 @@ export default function MonitorWizard({
                             className={[
                               "flex cursor-pointer items-center gap-4 rounded-lg border p-3.5 transition-colors",
                               on
-                                ? "border-primary/50 bg-primary-subtle"
+                                ? "border-primary/50 bg-primary/12"
                                 : "border-border hover:border-primary/30",
                             ].join(" ")}
                           >
@@ -677,8 +677,8 @@ export default function MonitorWizard({
                               />
                             </div>
                             <div className="min-w-0 flex-1">
-                              <p className="font-medium text-fg text-sm">{channel.name}</p>
-                              <p className="text-muted-fg text-xs capitalize">{channel.type}</p>
+                              <p className="font-medium text-foreground text-sm">{channel.name}</p>
+                              <p className="text-muted-foreground text-xs capitalize">{channel.type}</p>
                             </div>
                           </div>
                         )
@@ -687,7 +687,7 @@ export default function MonitorWizard({
                   </fieldset>
                 ) : (
                   <div className="rounded-lg rounded-lg border border-border bg-sidebar p-5 text-center">
-                    <p className="text-muted-fg text-sm">No notification channels configured.</p>
+                    <p className="text-muted-foreground text-sm">No notification channels configured.</p>
                     <Link
                       href="/notification-channels/create"
                       className="mt-2 block text-primary text-xs hover:underline"
@@ -699,7 +699,7 @@ export default function MonitorWizard({
 
                 {tags.length > 0 && (
                   <fieldset>
-                    <legend className="mb-3 font-medium text-fg text-sm">Tags</legend>
+                    <legend className="mb-3 font-medium text-foreground text-sm">Tags</legend>
                     <div className="flex flex-wrap gap-3">
                       {tags.map((tag) => (
                         <Checkbox

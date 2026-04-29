@@ -58,7 +58,7 @@ function HeartbeatBars({
   if (status === "paused") {
     return (
       <div className="flex h-[22px] items-center">
-        <span className="text-muted-fg text-xs">—</span>
+        <span className="text-muted-foreground text-xs">—</span>
       </div>
     )
   }
@@ -96,11 +96,11 @@ function ResponseSparkline({ heartbeats, status }: { heartbeats?: Heartbeat[]; s
   }, [heartbeats, status])
 
   if (!path) {
-    return <div className="flex h-8 items-center text-muted-fg text-xs">—</div>
+    return <div className="flex h-8 items-center text-muted-foreground text-xs">—</div>
   }
 
   const isDown = status === "down"
-  const colorVar = isDown ? "var(--color-danger)" : "var(--color-success)"
+  const colorVar = isDown ? "var(--color-destructive)" : "var(--color-success)"
 
   return (
     <svg
@@ -124,16 +124,16 @@ function ResponseSparkline({ heartbeats, status }: { heartbeats?: Heartbeat[]; s
 
 const STATUS_DOT_CLASS: Record<string, string> = {
   up: "bg-success shadow-[0_0_6px_var(--color-success)]",
-  down: "bg-danger",
+  down: "bg-destructive",
   pending: "bg-warning",
-  paused: "bg-muted-fg",
+  paused: "bg-muted-foreground",
 }
 
 const STATUS_LABEL_CLASS: Record<string, string> = {
   up: "text-success",
-  down: "text-danger",
+  down: "text-destructive",
   pending: "text-warning",
-  paused: "text-muted-fg",
+  paused: "text-muted-foreground",
 }
 
 // Matches design: 32px 280px 70px 0.9fr 88px 220px 84px 110px 36px
@@ -145,7 +145,7 @@ const COL_STYLE: React.CSSProperties = {
 function TableHeader() {
   return (
     <div
-      className="grid gap-x-4 border-border border-b bg-muted/30 px-6 py-3 font-medium text-muted-fg text-xs uppercase tracking-wider"
+      className="grid gap-x-4 border-border border-b bg-muted/30 px-6 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wider"
       style={COL_STYLE}
     >
       <div />
@@ -175,8 +175,8 @@ export function monitorRowAreEqual(
 }
 
 function MonitorRowImpl({ monitor, isSelected, onToggleSelect }: MonitorRowProps) {
-  const dot = STATUS_DOT_CLASS[monitor.status] ?? "bg-muted-fg"
-  const labelClass = STATUS_LABEL_CLASS[monitor.status] ?? "text-muted-fg"
+  const dot = STATUS_DOT_CLASS[monitor.status] ?? "bg-muted-foreground"
+  const labelClass = STATUS_LABEL_CLASS[monitor.status] ?? "text-muted-foreground"
 
   return (
     <div
@@ -201,8 +201,8 @@ function MonitorRowImpl({ monitor, isSelected, onToggleSelect }: MonitorRowProps
       >
         <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${dot}`} />
         <div className="min-w-0">
-          <div className="truncate font-medium text-fg text-sm">{monitor.name}</div>
-          <div className="mt-0.5 truncate text-muted-fg text-xs">
+          <div className="truncate font-medium text-foreground text-sm">{monitor.name}</div>
+          <div className="mt-0.5 truncate text-muted-foreground text-xs">
             {monitor.url || monitor.host || "—"}
           </div>
         </div>
@@ -210,7 +210,7 @@ function MonitorRowImpl({ monitor, isSelected, onToggleSelect }: MonitorRowProps
 
       {/* type */}
       <div>
-        <span className="rounded-lg rounded-sm border border-border px-2 py-0.5 font-mono text-muted-fg text-xs">
+        <span className="rounded-lg rounded-sm border border-border px-2 py-0.5 font-mono text-muted-foreground text-xs">
           {monitor.type.toUpperCase()}
         </span>
       </div>
@@ -228,19 +228,19 @@ function MonitorRowImpl({ monitor, isSelected, onToggleSelect }: MonitorRowProps
           className={`font-medium text-sm tabular-nums ${
             monitor.uptime_percentage !== undefined
               ? uptimeColor(monitor.uptime_percentage)
-              : "text-muted-fg"
+              : "text-muted-foreground"
           }`}
         >
           {monitor.uptime_percentage !== undefined
             ? `${monitor.uptime_percentage.toFixed(2)}%`
             : "—"}
         </div>
-        <div className="mt-0.5 text-muted-fg text-xs">30d</div>
+        <div className="mt-0.5 text-muted-foreground text-xs">30d</div>
       </div>
 
       {/* response + sparkline */}
       <div>
-        <div className="text-fg text-sm tabular-nums">
+        <div className="text-foreground text-sm tabular-nums">
           {monitor.average_response_time != null
             ? `${Math.round(monitor.average_response_time)} ms`
             : "—"}
@@ -249,13 +249,13 @@ function MonitorRowImpl({ monitor, isSelected, onToggleSelect }: MonitorRowProps
       </div>
 
       {/* interval */}
-      <div className="font-mono text-muted-fg text-xs">
+      <div className="font-mono text-muted-foreground text-xs">
         every {formatInterval(monitor.interval)}
       </div>
 
       {/* last check */}
       <div className="text-right">
-        <div className="font-mono text-muted-fg text-xs">
+        <div className="font-mono text-muted-foreground text-xs">
           {monitor.status === "paused" ? "paused" : timeAgo(monitor.last_checked_at)}
         </div>
         <div className={`mt-0.5 font-mono text-[10px] uppercase tracking-wide ${labelClass}`}>
@@ -271,7 +271,7 @@ function MonitorRowImpl({ monitor, isSelected, onToggleSelect }: MonitorRowProps
             e.preventDefault()
             router.visit(monitorRoutes.show.url(monitor.id))
           }}
-          className="rounded p-1 text-base text-muted-fg leading-none hover:text-fg"
+          className="rounded p-1 text-base text-muted-foreground leading-none hover:text-foreground"
           aria-label={`Actions for ${monitor.name}`}
         >
           ⋯
@@ -325,12 +325,12 @@ function MonitorToolbar({
               className={[
                 "flex items-center gap-1.5 rounded-full px-3 py-1 font-medium text-xs transition-colors",
                 active
-                  ? "bg-primary text-primary-fg"
-                  : "rounded-lg border border-border text-muted-fg hover:border-fg/30 hover:text-fg",
+                  ? "bg-primary text-primary-foreground"
+                  : "rounded-lg border border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground",
               ].join(" ")}
             >
               <span>{label}</span>
-              <span className={active ? "opacity-70" : "text-muted-fg"}>{count}</span>
+              <span className={active ? "opacity-70" : "text-muted-foreground"}>{count}</span>
             </button>
           )
         })}
@@ -338,7 +338,7 @@ function MonitorToolbar({
         {tags.length > 0 && (
           <>
             <div className="mx-1 h-4 w-px bg-border" />
-            <span className="text-muted-fg text-xs">tags</span>
+            <span className="text-muted-foreground text-xs">tags</span>
             {tags.map((tag) => {
               const active = tagFilter === tag.id
               return (
@@ -350,7 +350,7 @@ function MonitorToolbar({
                     "rounded-full px-3 py-1 text-xs transition-colors",
                     active
                       ? "border-2 font-medium"
-                      : "rounded-lg border border-border text-muted-fg hover:border-fg/30 hover:text-fg",
+                      : "rounded-lg border border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground",
                   ].join(" ")}
                   style={active ? { borderColor: tag.color, color: tag.color } : undefined}
                 >
@@ -365,15 +365,15 @@ function MonitorToolbar({
       {/* right: search */}
       <div className="flex shrink-0 items-center gap-2">
         <div className="relative flex items-center">
-          <MagnifyingGlassIcon className="pointer-events-none absolute left-2.5 size-3.5 text-muted-fg" />
+          <MagnifyingGlassIcon className="pointer-events-none absolute left-2.5 size-3.5 text-muted-foreground" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="name, url, tag…"
-            className="w-52 rounded-lg rounded-md border border-border bg-transparent py-1.5 pr-8 pl-8 text-fg text-xs placeholder:text-muted-fg focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-52 rounded-lg rounded-md border border-border bg-transparent py-1.5 pr-8 pl-8 text-foreground text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
           />
-          <span className="pointer-events-none absolute right-2 rounded rounded-lg border border-border px-1 text-[10px] text-muted-fg">
+          <span className="pointer-events-none absolute right-2 rounded rounded-lg border border-border px-1 text-[10px] text-muted-foreground">
             /
           </span>
         </div>
@@ -416,7 +416,7 @@ function MonitorTable({
   if (filteredMonitors.length === 0) {
     return (
       <div className="py-10 text-center">
-        <p className="text-muted-fg text-sm">No monitors match your filters.</p>
+        <p className="text-muted-foreground text-sm">No monitors match your filters.</p>
         <Button
           intent="plain"
           size="xs"
@@ -442,7 +442,7 @@ function MonitorTable({
           onChange={toggleSelectAll}
           aria-label="Select all monitors"
         />
-        <span className="text-muted-fg text-xs">Select all</span>
+        <span className="text-muted-foreground text-xs">Select all</span>
       </div>
 
       <TableHeader />
@@ -469,7 +469,7 @@ function MonitorTable({
       {ungroupedMonitors.length > 0 && (
         <div>
           {hasGroups && groupedMonitors[0] && (
-            <div className="border-border border-b px-6 py-2 font-medium text-muted-fg text-xs uppercase tracking-wider">
+            <div className="border-border border-b px-6 py-2 font-medium text-muted-foreground text-xs uppercase tracking-wider">
               Ungrouped
             </div>
           )}
@@ -489,7 +489,7 @@ function MonitorTable({
           .filter((g) => !groupedMonitors[g.id]?.length)
           .map((group) => (
             <MonitorGroupSection key={group.id} group={group} monitorCount={0}>
-              <p className="py-4 text-center text-muted-fg text-sm">No monitors in this group.</p>
+              <p className="py-4 text-center text-muted-foreground text-sm">No monitors in this group.</p>
             </MonitorGroupSection>
           ))}
     </div>
@@ -538,8 +538,8 @@ export default function MonitorsIndex({
         {/* page header */}
         <div className="flex items-center justify-between gap-4 border-border border-b px-6 py-5">
           <div>
-            <h1 className="font-medium text-2xl text-fg tracking-tight">
-              Monitors <span className="font-normal text-lg text-muted-fg">· {totalCount}</span>
+            <h1 className="font-medium text-2xl text-foreground tracking-tight">
+              Monitors <span className="font-normal text-lg text-muted-foreground">· {totalCount}</span>
             </h1>
           </div>
           <div className="flex items-center gap-2">
@@ -606,7 +606,7 @@ export default function MonitorsIndex({
               />
 
               {/* footer */}
-              <div className="flex items-center justify-between border-border border-t px-6 py-4 font-mono text-muted-fg text-xs">
+              <div className="flex items-center justify-between border-border border-t px-6 py-4 font-mono text-muted-foreground text-xs">
                 <div>
                   showing {filteredMonitors.length} of {totalCount}
                 </div>
@@ -617,8 +617,8 @@ export default function MonitorsIndex({
             </>
           ) : (
             <div className="py-16 text-center">
-              <p className="font-medium text-fg">No monitors yet</p>
-              <p className="mt-1 text-muted-fg text-sm">
+              <p className="font-medium text-foreground">No monitors yet</p>
+              <p className="mt-1 text-muted-foreground text-sm">
                 Add a URL, host, or IP to start tracking uptime.
               </p>
               <CreateMonitorModal>

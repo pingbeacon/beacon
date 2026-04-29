@@ -98,7 +98,7 @@ export default function TeamsEdit({ team }: Props) {
                   <div key={member.id} className="flex items-center justify-between rounded-lg border p-3">
                     <div>
                       <p className="font-medium text-sm">{member.name}</p>
-                      <p className="text-muted-fg text-xs">{member.email}</p>
+                      <p className="text-muted-foreground text-xs">{member.email}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       {member.pivot.role === "owner" ? (

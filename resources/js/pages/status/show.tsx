@@ -49,17 +49,17 @@ const overallStatusConfig: Record<
   operational: {
     label: "All Systems Operational",
     description: "All services are running normally.",
-    className: "bg-success/10 border-success/20 text-success-fg",
+    className: "bg-success/10 border-success/20 text-success-foreground",
   },
   degraded: {
     label: "Partial Service Disruption",
     description: "Some services are experiencing issues.",
-    className: "bg-warning/10 border-warning/20 text-warning-fg",
+    className: "bg-warning/10 border-warning/20 text-warning-foreground",
   },
   major_outage: {
     label: "Major Service Outage",
     description: "Multiple services are down.",
-    className: "bg-danger/10 border-danger/20 text-danger-fg",
+    className: "bg-destructive/10 border-destructive/20 text-destructive-foreground",
   },
 }
 
@@ -95,7 +95,7 @@ export default function StatusShow({ statusPage, monitors, overallStatus }: Prop
       </Head>
       {statusPage.custom_css && <style>{statusPage.custom_css}</style>}
       <div
-        className="status-page min-h-screen bg-bg"
+        className="status-page min-h-screen bg-background"
         style={customStyles}
       >
         <div className="mx-auto max-w-3xl px-4 py-12">
@@ -111,7 +111,7 @@ export default function StatusShow({ statusPage, monitors, overallStatus }: Prop
             )}
             <Heading>{statusPage.title}</Heading>
             {statusPage.description && (
-              <p className="mt-2 text-muted-fg text-sm">{statusPage.description}</p>
+              <p className="mt-2 text-muted-foreground text-sm">{statusPage.description}</p>
             )}
           </div>
 
@@ -132,7 +132,7 @@ export default function StatusShow({ statusPage, monitors, overallStatus }: Prop
                     ? "bg-success"
                     : overallStatus === "degraded"
                       ? "bg-warning"
-                      : "bg-danger"
+                      : "bg-destructive"
                 }`}
               />
               <div>
@@ -147,10 +147,10 @@ export default function StatusShow({ statusPage, monitors, overallStatus }: Prop
             <div className="space-y-4">
               <Heading level={2}>Services</Heading>
               {monitors.map((monitor) => (
-                <div key={monitor.id} className="rounded-xl border bg-overlay p-5">
+                <div key={monitor.id} className="rounded-xl border bg-popover p-5">
                   <div className="mb-3 flex items-center justify-between gap-4">
                     <div className="flex min-w-0 items-center gap-2">
-                      <span className="truncate font-medium text-fg text-sm">{monitor.name}</span>
+                      <span className="truncate font-medium text-foreground text-sm">{monitor.name}</span>
                       {monitor.tags.map((tag) => (
                         <TagBadge key={tag.id} tag={tag} />
                       ))}
@@ -167,7 +167,7 @@ export default function StatusShow({ statusPage, monitors, overallStatus }: Prop
                   />
 
                   <div className="mt-2 flex items-center justify-between">
-                    <span className="text-muted-fg text-xs">Last 90 checks</span>
+                    <span className="text-muted-foreground text-xs">Last 90 checks</span>
                     <span className={`font-medium text-xs tabular-nums ${uptimeColor(monitor.uptime_percentage)}`}>
                       {monitor.uptime_percentage}% uptime
                     </span>
@@ -176,13 +176,13 @@ export default function StatusShow({ statusPage, monitors, overallStatus }: Prop
               ))}
             </div>
           ) : (
-            <div className="rounded-xl border bg-overlay p-8 text-center text-muted-fg">
+            <div className="rounded-xl border bg-popover p-8 text-center text-muted-foreground">
               <p>No monitors are configured for this status page.</p>
             </div>
           )}
 
           {/* Footer */}
-          <div className="mt-10 text-center text-muted-fg text-xs">
+          <div className="mt-10 text-center text-muted-foreground text-xs">
             {statusPage.footer_text && (
               <p className="mb-2">{statusPage.footer_text}</p>
             )}

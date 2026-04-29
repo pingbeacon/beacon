@@ -17,7 +17,7 @@ export const statusBadgeIntent: Record<MonitorStatus, "success" | "danger" | "wa
 export function uptimeColor(value: number): string {
   if (value >= 99) return "text-success"
   if (value >= 95) return "text-warning"
-  return "text-danger"
+  return "text-destructive"
 }
 
 /**

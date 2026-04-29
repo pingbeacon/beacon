@@ -8,7 +8,7 @@ export function InputError({
   ...props
 }: HTMLAttributes<HTMLParagraphElement> & { message?: string }) {
   return message ? (
-    <Description {...props} className={twMerge("block text-danger text-sm")}>
+    <Description {...props} className={twMerge("block text-destructive text-sm", className)}>
       {message}
     </Description>
   ) : null

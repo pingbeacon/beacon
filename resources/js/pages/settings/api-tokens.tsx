@@ -124,15 +124,15 @@ export default function ApiTokensPage({ tokens }: Props) {
       <Head title="API Tokens" />
 
       {newToken && (
-        <Card className="mb-6 border-success/40 bg-success-subtle">
+        <Card className="mb-6 border-success/40 bg-success/12">
           <CardHeader>
-            <CardTitle className="text-success-subtle-fg">Token Created</CardTitle>
-            <CardDescription className="text-success-subtle-fg/80">
+            <CardTitle className="text-success">Token Created</CardTitle>
+            <CardDescription className="text-success/80">
               Copy your token now — it will not be shown again.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <code className="block select-all break-all rounded-lg border border-success/30 bg-bg p-3 font-mono text-sm">
+            <code className="block select-all break-all rounded-lg border border-success/30 bg-background p-3 font-mono text-sm">
               {newToken}
             </code>
             <Button intent="outline" size="sm" onPress={copyToken} className="gap-1.5">
@@ -198,7 +198,7 @@ export default function ApiTokensPage({ tokens }: Props) {
                         ))}
                       </SelectContent>
                     </Select>
-                    {errors.team_id && <p className="text-danger text-sm">{errors.team_id}</p>}
+                    {errors.team_id && <p className="text-destructive text-sm">{errors.team_id}</p>}
                   </div>
 
                   <div className="space-y-1.5">
@@ -217,7 +217,7 @@ export default function ApiTokensPage({ tokens }: Props) {
                       </SelectContent>
                     </Select>
                     {errors.expires_at && (
-                      <p className="text-danger text-sm">{errors.expires_at}</p>
+                      <p className="text-destructive text-sm">{errors.expires_at}</p>
                     )}
                   </div>
 
@@ -231,7 +231,7 @@ export default function ApiTokensPage({ tokens }: Props) {
                       ))}
                     </CheckboxGroup>
                     {(errors.scopes ?? errors["scopes.0"]) && (
-                      <p className="text-danger text-sm">{errors.scopes ?? errors["scopes.0"]}</p>
+                      <p className="text-destructive text-sm">{errors.scopes ?? errors["scopes.0"]}</p>
                     )}
                   </div>
                 </ModalBody>
@@ -248,7 +248,7 @@ export default function ApiTokensPage({ tokens }: Props) {
 
         <CardContent className="p-0">
           {tokens.length === 0 ? (
-            <p className="px-6 pb-6 text-center text-muted-fg text-sm">No tokens yet.</p>
+            <p className="px-6 pb-6 text-center text-muted-foreground text-sm">No tokens yet.</p>
           ) : (
             <>
               <div className="divide-y divide-border">
@@ -270,7 +270,7 @@ export default function ApiTokensPage({ tokens }: Props) {
                           </Badge>
                         ))}
                       </div>
-                      <p className="text-muted-fg text-xs">
+                      <p className="text-muted-foreground text-xs">
                         Created {formatDate(token.created_at)}
                         {token.expires_at && ` · Expires ${formatDate(token.expires_at)}`}
                         {token.last_used_at

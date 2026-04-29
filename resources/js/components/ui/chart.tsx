@@ -216,9 +216,9 @@ const Chart = ({
         ref={ref}
         className={twMerge(
           "z-20 flex w-full justify-center text-xs",
-          "[&_.recharts-cartesian-axis-tick_text]:fill-muted-fg [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/80 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-hidden [&_.recharts-surface]:outline-hidden",
+          "[&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/80 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-hidden [&_.recharts-surface]:outline-hidden",
           "[&_.recharts-dot[fill='#fff']]:fill-(--line-color)",
-          "[&_.recharts-active-dot>.recharts-dot]:stroke-fg/10",
+          "[&_.recharts-active-dot>.recharts-dot]:stroke-foreground/10",
 
           "[&_.recharts-surface_g]:focus:outline-hidden",
 
@@ -326,7 +326,7 @@ const XAxis = ({
   const tick = layout === "horizontal" ? tickHorizontal : undefined
   return (
     <XAxisPrimitive
-      className={twMerge("text-muted-fg text-xs **:[text]:fill-muted-fg", className)}
+      className={twMerge("text-muted-foreground text-xs **:[text]:fill-muted-foreground", className)}
       interval={displayEdgeLabelsOnly ? "preserveStartEnd" : intervalType}
       tick={tick}
       ticks={ticks}
@@ -360,7 +360,7 @@ const YAxis = ({
 
   return (
     <YAxisPrimitive
-      className={twMerge("text-muted-fg text-xs **:[text]:fill-muted-fg", className)}
+      className={twMerge("text-muted-foreground text-xs **:[text]:fill-muted-foreground", className)}
       width={width ?? (layout === "horizontal" ? 40 : 80)}
       domain={domain}
       tick={tick}
@@ -451,14 +451,14 @@ const ChartTooltipContent = <TValue extends ValueType, TName extends NameType>({
     <div
       ref={ref}
       className={twMerge(
-        "grid min-w-48 items-start rounded-lg bg-overlay/70 p-3 py-2 text-overlay-fg text-xs ring ring-current/10 backdrop-blur-lg",
+        "grid min-w-48 items-start rounded-lg bg-popover/70 p-3 py-2 text-popover-foreground text-xs ring ring-current/10 backdrop-blur-lg",
         className,
       )}
     >
       {!hideLabel && (
         <>
           {!nestLabel ? <span className="font-medium">{tooltipLabel}</span> : null}
-          {labelSeparator && <span aria-hidden className="mt-2 mb-3 block h-px w-full bg-bg/10" />}
+          {labelSeparator && <span aria-hidden className="mt-2 mb-3 block h-px w-full bg-background/10" />}
         </>
       )}
       <div className="grid gap-3">
@@ -471,7 +471,7 @@ const ChartTooltipContent = <TValue extends ValueType, TName extends NameType>({
             <div
               key={key}
               className={twMerge(
-                "flex w-full flex-wrap items-stretch gap-2 *:data-[slot=icon]:text-muted-fg",
+                "flex w-full flex-wrap items-stretch gap-2 *:data-[slot=icon]:text-muted-foreground",
                 indicator === "dot" && "items-center *:data-[slot=icon]:size-2.5",
                 indicator === "line" && "*:data-[slot=icon]:h-full *:data-[slot=icon]:w-2.5",
               )}
@@ -510,11 +510,11 @@ const ChartTooltipContent = <TValue extends ValueType, TName extends NameType>({
                   >
                     <div className="grid gap-1.5">
                       {nestLabel ? tooltipLabel : null}
-                      <span className="text-muted-fg">{itemConfig?.label || item.name}</span>
+                      <span className="text-muted-foreground">{itemConfig?.label || item.name}</span>
                     </div>
 
                     {item.value && (
-                      <span className="font-medium font-mono text-fg tabular-nums">
+                      <span className="font-medium font-mono text-foreground tabular-nums">
                         {item.value.toString()}
                       </span>
                     )}
@@ -579,9 +579,9 @@ const ChartLegendContent = ({
             key={key}
             id={key}
             className={twMerge(
-              "*:data-[slot=icon]:-mx-0.5 flex items-center gap-2 rounded-sm px-2 py-1 text-muted-fg *:data-[slot=icon]:size-2.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-muted-fg",
-              "selected:bg-secondary/70 selected:text-secondary-fg",
-              "hover:bg-secondary/70 hover:text-secondary-fg",
+              "flex items-center gap-2 rounded-sm px-2 py-1 text-muted-foreground *:data-[slot=icon]:-mx-0.5 *:data-[slot=icon]:size-2.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-muted-foreground",
+              "selected:bg-secondary/70 selected:text-secondary-foreground",
+              "hover:bg-secondary/70 hover:text-secondary-foreground",
             )}
             aria-label={"Legend Item"}
           >
