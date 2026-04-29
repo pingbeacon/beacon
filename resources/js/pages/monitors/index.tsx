@@ -4,10 +4,11 @@ import { useCallback, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Link } from "@/components/ui/link"
+import { Tracker } from "@/components/ui/tracker"
 import { useMonitorFilters } from "@/hooks/use-monitor-filters"
 import AppLayout from "@/layouts/app-layout"
 import { uptimeColor } from "@/lib/color"
-import { formatInterval } from "@/lib/heartbeats"
+import { formatInterval, heartbeatsToTracker } from "@/lib/heartbeats"
 import monitorRoutes from "@/routes/monitors"
 import { useHydrateMonitors, useMonitors } from "@/stores/monitor-realtime"
 import type { Heartbeat, Monitor, MonitorGroup, Tag } from "@/types/monitor"
@@ -45,34 +46,15 @@ function statusCounts(monitors: Monitor[]) {
   }
 }
 
-type BarState = "up" | "slow" | "down" | "empty"
-
-function HeartbeatBars({ heartbeats, status }: { heartbeats?: Heartbeat[]; status: string }) {
-  const bars = useMemo<BarState[]>(() => {
-    const result: BarState[] = Array(HEARTBEAT_COUNT).fill("empty")
-    if (!heartbeats || heartbeats.length === 0) return result
-
-    // compute avg response time to detect slow ("degraded") beats
-    const upTimes = heartbeats
-      .filter((hb) => hb.status === "up" && hb.response_time != null)
-      .map((hb) => hb.response_time as number)
-    const avg = upTimes.length > 0 ? upTimes.reduce((a, b) => a + b, 0) / upTimes.length : 0
-    const slowThreshold = Math.max(avg * 2, 1500) // 2× avg, min 1.5 s
-
-    const recent = [...heartbeats].slice(-HEARTBEAT_COUNT)
-    const offset = HEARTBEAT_COUNT - recent.length
-    recent.forEach((hb, i) => {
-      if (hb.status === "down") {
-        result[offset + i] = "down"
-      } else if (hb.response_time != null && avg > 0 && hb.response_time > slowThreshold) {
-        result[offset + i] = "slow"
-      } else {
-        result[offset + i] = "up"
-      }
-    })
-    return result
-  }, [heartbeats])
-
+function HeartbeatBars({
+  heartbeats,
+  status,
+  monitorName,
+}: {
+  heartbeats?: Heartbeat[]
+  status: string
+  monitorName: string
+}) {
   if (status === "paused") {
     return (
       <div className="flex h-[22px] items-center">
@@ -82,29 +64,11 @@ function HeartbeatBars({ heartbeats, status }: { heartbeats?: Heartbeat[]; statu
   }
 
   return (
-    <div
-      className="grid h-[22px] w-full gap-[1.5px]"
-      style={{ gridTemplateColumns: `repeat(${HEARTBEAT_COUNT}, 1fr)` }}
-    >
-      {bars.map((b, i) => (
-        <div
-          key={i}
-          style={{
-            borderRadius: 1,
-            height: "100%",
-            background:
-              b === "up"
-                ? "var(--color-success)"
-                : b === "slow"
-                  ? "var(--color-warning)"
-                  : b === "down"
-                    ? "var(--color-danger)"
-                    : "var(--color-muted-fg)",
-            opacity: b === "up" ? 0.4 : b === "empty" ? 0.18 : 1,
-          }}
-        />
-      ))}
-    </div>
+    <Tracker
+      data={heartbeatsToTracker(heartbeats, HEARTBEAT_COUNT)}
+      className="h-[22px] w-full"
+      aria-label={`Uptime history for ${monitorName} — last ${HEARTBEAT_COUNT} checks`}
+    />
   )
 }
 
@@ -247,7 +211,11 @@ function MonitorRow({
       </div>
 
       {/* heartbeats */}
-      <HeartbeatBars heartbeats={monitor.heartbeats} status={monitor.status} />
+      <HeartbeatBars
+        heartbeats={monitor.heartbeats}
+        status={monitor.status}
+        monitorName={monitor.name}
+      />
 
       {/* uptime */}
       <div>
