@@ -9,7 +9,7 @@ import {
   SignalIcon,
 } from "@heroicons/react/20/solid"
 import { Head, WhenVisible } from "@inertiajs/react"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Container } from "@/components/ui/container"
@@ -326,15 +326,15 @@ function StatusDot({ status }: { status: Monitor["status"] }) {
   }
   return (
     <span className="relative flex size-2.5 shrink-0">
-      {status === "up" && (
-        <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-20" />
+      {status === "down" && (
+        <span className="absolute inline-flex size-full animate-ping rounded-full bg-danger opacity-30" />
       )}
       <span className={`relative inline-flex size-2.5 rounded-full ${colors[status]}`} />
     </span>
   )
 }
 
-function MonitorCard({ monitor }: { monitor: Monitor }) {
+function MonitorCardImpl({ monitor }: { monitor: Monitor }) {
   const lastChecked = monitor.last_checked_at ? formatRelativeTime(monitor.last_checked_at) : "—"
   const isDown = monitor.status === "down"
 
@@ -397,6 +397,8 @@ function MonitorCard({ monitor }: { monitor: Monitor }) {
     </Link>
   )
 }
+
+const MonitorCard = memo(MonitorCardImpl, (prev, next) => prev.monitor === next.monitor)
 
 type GridFilter = "all" | "up" | "down" | "paused"
 

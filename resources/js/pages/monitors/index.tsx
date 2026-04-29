@@ -1,6 +1,6 @@
 import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/20/solid"
 import { Head, router, WhenVisible } from "@inertiajs/react"
-import { useCallback, useMemo, useRef, useState } from "react"
+import { memo, useCallback, useId, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Link } from "@/components/ui/link"
@@ -73,7 +73,7 @@ function HeartbeatBars({
 }
 
 function ResponseSparkline({ heartbeats, status }: { heartbeats?: Heartbeat[]; status: string }) {
-  const id = useRef(`spark-${Math.random().toString(36).slice(2)}`)
+  const id = useId()
 
   const path = useMemo(() => {
     if (!heartbeats || heartbeats.length < 2 || status === "paused") return null
@@ -111,12 +111,12 @@ function ResponseSparkline({ heartbeats, status }: { heartbeats?: Heartbeat[]; s
       className="mt-1 block"
     >
       <defs>
-        <linearGradient id={id.current} x1="0" x2="0" y1="0" y2="1">
+        <linearGradient id={id} x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor={colorVar} stopOpacity="0.3" />
           <stop offset="100%" stopColor={colorVar} stopOpacity="0" />
         </linearGradient>
       </defs>
-      <path d={path.fill} fill={`url(#${id.current})`} />
+      <path d={path.fill} fill={`url(#${id})`} />
       <path d={path.line} fill="none" stroke={colorVar} strokeWidth="1.2" />
     </svg>
   )
@@ -161,15 +161,20 @@ function TableHeader() {
   )
 }
 
-function MonitorRow({
-  monitor,
-  isSelected,
-  onToggleSelect,
-}: {
+type MonitorRowProps = {
   monitor: Monitor
   isSelected?: boolean
   onToggleSelect?: (id: number) => void
-}) {
+}
+
+export function monitorRowAreEqual(
+  prev: Pick<MonitorRowProps, "monitor" | "isSelected">,
+  next: Pick<MonitorRowProps, "monitor" | "isSelected">,
+): boolean {
+  return prev.monitor === next.monitor && prev.isSelected === next.isSelected
+}
+
+function MonitorRowImpl({ monitor, isSelected, onToggleSelect }: MonitorRowProps) {
   const dot = STATUS_DOT_CLASS[monitor.status] ?? "bg-muted-fg"
   const labelClass = STATUS_LABEL_CLASS[monitor.status] ?? "text-muted-fg"
 
@@ -275,6 +280,8 @@ function MonitorRow({
     </div>
   )
 }
+
+const MonitorRow = memo(MonitorRowImpl, monitorRowAreEqual)
 
 function MonitorToolbar({
   monitors,
