@@ -2,18 +2,22 @@
 
 namespace Database\Seeders;
 
-use App\Models\Heartbeat;
+use App\Console\Commands\DevFakeServersCommand;
 use App\Models\Incident;
 use App\Models\Monitor;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class MonitorSeeder extends Seeder
 {
     public function run(): void
     {
+        // Seeder builds tens of thousands of synthetic heartbeats; default CLI 128M OOMs.
+        ini_set('memory_limit', '512M');
+
         $user = User::where('email', 'test@example.com')->firstOrFail();
 
         $monitors = $this->definitions($user->id, $user->current_team_id);
@@ -25,8 +29,21 @@ class MonitorSeeder extends Seeder
 
             $monitor = Monitor::create($definition);
 
-            foreach ($heartbeats as $hb) {
-                (new Heartbeat)->forceFill(['monitor_id' => $monitor->id, ...$hb])->save();
+            if (! empty($heartbeats)) {
+                $rows = array_map(fn (array $hb) => [
+                    'monitor_id' => $monitor->id,
+                    'status' => $hb['status'],
+                    'status_code' => $hb['status_code'] ?? null,
+                    'response_time' => $hb['response_time'] ?? null,
+                    'message' => $hb['message'] ?? null,
+                    'created_at' => $hb['created_at'] instanceof Carbon
+                        ? $hb['created_at']->toDateTimeString()
+                        : $hb['created_at'],
+                ], $heartbeats);
+
+                foreach (array_chunk($rows, 500) as $chunk) {
+                    DB::table('heartbeats')->insert($chunk);
+                }
             }
 
             foreach ($incidents as $inc) {
@@ -34,9 +51,11 @@ class MonitorSeeder extends Seeder
             }
 
             if ($monitor->status === 'up' || $monitor->status === 'down') {
-                $latest = $monitor->heartbeats()->latest()->first();
-                if ($latest) {
-                    $monitor->update(['last_checked_at' => $latest->created_at]);
+                $latestCreatedAt = DB::table('heartbeats')
+                    ->where('monitor_id', $monitor->id)
+                    ->max('created_at');
+                if ($latestCreatedAt) {
+                    $monitor->update(['last_checked_at' => $latestCreatedAt]);
                 }
             }
         }
@@ -93,14 +112,84 @@ class MonitorSeeder extends Seeder
     }
 
     /**
+     * Generate heartbeats for a local fake-server profile. Pure helper — driven entirely
+     * by $profile so the runtime fleet and seeded history cannot drift.
+     *
+     * @param  array<string, mixed>  $profile
+     * @return array<int, array{status: string, status_code: int|null, response_time: int|null, message: string|null, created_at: Carbon}>
+     */
+    public static function localServerHistory(int $hours, int $intervalSeconds, array $profile): array
+    {
+        $records = [];
+        $now = now();
+        $current = $now->copy()->subHours($hours);
+        $kind = $profile['kind'] ?? 'fast';
+        $monitorTimeoutMs = 10_000;
+
+        while ($current->lessThanOrEqualTo($now)) {
+            $records[] = match ($kind) {
+                'fast', 'slow', 'jitter' => self::upRecord(
+                    rand((int) ($profile['latency_min'] ?? 5), (int) ($profile['latency_max'] ?? 50)),
+                    $current
+                ),
+                'spike' => self::upRecord(
+                    mt_rand(1, 100) <= (int) ($profile['spike_outlier_pct'] ?? 10)
+                        ? (int) ($profile['spike_outlier_ms'] ?? 3000)
+                        : rand((int) ($profile['latency_min'] ?? 5), (int) ($profile['latency_max'] ?? 50)),
+                    $current
+                ),
+                'flap' => mt_rand(1, 100) <= (int) ($profile['flap_down_pct'] ?? 20)
+                    ? self::downRecord(500, 'HTTP 500 Internal Server Error', $current)
+                    : self::upRecord(rand(5, 50), $current),
+                'down_500' => self::downRecord(500, 'HTTP 500 Internal Server Error', $current),
+                'unbound' => self::downRecord(null, 'Connection refused', $current),
+                'timeout' => self::downRecord(null, "Request exceeded timeout of {$monitorTimeoutMs}ms", $current),
+                default => self::upRecord(rand(5, 50), $current),
+            };
+
+            $current = $current->copy()->addSeconds($intervalSeconds);
+        }
+
+        return $records;
+    }
+
+    /**
+     * @return array{status: string, status_code: int, response_time: int, message: null, created_at: Carbon}
+     */
+    private static function upRecord(int $latencyMs, Carbon $at): array
+    {
+        return [
+            'status' => 'up',
+            'status_code' => 200,
+            'response_time' => $latencyMs,
+            'message' => null,
+            'created_at' => $at->copy(),
+        ];
+    }
+
+    /**
+     * @return array{status: string, status_code: int|null, response_time: null, message: string, created_at: Carbon}
+     */
+    private static function downRecord(?int $statusCode, string $message, Carbon $at): array
+    {
+        return [
+            'status' => 'down',
+            'status_code' => $statusCode,
+            'response_time' => null,
+            'message' => $message,
+            'created_at' => $at->copy(),
+        ];
+    }
+
+    /**
      * @return array<int, array<string, mixed>>
      */
     private function definitions(int $userId, int $teamId): array
     {
         $base = ['user_id' => $userId, 'team_id' => $teamId, 'is_active' => true, 'retry_count' => 1, 'timeout' => 10];
 
-        return [
-            // ── HTTP: UP ──────────────────────────────────────────────────────
+        $definitions = [
+            // ── HTTPS retained for SSL monitoring demos ──────────────────────
             [
                 ...$base,
                 'name' => 'GitHub API',
@@ -112,30 +201,6 @@ class MonitorSeeder extends Seeder
                 'status' => 'up',
                 'ssl_monitoring_enabled' => true,
                 'heartbeats' => $this->heartbeatHistory(24, 60),
-            ],
-            [
-                ...$base,
-                'name' => 'Stripe Dashboard',
-                'type' => 'http',
-                'url' => 'https://dashboard.stripe.com',
-                'method' => 'GET',
-                'interval' => 60,
-                'accepted_status_codes' => [200, 301, 302],
-                'status' => 'up',
-                'ssl_monitoring_enabled' => true,
-                'heartbeats' => $this->heartbeatHistory(24, 60),
-            ],
-            [
-                ...$base,
-                'name' => 'Cloudflare DNS',
-                'type' => 'http',
-                'url' => 'https://1.1.1.1',
-                'method' => 'GET',
-                'interval' => 30,
-                'accepted_status_codes' => [200, 301, 302, 403],
-                'status' => 'up',
-                'ssl_monitoring_enabled' => true,
-                'heartbeats' => $this->heartbeatHistory(24, 30),
             ],
             [
                 ...$base,
@@ -158,83 +223,42 @@ class MonitorSeeder extends Seeder
                     ],
                 ],
             ],
-            [
-                ...$base,
-                'name' => 'Vercel Edge Network',
-                'type' => 'http',
-                'url' => 'https://vercel.com',
-                'method' => 'HEAD',
-                'interval' => 120,
-                'accepted_status_codes' => [200, 301],
-                'status' => 'up',
-                'ssl_monitoring_enabled' => true,
-                'heartbeats' => $this->heartbeatHistory(24, 120),
-            ],
+        ];
 
-            // ── HTTP: DOWN ────────────────────────────────────────────────────
-            [
+        // ── Local fake-server fleet (driven by registry) ─────────────────────
+        $persistentDownKinds = ['down_500', 'unbound', 'timeout'];
+        $persistentDownCauses = [
+            'down_500' => 'HTTP 500 Internal Server Error',
+            'unbound' => 'Connection refused',
+            'timeout' => 'Request exceeded monitor timeout',
+        ];
+
+        foreach (DevFakeServersCommand::profileRegistry() as $port => $profile) {
+            $isPersistentDown = in_array($profile['kind'], $persistentDownKinds, true);
+
+            $definitions[] = [
                 ...$base,
-                'name' => 'Internal Admin Panel',
+                'name' => $profile['name'],
                 'type' => 'http',
-                'url' => 'https://admin.internal.dev',
+                'url' => "http://127.0.0.1:{$port}",
                 'method' => 'GET',
-                'interval' => 60,
+                'interval' => $profile['interval'],
                 'accepted_status_codes' => [200],
-                'status' => 'down',
+                'status' => $isPersistentDown ? 'down' : 'up',
                 'ssl_monitoring_enabled' => false,
-                'heartbeats' => $this->heartbeatHistory(24, 60, 'http', [
-                    ['from' => now()->subHours(3), 'to' => now()],
-                ]),
-                'incidents' => [
+                'heartbeats' => self::localServerHistory(24, $profile['interval'], $profile),
+                'incidents' => $isPersistentDown ? [
                     [
-                        'started_at' => now()->subHours(3),
+                        'started_at' => now()->subHours(24),
                         'resolved_at' => null,
-                        'cause' => 'Connection refused',
+                        'cause' => $persistentDownCauses[$profile['kind']],
                     ],
-                ],
-            ],
-            [
-                ...$base,
-                'name' => 'Legacy Auth Service',
-                'type' => 'http',
-                'url' => 'https://auth.legacy.example.com/health',
-                'method' => 'GET',
-                'interval' => 30,
-                'accepted_status_codes' => [200],
-                'status' => 'down',
-                'ssl_monitoring_enabled' => true,
-                'heartbeats' => $this->heartbeatHistory(24, 30, 'http', [
-                    ['from' => now()->subHours(6), 'to' => now()],
-                ]),
-                'incidents' => [
-                    [
-                        'started_at' => now()->subHours(14),
-                        'resolved_at' => now()->subHours(12),
-                        'cause' => 'HTTP 502 Bad Gateway',
-                    ],
-                    [
-                        'started_at' => now()->subHours(6),
-                        'resolved_at' => null,
-                        'cause' => 'HTTP 502 Bad Gateway',
-                    ],
-                ],
-            ],
+                ] : [],
+            ];
+        }
 
-            // ── HTTP: PAUSED ──────────────────────────────────────────────────
-            [
-                ...$base,
-                'name' => 'Staging Environment',
-                'type' => 'http',
-                'url' => 'https://staging.example.com',
-                'method' => 'GET',
-                'interval' => 300,
-                'accepted_status_codes' => [200],
-                'status' => 'paused',
-                'is_active' => false,
-                'ssl_monitoring_enabled' => false,
-                'heartbeats' => $this->heartbeatHistory(48, 300),
-            ],
-
+        // ── Synthetic non-HTTP monitors retained ─────────────────────────────
+        return array_merge($definitions, [
             // ── TCP: UP ───────────────────────────────────────────────────────
             [
                 ...$base,
@@ -436,6 +460,6 @@ class MonitorSeeder extends Seeder
                     ],
                 ],
             ],
-        ];
+        ]);
     }
 }
