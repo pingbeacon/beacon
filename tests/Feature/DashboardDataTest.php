@@ -3,34 +3,34 @@
 use App\Models\Monitor;
 use App\Models\User;
 
-test('dashboard returns monitor counts', function () {
+test('dashboard deferred monitors include all team monitors with their status', function () {
     $user = User::factory()->create();
     Monitor::factory()->up()->create(['user_id' => $user->id]);
     Monitor::factory()->up()->create(['user_id' => $user->id]);
     Monitor::factory()->down()->create(['user_id' => $user->id]);
     Monitor::factory()->paused()->create(['user_id' => $user->id]);
 
-    $response = $this->actingAs($user)->get('/dashboard');
-
-    $response->assertOk()
+    $this->actingAs($user)->get('/dashboard')
+        ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('dashboard')
-            ->where('counts.total', 4)
-            ->where('counts.up', 2)
-            ->where('counts.down', 1)
-            ->where('counts.paused', 1)
+            ->loadDeferredProps('default', fn ($page) => $page
+                ->has('monitors', 4)
+                ->where('monitors', fn ($monitors) => collect($monitors)
+                    ->countBy('status')
+                    ->all() === ['up' => 2, 'down' => 1, 'paused' => 1])
+            )
         );
 });
 
-test('dashboard shows zero counts for user with no monitors', function () {
+test('dashboard renders for user with no monitors', function () {
     $user = User::factory()->create();
 
-    $response = $this->actingAs($user)->get('/dashboard');
-
-    $response->assertOk()
+    $this->actingAs($user)->get('/dashboard')
+        ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('dashboard')
-            ->where('counts.total', 0)
+            ->loadDeferredProps('default', fn ($page) => $page->has('monitors', 0))
         );
 });
 
@@ -41,10 +41,9 @@ test('dashboard only shows monitors for authenticated user', function () {
     Monitor::factory()->up()->count(3)->create(['user_id' => $user->id]);
     Monitor::factory()->up()->count(5)->create(['user_id' => $otherUser->id]);
 
-    $response = $this->actingAs($user)->get('/dashboard');
-
-    $response->assertOk()
+    $this->actingAs($user)->get('/dashboard')
+        ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('counts.total', 3)
+            ->loadDeferredProps('default', fn ($page) => $page->has('monitors', 3))
         );
 });

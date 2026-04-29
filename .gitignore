@@ -25,3 +25,6 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+/docs/prds
+/docs/generated
+/test-results

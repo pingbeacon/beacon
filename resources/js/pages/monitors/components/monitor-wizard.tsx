@@ -1,16 +1,16 @@
+import { CheckIcon, PlusIcon, TrashIcon } from "@heroicons/react/20/solid"
+import { Link, router, useForm } from "@inertiajs/react"
 import { useState } from "react"
-import { useForm, router, Link } from "@inertiajs/react"
-import { TextField } from "@/components/ui/text-field"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { FieldError, Label } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
 import { NumberField, NumberInput } from "@/components/ui/number-field"
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
+import { TextField } from "@/components/ui/text-field"
 import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { CheckIcon, PlusIcon, TrashIcon } from "@heroicons/react/20/solid"
-import type { Monitor, MonitorGroup, Tag, NotificationChannel } from "@/types/monitor"
+import type { Monitor, MonitorGroup, NotificationChannel, Tag } from "@/types/monitor"
 
 interface MonitorWizardProps {
   monitor?: Monitor
@@ -20,11 +20,31 @@ interface MonitorWizardProps {
 }
 
 const monitorTypes = [
-  { id: "http", label: "HTTP(S)", desc: "GET / POST / custom methods. Assert status codes, response bodies, latency." },
-  { id: "tcp", label: "TCP", desc: "Open-socket check for databases, queues, anything with an open port." },
-  { id: "ping", label: "PING", desc: "Raw network reachability. Measures packet loss & round-trip time." },
-  { id: "dns", label: "DNS", desc: "Resolve A / AAAA / CNAME / MX / TXT and assert expected values." },
-  { id: "push", label: "PUSH", desc: "Cron or worker posts to Beacon. Alert if no ping within window." },
+  {
+    id: "http",
+    label: "HTTP(S)",
+    desc: "GET / POST / custom methods. Assert status codes, response bodies, latency.",
+  },
+  {
+    id: "tcp",
+    label: "TCP",
+    desc: "Open-socket check for databases, queues, anything with an open port.",
+  },
+  {
+    id: "ping",
+    label: "PING",
+    desc: "Raw network reachability. Measures packet loss & round-trip time.",
+  },
+  {
+    id: "dns",
+    label: "DNS",
+    desc: "Resolve A / AAAA / CNAME / MX / TXT and assert expected values.",
+  },
+  {
+    id: "push",
+    label: "PUSH",
+    desc: "Cron or worker posts to Beacon. Alert if no ping within window.",
+  },
 ]
 
 const httpMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]
@@ -61,7 +81,12 @@ function getSearchParams(): URLSearchParams {
   return new URLSearchParams(window.location.search)
 }
 
-export default function MonitorWizard({ monitor, tags, notificationChannels, groups = [] }: MonitorWizardProps) {
+export default function MonitorWizard({
+  monitor,
+  tags,
+  notificationChannels,
+  groups = [],
+}: MonitorWizardProps) {
   const isEditing = !!monitor
   const params = !isEditing ? getSearchParams() : null
 
@@ -138,14 +163,16 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
   return (
     <div className="flex flex-col">
       {/* page header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-bg px-6 py-4">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-border border-b bg-bg px-6 py-4">
         <div>
-          <div className="flex items-center gap-1.5 text-xs text-muted-fg">
-            <Link href="/monitors" className="hover:text-fg transition-colors">monitors</Link>
+          <div className="flex items-center gap-1.5 text-muted-fg text-xs">
+            <Link href="/monitors" className="transition-colors hover:text-fg">
+              monitors
+            </Link>
             <span>/</span>
             <span className="text-fg">{isEditing ? monitor.name : "new"}</span>
           </div>
-          <h1 className="mt-0.5 text-xl font-semibold tracking-tight">
+          <h1 className="mt-0.5 font-semibold text-xl tracking-tight">
             {isEditing ? `Edit ${monitor.name}` : "New monitor"}
           </h1>
         </div>
@@ -157,8 +184,8 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
       {/* wizard body */}
       <div className="flex gap-0">
         {/* step rail */}
-        <aside className="sticky top-[73px] h-[calc(100dvh-73px)] w-64 shrink-0 overflow-y-auto border-r border-border p-5">
-          <p className="mb-3 text-[11px] uppercase tracking-widest text-muted-fg">// setup</p>
+        <aside className="sticky top-[73px] h-[calc(100dvh-73px)] w-64 shrink-0 overflow-y-auto border-border border-r p-5">
+          <p className="mb-3 text-[11px] text-muted-fg uppercase tracking-widest">{"// setup"}</p>
           <div className="flex flex-col gap-0.5">
             {visibleSteps.map((s) => {
               const state = stepState(s.key)
@@ -172,18 +199,18 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                     state === "active"
                       ? "border-primary bg-primary-subtle"
                       : state === "done"
-                      ? "border-primary/30 hover:bg-sidebar"
-                      : "border-transparent hover:bg-sidebar",
+                        ? "border-primary/30 hover:bg-sidebar"
+                        : "border-transparent hover:bg-sidebar",
                   ].join(" ")}
                 >
                   <div
                     className={[
-                      "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-semibold",
+                      "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border font-semibold text-[10px]",
                       state === "active"
                         ? "border-primary bg-primary text-primary-fg"
                         : state === "done"
-                        ? "border-primary text-primary"
-                        : "border-border text-muted-fg",
+                          ? "border-primary text-primary"
+                          : "border-border text-muted-fg",
                     ].join(" ")}
                   >
                     {state === "done" ? <CheckIcon className="size-2.5" /> : s.n}
@@ -191,13 +218,13 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                   <div className="min-w-0">
                     <p
                       className={[
-                        "text-sm font-medium",
+                        "font-medium text-sm",
                         state === "active" ? "text-fg" : "text-muted-fg",
                       ].join(" ")}
                     >
                       {s.title}
                     </p>
-                    <p className="mt-0.5 text-[11px] leading-relaxed text-muted-fg">{s.blurb}</p>
+                    <p className="mt-0.5 text-[11px] text-muted-fg leading-relaxed">{s.blurb}</p>
                   </div>
                 </button>
               )
@@ -205,11 +232,11 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
           </div>
 
           {/* summary */}
-          <div className="mt-5 rounded-lg border border-border bg-sidebar p-3.5">
-            <p className="mb-2 text-xs font-medium text-fg">Summary</p>
-            <div className="space-y-1 text-[11px] leading-relaxed text-muted-fg">
+          <div className="mt-5 rounded-lg rounded-lg border border-border bg-sidebar p-3.5">
+            <p className="mb-2 font-medium text-fg text-xs">Summary</p>
+            <div className="space-y-1 text-[11px] text-muted-fg leading-relaxed">
               <p>
-                <span className="font-mono uppercase text-primary">{data.type}</span>
+                <span className="font-mono text-primary uppercase">{data.type}</span>
                 {data.name && <span> · {data.name}</span>}
               </p>
               {data.url && <p className="truncate">{data.url}</p>}
@@ -221,7 +248,8 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
               )}
               <p>
                 every{" "}
-                {intervalOptions.find((o) => o.value === data.interval)?.label ?? `${data.interval}s`}
+                {intervalOptions.find((o) => o.value === data.interval)?.label ??
+                  `${data.interval}s`}
                 {" · "}
                 {data.retry_count} {data.retry_count === 1 ? "retry" : "retries"}
               </p>
@@ -240,11 +268,11 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
           <div className="mx-auto max-w-2xl">
             {/* step header */}
             <div className="mb-8">
-              <p className="mb-2 font-mono text-[11px] uppercase tracking-widest text-primary">
+              <p className="mb-2 font-mono text-[11px] text-primary uppercase tracking-widest">
                 step {currentStep.n} / {String(visibleSteps.length).padStart(2, "0")}
               </p>
-              <h2 className="text-2xl font-semibold tracking-tight">{currentStep.title}</h2>
-              <p className="mt-1 text-sm text-muted-fg">{currentStep.blurb}</p>
+              <h2 className="font-semibold text-2xl tracking-tight">{currentStep.title}</h2>
+              <p className="mt-1 text-muted-fg text-sm">{currentStep.blurb}</p>
             </div>
 
             {/* — Step: type — */}
@@ -269,7 +297,7 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                     <div className="flex items-center justify-between">
                       <span
                         className={[
-                          "font-mono text-sm font-semibold tracking-wide",
+                          "font-mono font-semibold text-sm tracking-wide",
                           data.type === t.id ? "text-primary" : "text-fg",
                         ].join(" ")}
                       >
@@ -281,10 +309,12 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                           data.type === t.id ? "border-primary bg-primary" : "border-border",
                         ].join(" ")}
                       >
-                        {data.type === t.id && <div className="size-1.5 rounded-full bg-primary-fg" />}
+                        {data.type === t.id && (
+                          <div className="size-1.5 rounded-full bg-primary-fg" />
+                        )}
                       </div>
                     </div>
-                    <p className="mt-2 text-[11px] leading-relaxed text-muted-fg">{t.desc}</p>
+                    <p className="mt-2 text-[11px] text-muted-fg leading-relaxed">{t.desc}</p>
                   </button>
                 ))}
               </div>
@@ -351,18 +381,18 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                     {/* headers table */}
                     <div>
                       <Label>Headers</Label>
-                      <div className="mt-2 overflow-hidden rounded-lg border border-border">
+                      <div className="mt-2 overflow-hidden rounded-lg rounded-lg border border-border">
                         {headerRows.length > 0 && (
-                          <div className="grid grid-cols-[1fr_1fr_36px] bg-sidebar text-[11px] uppercase tracking-wider text-muted-fg">
-                            <div className="border-b border-border px-3 py-2">Key</div>
-                            <div className="border-b border-l border-border px-3 py-2">Value</div>
-                            <div className="border-b border-l border-border" />
+                          <div className="grid grid-cols-[1fr_1fr_36px] bg-sidebar text-[11px] text-muted-fg uppercase tracking-wider">
+                            <div className="border-border border-b px-3 py-2">Key</div>
+                            <div className="border-border border-b border-l px-3 py-2">Value</div>
+                            <div className="border-border border-b border-l" />
                           </div>
                         )}
                         {headerRows.map((row, i) => (
                           <div key={i} className="grid grid-cols-[1fr_1fr_36px]">
                             <input
-                              className="border-b border-border bg-transparent px-3 py-2.5 text-sm text-fg outline-none placeholder:text-muted-fg focus:bg-sidebar"
+                              className="border-border border-b bg-transparent px-3 py-2.5 text-fg text-sm outline-none placeholder:text-muted-fg focus:bg-sidebar"
                               placeholder="Authorization"
                               value={row.key}
                               onChange={(e) => {
@@ -372,7 +402,7 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                               }}
                             />
                             <input
-                              className="border-b border-l border-border bg-transparent px-3 py-2.5 text-sm text-fg outline-none placeholder:text-muted-fg focus:bg-sidebar"
+                              className="border-border border-b border-l bg-transparent px-3 py-2.5 text-fg text-sm outline-none placeholder:text-muted-fg focus:bg-sidebar"
                               placeholder="Bearer …"
                               value={row.value}
                               onChange={(e) => {
@@ -383,8 +413,10 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                             />
                             <button
                               type="button"
-                              onClick={() => updateHeaderRows(headerRows.filter((_, idx) => idx !== i))}
-                              className="flex items-center justify-center border-b border-l border-border text-muted-fg hover:text-danger"
+                              onClick={() =>
+                                updateHeaderRows(headerRows.filter((_, idx) => idx !== i))
+                              }
+                              className="flex items-center justify-center border-border border-b border-l text-muted-fg hover:text-danger"
                             >
                               <TrashIcon className="size-3.5" />
                             </button>
@@ -393,7 +425,7 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                         <button
                           type="button"
                           onClick={() => updateHeaderRows([...headerRows, { key: "", value: "" }])}
-                          className="flex w-full items-center gap-1.5 px-3 py-2.5 text-xs text-muted-fg hover:text-fg"
+                          className="flex w-full items-center gap-1.5 px-3 py-2.5 text-muted-fg text-xs hover:text-fg"
                         >
                           <PlusIcon className="size-3.5" />
                           Add header
@@ -401,7 +433,9 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                       </div>
                     </div>
 
-                    {(data.method === "POST" || data.method === "PUT" || data.method === "PATCH") && (
+                    {(data.method === "POST" ||
+                      data.method === "PUT" ||
+                      data.method === "PATCH") && (
                       <TextField value={data.body ?? ""} onChange={(v) => setData("body", v)}>
                         <Label>Request body</Label>
                         <Textarea placeholder='{"key": "value"}' rows={4} />
@@ -446,11 +480,11 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                 )}
 
                 {data.type === "push" && (
-                  <div className="rounded-lg border border-border bg-sidebar p-4">
-                    <p className="text-sm text-muted-fg">
-                      After creating this monitor, you'll receive a unique push URL. Your cron job or worker should POST
-                      to it on each successful run. If no ping is received within the check interval, Beacon will fire
-                      an alert.
+                  <div className="rounded-lg rounded-lg border border-border bg-sidebar p-4">
+                    <p className="text-muted-fg text-sm">
+                      After creating this monitor, you'll receive a unique push URL. Your cron job
+                      or worker should POST to it on each successful run. If no ping is received
+                      within the check interval, Beacon will fire an alert.
                     </p>
                   </div>
                 )}
@@ -516,7 +550,9 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
 
                     {data.ssl_monitoring_enabled && (
                       <fieldset className="pl-6">
-                        <legend className="mb-3 text-sm font-medium text-fg">Alert when SSL expires within</legend>
+                        <legend className="mb-3 font-medium text-fg text-sm">
+                          Alert when SSL expires within
+                        </legend>
                         <div className="flex flex-wrap gap-3">
                           {sslExpiryDays.map((days) => (
                             <Checkbox
@@ -526,7 +562,9 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                                 setData(
                                   "ssl_expiry_notification_days",
                                   checked
-                                    ? [...data.ssl_expiry_notification_days, days].sort((a, b) => b - a)
+                                    ? [...data.ssl_expiry_notification_days, days].sort(
+                                        (a, b) => b - a,
+                                      )
                                     : data.ssl_expiry_notification_days.filter((d) => d !== days),
                                 )
                               }}
@@ -546,8 +584,8 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
             {activeKey === "assertions" && (
               <div className="space-y-5">
                 <div>
-                  <p className="mb-1 text-sm font-medium text-fg">Accepted status codes</p>
-                  <p className="mb-4 text-xs text-muted-fg">
+                  <p className="mb-1 font-medium text-fg text-sm">Accepted status codes</p>
+                  <p className="mb-4 text-muted-fg text-xs">
                     Monitor is UP when the response matches any selected code.
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -577,9 +615,11 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-border bg-sidebar p-4">
-                  <p className="font-mono text-xs text-muted-fg">
-                    // monitor is DOWN when status code is not in the accepted list, or when the request times out
+                <div className="rounded-lg rounded-lg border border-border bg-sidebar p-4">
+                  <p className="font-mono text-muted-fg text-xs">
+                    {
+                      "// monitor is DOWN when status code is not in the accepted list, or when the request times out"
+                    }
                   </p>
                 </div>
               </div>
@@ -590,7 +630,9 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
               <div className="space-y-6">
                 {notificationChannels.length > 0 ? (
                   <fieldset>
-                    <legend className="mb-3 text-sm font-medium text-fg">Notification channels</legend>
+                    <legend className="mb-3 font-medium text-fg text-sm">
+                      Notification channels
+                    </legend>
                     <div className="space-y-2">
                       {notificationChannels.map((channel) => {
                         const on = data.notification_channel_ids.includes(channel.id)
@@ -607,10 +649,17 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                                   : [...data.notification_channel_ids, channel.id],
                               )
                             }
-                            onKeyDown={(e) => e.key === "Enter" || e.key === " " ? e.currentTarget.click() : undefined}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault()
+                                e.currentTarget.click()
+                              }
+                            }}
                             className={[
                               "flex cursor-pointer items-center gap-4 rounded-lg border p-3.5 transition-colors",
-                              on ? "border-primary/50 bg-primary-subtle" : "border-border hover:border-primary/30",
+                              on
+                                ? "border-primary/50 bg-primary-subtle"
+                                : "border-border hover:border-primary/30",
                             ].join(" ")}
                           >
                             {/* toggle knob */}
@@ -628,8 +677,8 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                               />
                             </div>
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium text-fg">{channel.name}</p>
-                              <p className="text-xs capitalize text-muted-fg">{channel.type}</p>
+                              <p className="font-medium text-fg text-sm">{channel.name}</p>
+                              <p className="text-muted-fg text-xs capitalize">{channel.type}</p>
                             </div>
                           </div>
                         )
@@ -637,11 +686,11 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                     </div>
                   </fieldset>
                 ) : (
-                  <div className="rounded-lg border border-border bg-sidebar p-5 text-center">
-                    <p className="text-sm text-muted-fg">No notification channels configured.</p>
+                  <div className="rounded-lg rounded-lg border border-border bg-sidebar p-5 text-center">
+                    <p className="text-muted-fg text-sm">No notification channels configured.</p>
                     <Link
                       href="/notification-channels/create"
-                      className="mt-2 block text-xs text-primary hover:underline"
+                      className="mt-2 block text-primary text-xs hover:underline"
                     >
                       Set one up →
                     </Link>
@@ -650,7 +699,7 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
 
                 {tags.length > 0 && (
                   <fieldset>
-                    <legend className="mb-3 text-sm font-medium text-fg">Tags</legend>
+                    <legend className="mb-3 font-medium text-fg text-sm">Tags</legend>
                     <div className="flex flex-wrap gap-3">
                       {tags.map((tag) => (
                         <Checkbox
@@ -679,7 +728,7 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
             )}
 
             {/* footer nav */}
-            <div className="mt-12 flex items-center justify-between border-t border-border pt-6">
+            <div className="mt-12 flex items-center justify-between border-border border-t pt-6">
               <Button type="button" intent="outline" onPress={goPrev} isDisabled={isFirst}>
                 ← Back
               </Button>
@@ -691,7 +740,11 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                     key={s.key}
                     className={[
                       "h-1 rounded-full transition-all duration-200",
-                      s.key === activeKey ? "w-6 bg-primary" : i < activeIndex ? "w-4 bg-primary/40" : "w-4 bg-border",
+                      s.key === activeKey
+                        ? "w-6 bg-primary"
+                        : i < activeIndex
+                          ? "w-4 bg-primary/40"
+                          : "w-4 bg-border",
                     ].join(" ")}
                   />
                 ))}
@@ -702,7 +755,9 @@ export default function MonitorWizard({ monitor, tags, notificationChannels, gro
                   {isEditing ? "Save changes" : "Create monitor"}
                 </Button>
               ) : (
-                <Button key="continue" type="button" onPress={goNext}>Continue →</Button>
+                <Button key="continue" type="button" onPress={goNext}>
+                  Continue →
+                </Button>
               )}
             </div>
           </div>
