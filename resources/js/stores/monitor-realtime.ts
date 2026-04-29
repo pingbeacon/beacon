@@ -117,8 +117,8 @@ export function hydrate(monitors: Monitor[] | undefined | null): void {
       changed = true
       continue
     }
-    const existingNewer = timestamp(existing.last_checked_at) > timestamp(incoming.last_checked_at)
-    const base = existingNewer ? existing : incoming
+    const incomingNewer = timestamp(incoming.last_checked_at) > timestamp(existing.last_checked_at)
+    const base = incomingNewer ? incoming : existing
     const merged: Monitor = {
       ...base,
       heartbeats: mergeHeartbeats(existing.heartbeats, incoming.heartbeats),
