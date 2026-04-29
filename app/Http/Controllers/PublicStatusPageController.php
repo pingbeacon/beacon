@@ -21,7 +21,7 @@ class PublicStatusPageController extends Controller
         }]);
 
         $monitors = $statusPage->monitors->map(function ($monitor) {
-            $heartbeats = $monitor->heartbeats;
+            $heartbeats = $monitor->heartbeats->reverse()->values();
             $total = $heartbeats->count();
             $upCount = $heartbeats->where('status', 'up')->count();
             $uptimePercentage = $total > 0 ? round(($upCount / $total) * 100, 2) : 100.0;
@@ -31,7 +31,7 @@ class PublicStatusPageController extends Controller
                 'name' => $monitor->name,
                 'status' => $monitor->status,
                 'tags' => $monitor->tags,
-                'heartbeats' => $heartbeats->values(),
+                'heartbeats' => $heartbeats,
                 'uptime_percentage' => $uptimePercentage,
             ];
         });

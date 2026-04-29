@@ -8,9 +8,8 @@ import {
   ShieldCheckIcon,
   SignalIcon,
 } from "@heroicons/react/20/solid"
-import { Head, router, usePage, WhenVisible } from "@inertiajs/react"
-import { useEcho } from "@laravel/echo-react"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Head, router, WhenVisible } from "@inertiajs/react"
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Container } from "@/components/ui/container"
@@ -21,8 +20,15 @@ import AppLayout from "@/layouts/app-layout"
 import { statusBadgeIntent, uptimeColor } from "@/lib/color"
 import { formatInterval, heartbeatsToTracker } from "@/lib/heartbeats"
 import monitorRoutes from "@/routes/monitors"
-import type { Heartbeat, Monitor } from "@/types/monitor"
-import type { SharedData } from "@/types/shared"
+import notificationChannelRoutes from "@/routes/notification-channels"
+import {
+  getSnapshot,
+  subscribeToEvents,
+  useHydrateMonitors,
+  useMonitorCounts,
+  useMonitors,
+} from "@/stores/monitor-realtime"
+import type { Monitor } from "@/types/monitor"
 import CreateMonitorModal from "./monitors/components/create-monitor-modal"
 
 interface OpenIncident {
@@ -56,28 +62,12 @@ interface LiveEvent {
 }
 
 interface Props {
-  counts: { total: number; up: number; down: number; paused: number }
   team_uptime_30d: number | null
   avg_response_24h: number | null
   open_incidents: OpenIncident[]
   ssl_certs: SslCert[]
   notification_channels: NotifChannel[]
   monitors?: Monitor[]
-}
-
-interface HeartbeatPayload {
-  monitorId: number
-  heartbeat: Heartbeat
-  monitorStatus: string
-  uptimePercentage: number
-  averageResponseTime: number | null
-}
-
-interface StatusChangedPayload {
-  monitorId: number
-  oldStatus: string
-  newStatus: string
-  message: string | null
 }
 
 function formatRelativeTime(dateStr: string): string {
@@ -104,13 +94,20 @@ function formatTime(date: Date): string {
   return date.toTimeString().slice(0, 8)
 }
 
+interface KPICounts {
+  total: number
+  up: number
+  down: number
+  paused: number
+}
+
 function KPIStrip({
   counts,
   teamUptime30d,
   avgResponse24h,
   openIncidentsCount,
 }: {
-  counts: Props["counts"]
+  counts: KPICounts
   teamUptime30d: number | null
   avgResponse24h: number | null
   openIncidentsCount: number
@@ -178,7 +175,7 @@ function KPIStrip({
 
 function ActiveIncidentBanner({ incidents }: { incidents: OpenIncident[] }) {
   const first = incidents[0]
-  const startedAt = first?.started_at
+  const startedAt = first?.started_at ?? null
   const [elapsed, setElapsed] = useState(() => (startedAt ? formatElapsed(startedAt) : ""))
 
   useEffect(() => {
@@ -340,15 +337,15 @@ function StatusDot({ status }: { status: Monitor["status"] }) {
   }
   return (
     <span className="relative flex size-2.5 shrink-0">
-      {status === "up" && (
-        <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-20" />
+      {status === "down" && (
+        <span className="absolute inline-flex size-full animate-ping rounded-full bg-danger opacity-30" />
       )}
       <span className={`relative inline-flex size-2.5 rounded-full ${colors[status]}`} />
     </span>
   )
 }
 
-function MonitorCard({ monitor }: { monitor: Monitor }) {
+function MonitorCardImpl({ monitor }: { monitor: Monitor }) {
   const lastChecked = monitor.last_checked_at ? formatRelativeTime(monitor.last_checked_at) : "—"
   const isDown = monitor.status === "down"
 
@@ -384,9 +381,13 @@ function MonitorCard({ monitor }: { monitor: Monitor }) {
         <div>
           <div className="text-[10px] text-muted-fg uppercase tracking-wide">Uptime</div>
           <div
-            className={`mt-0.5 font-medium font-mono text-sm tabular-nums ${uptimeColor(monitor.uptime_percentage ?? 100)}`}
+            className={`mt-0.5 font-medium font-mono text-sm tabular-nums ${
+              monitor.uptime_percentage != null
+                ? uptimeColor(monitor.uptime_percentage)
+                : "text-muted-fg"
+            }`}
           >
-            {monitor.uptime_percentage !== undefined ? `${monitor.uptime_percentage}%` : "—"}
+            {monitor.uptime_percentage != null ? `${monitor.uptime_percentage}%` : "—"}
           </div>
         </div>
         <div>
@@ -411,6 +412,8 @@ function MonitorCard({ monitor }: { monitor: Monitor }) {
     </Link>
   )
 }
+
+const MonitorCard = memo(MonitorCardImpl, (prev, next) => prev.monitor === next.monitor)
 
 type GridFilter = "all" | "up" | "down" | "paused"
 
@@ -543,7 +546,10 @@ function NotificationChannelsWidget({ channels }: { channels: NotifChannel[] }) 
           <BellIcon className="size-4 text-muted-fg" />
           Notifications
         </div>
-        <Link href="/notification-channels" className="text-primary text-xs hover:underline">
+        <Link
+          href={notificationChannelRoutes.index.url()}
+          className="text-primary text-xs hover:underline"
+        >
           manage →
         </Link>
       </div>
@@ -633,7 +639,7 @@ function EmptyState() {
       description:
         "Get alerted via email, Slack, Discord, or webhook when a monitor goes down — before your users notice.",
       action: (
-        <Link href="/notification-channels">
+        <Link href={notificationChannelRoutes.index.url()}>
           <Button intent="outline" size="sm">
             Set up channels
           </Button>
@@ -691,126 +697,98 @@ function EmptyState() {
 }
 
 export default function Dashboard({
-  counts: initialCounts,
   monitors: initialMonitors,
   team_uptime_30d,
   avg_response_24h,
-  open_incidents,
   ssl_certs,
   notification_channels,
 }: Props) {
-  const { auth } = usePage<SharedData>().props
-  const [monitors, setMonitors] = useState(initialMonitors)
-  const [counts, setCounts] = useState(initialCounts)
-  const [openIncidents, setOpenIncidents] = useState(open_incidents)
+  useHydrateMonitors(initialMonitors)
+  const monitors = useMonitors()
+  const storeCounts = useMonitorCounts()
+  const counts: KPICounts = {
+    total: storeCounts.total,
+    up: storeCounts.up,
+    down: storeCounts.down,
+    paused: storeCounts.paused,
+  }
+
   const [liveEvents, setLiveEvents] = useState<LiveEvent[]>([])
   const liveEventIdRef = useRef(0)
 
-  useEffect(() => {
-    if (initialMonitors) setMonitors(initialMonitors)
-  }, [initialMonitors])
-
-  useEffect(() => {
-    setCounts(initialCounts)
-  }, [initialCounts])
-
-  useEffect(() => {
-    setOpenIncidents(open_incidents)
-  }, [open_incidents])
-
-  const monitorMap = useMemo(() => {
-    const map = new Map<number, { name: string; type: string }>()
-    monitors?.forEach((m) => map.set(m.id, { name: m.name, type: m.type }))
-    return map
+  const openIncidents = useMemo<OpenIncident[]>(() => {
+    return monitors
+      .filter((m) => m.status === "down")
+      .map((m) => {
+        const history = m.heartbeats ?? []
+        let outageStart: string | undefined
+        let latestDownMessage: string | null = null
+        for (let i = history.length - 1; i >= 0; i--) {
+          if (history[i].status !== "down") break
+          outageStart = history[i].created_at
+          if (latestDownMessage === null) {
+            latestDownMessage = history[i].message ?? null
+          }
+        }
+        return {
+          id: m.id,
+          monitor_id: m.id,
+          monitor_name: m.name,
+          started_at: outageStart ?? m.last_checked_at ?? new Date().toISOString(),
+          cause: latestDownMessage,
+        }
+      })
   }, [monitors])
 
   const addLiveEvent = useCallback((event: Omit<LiveEvent, "id">) => {
     setLiveEvents((prev) => [{ ...event, id: ++liveEventIdRef.current }, ...prev].slice(0, 20))
   }, [])
 
-  const handleHeartbeat = useCallback(
-    (payload: HeartbeatPayload) => {
-      setMonitors((prev) =>
-        prev?.map((m) => {
-          if (m.id !== payload.monitorId) return m
-          const updatedHeartbeats = [...(m.heartbeats ?? []), payload.heartbeat].slice(-90)
-          return {
-            ...m,
-            status: payload.monitorStatus as Monitor["status"],
-            heartbeats: updatedHeartbeats,
-            uptime_percentage: payload.uptimePercentage,
-            average_response_time: payload.averageResponseTime,
-          }
-        }),
-      )
-      const info = monitorMap.get(payload.monitorId)
-      addLiveEvent({
-        kind: info?.type.toUpperCase() ?? "CHECK",
-        monitorName: info?.name ?? `Monitor #${payload.monitorId}`,
-        detail: [
-          payload.heartbeat.status_code ? String(payload.heartbeat.status_code) : null,
-          payload.heartbeat.response_time != null ? `${payload.heartbeat.response_time}ms` : null,
-        ]
-          .filter(Boolean)
-          .join(" · "),
-        timestamp: new Date(),
-        isAlert: payload.heartbeat.status === "down",
-      })
-    },
-    [monitorMap, addLiveEvent],
-  )
-
-  const handleStatusChanged = useCallback(
-    (payload: StatusChangedPayload) => {
-      setMonitors((prev) =>
-        prev?.map((m) =>
-          m.id === payload.monitorId
-            ? {
-                ...m,
-                status: payload.newStatus as Monitor["status"],
-                has_incidents_24h: m.has_incidents_24h || payload.newStatus === "down",
-              }
-            : m,
-        ),
-      )
-      setCounts((prev) => {
-        const updated = { ...prev }
-        if (payload.oldStatus === "up") updated.up--
-        if (payload.oldStatus === "down") updated.down--
-        if (payload.newStatus === "up") updated.up++
-        if (payload.newStatus === "down") updated.down++
-        return updated
-      })
-
-      if (payload.newStatus === "up") {
-        setOpenIncidents((prev) => prev.filter((i) => i.monitor_id !== payload.monitorId))
-      } else if (payload.newStatus === "down") {
-        router.reload({ only: ["open_incidents"], preserveUrl: true })
+  useEffect(() => {
+    return subscribeToEvents((event) => {
+      if (event.type === "heartbeat") {
+        const info = getSnapshot().byId[event.payload.monitorId]
+        addLiveEvent({
+          kind: info?.type.toUpperCase() ?? "CHECK",
+          monitorName: info?.name ?? `Monitor #${event.payload.monitorId}`,
+          detail: [
+            event.payload.heartbeat.status_code
+              ? String(event.payload.heartbeat.status_code)
+              : null,
+            event.payload.heartbeat.response_time != null
+              ? `${event.payload.heartbeat.response_time}ms`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" · "),
+          timestamp: new Date(),
+          isAlert: event.payload.heartbeat.status === "down",
+        })
+      } else if (event.type === "status") {
+        const info = getSnapshot().byId[event.payload.monitorId]
+        addLiveEvent({
+          kind: event.payload.newStatus.toUpperCase(),
+          monitorName: info?.name ?? `Monitor #${event.payload.monitorId}`,
+          detail:
+            event.payload.message ??
+            (event.payload.newStatus === "up" ? "recovered" : "incident started"),
+          timestamp: new Date(),
+          isAlert: event.payload.newStatus === "down",
+        })
+        router.reload({ only: ["monitors"], preserveUrl: true })
       }
+    })
+  }, [addLiveEvent])
 
-      const info = monitorMap.get(payload.monitorId)
-      addLiveEvent({
-        kind: payload.newStatus.toUpperCase(),
-        monitorName: info?.name ?? `Monitor #${payload.monitorId}`,
-        detail: payload.message ?? (payload.newStatus === "up" ? "recovered" : "incident started"),
-        timestamp: new Date(),
-        isAlert: payload.newStatus === "down",
-      })
-    },
-    [monitorMap, addLiveEvent],
-  )
-
-  const handleChecking = useCallback((payload: { monitorId: number }) => {
-    setMonitors((prev) =>
-      prev?.map((m) =>
-        m.id === payload.monitorId ? { ...m, status: "pending" as Monitor["status"] } : m,
-      ),
+  useEffect(() => {
+    const id = window.setInterval(
+      () => {
+        router.reload({ only: ["monitors"], preserveUrl: true })
+      },
+      5 * 60 * 1000,
     )
+    return () => window.clearInterval(id)
   }, [])
-
-  useEcho(`monitors.${auth.user.id}`, ".MonitorChecking", handleChecking)
-  useEcho(`monitors.${auth.user.id}`, ".HeartbeatRecorded", handleHeartbeat)
-  useEcho(`monitors.${auth.user.id}`, ".MonitorStatusChanged", handleStatusChanged)
 
   return (
     <>

@@ -27,9 +27,12 @@ class MonitorController extends Controller
 
         $monitors = Monitor::query()
             ->where('team_id', $teamId)
-            ->with(['tags', 'monitorGroup', 'heartbeats' => fn ($q) => $q->latest()->limit(20)])
+            ->with(['tags', 'monitorGroup', 'heartbeats' => fn ($q) => $q->latest()->limit(90)])
             ->latest()
-            ->get();
+            ->get()
+            ->each(function (Monitor $monitor) {
+                $monitor->setRelation('heartbeats', $monitor->heartbeats->reverse()->values());
+            });
 
         $tags = Tag::query()
             ->where('team_id', $teamId)
@@ -121,7 +124,8 @@ class MonitorController extends Controller
     {
         $this->authorize('view', $monitor);
 
-        $monitor->load('tags', 'notificationChannels');
+        $monitor->load(['tags', 'notificationChannels', 'heartbeats' => fn ($q) => $q->latest()->limit(90)]);
+        $monitor->setRelation('heartbeats', $monitor->heartbeats->reverse()->values());
 
         $period = request()->query('period', '24h');
         $allowedPeriods = ['1h', '24h', '7d', '30d'];
@@ -142,9 +146,12 @@ class MonitorController extends Controller
             'sslCertificate' => Inertia::defer(
                 fn () => $monitor->sslCertificate
             ),
-            'heartbeats' => Inertia::defer(
-                fn () => HeartbeatResource::collection($monitor->heartbeats()->latest()->paginate(10))
-            ),
+            'heartbeats' => Inertia::defer(function () use ($monitor) {
+                $paginator = $monitor->heartbeats()->latest()->paginate(10);
+                $paginator->setCollection($paginator->getCollection()->reverse()->values());
+
+                return HeartbeatResource::collection($paginator);
+            }),
             'incidents' => Inertia::defer(
                 fn () => $monitor->incidents()->latest('started_at')->get()
             ),

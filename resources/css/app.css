@@ -176,7 +176,7 @@
     --chart-4: #8a8170;
     --chart-5: #5a5448;
 
-    --radius-lg: 0.125rem;
+    --radius-lg: 0.65rem;
     --radius-xs: calc(var(--radius-lg) * 0.5);
     --radius-sm: calc(var(--radius-lg) * 0.75);
     --radius-md: calc(var(--radius-lg) * 0.9);
