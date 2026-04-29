@@ -37,7 +37,51 @@ jobs:
             -e APP_KEY=base64:$(openssl rand -base64 32) \
             -e APP_ENV=testing \
             beacon:test \
-            php artisan test --compact
+            php artisan test --compact --exclude-testsuite=Browser
+
+  browser:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: bcmath, intl, mbstring, pcntl, sockets, sqlite3, pdo_sqlite, gd, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install PHP dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build assets
+        run: npm run build
+
+      - name: Generate app key
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run Browser suite
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+        run: php artisan test --compact --testsuite=Browser
 
   push:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

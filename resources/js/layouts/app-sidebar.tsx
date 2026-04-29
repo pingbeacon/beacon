@@ -44,7 +44,7 @@ const statusDot: Record<string, string> = {
   paused: "bg-muted-foreground",
 }
 
-const secondaryNav = [
+export const secondaryNav = [
   { name: "Dashboard", href: "/dashboard", icon: ChartBarIcon },
   { name: "Status Pages", href: "/status-pages", icon: GlobeAltIcon },
   { name: "Maintenance", href: "/maintenance-windows", icon: WrenchScrewdriverIcon },
@@ -89,31 +89,35 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar {...props}>
       <SidebarHeader>
-        <div className="flex items-center justify-between">
-          <Link href="/" aria-label="Goto homepage" className="flex items-center gap-2">
-            <Logo />
-            <SidebarLabel className="font-semibold">Beacon</SidebarLabel>
-          </Link>
-        </div>
+        <Link href="/" aria-label="Goto homepage" className="flex items-center gap-2.5 px-1.5">
+          <Logo />
+          <SidebarLabel className="font-semibold text-[15px] text-foreground">beacon</SidebarLabel>
+          {currentTeam ? (
+            <span className="ml-auto truncate text-[10px] text-muted-foreground/70 uppercase tracking-[0.12em]">
+              {currentTeam.name}
+            </span>
+          ) : null}
+        </Link>
 
-        {/* Search */}
         <button
           type="button"
+          data-slot="search-trigger"
           onClick={() => setPaletteOpen(true)}
-          className="mt-3 flex w-full cursor-pointer items-center gap-2 rounded rounded-lg border border-border bg-transparent px-3 py-2 text-muted-foreground text-xs transition-colors hover:border-primary/40 hover:text-foreground"
+          className="mt-2 flex w-full cursor-pointer items-center gap-2 rounded-md border border-border bg-transparent px-3 py-2 text-[13px] text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground"
         >
-          <span className="text-sm leading-none">⌕</span>
-          <span className="flex-1 text-left">Search monitors…</span>
-          <kbd className="rounded rounded-lg border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+          <span aria-hidden className="text-sm leading-none">
+            ⌕
+          </span>
+          <span className="flex-1 text-left">Search…</span>
+          <kbd className="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
             {isMac ? "⌘K" : "Ctrl K"}
           </kbd>
         </button>
       </SidebarHeader>
 
       <SidebarContent className="flex flex-col overflow-hidden">
-        {/* Monitor list */}
-        <div className="flex shrink-0 items-center justify-between px-4 pt-0.5 pb-1.5">
-          <span className="font-medium text-[10px] text-muted-foreground uppercase tracking-widest">
+        <div className="flex shrink-0 items-center justify-between px-4 pt-1 pb-1.5">
+          <span className="font-medium text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
             Monitors · {monitors.length}
           </span>
           <Link
@@ -170,8 +174,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         </div>
       </SidebarContent>
 
-      {/* Secondary nav — outside scrollable content, above footer */}
-      <div className="shrink-0 border-sidebar-border border-t px-2 py-1">
+      <div className="shrink-0 border-sidebar-border border-t px-2 py-1.5">
         <SidebarSection>
           {secondaryNav.map((item) => (
             <SidebarItem
@@ -188,7 +191,10 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 
         {auth.user && currentTeam && teams.length > 1 && (
           <Menu>
-            <Button intent="plain" className="w-full justify-start gap-2 text-muted-foreground text-xs">
+            <Button
+              intent="plain"
+              className="w-full justify-start gap-2 text-muted-foreground text-xs"
+            >
               <span className="truncate">{currentTeam.name}</span>
               <span className="ml-auto text-[10px] text-muted-foreground/60">switch</span>
             </Button>
@@ -235,11 +241,14 @@ function UserMenu() {
   const { auth } = usePage<SharedData>().props
   return (
     <Menu>
-      <Button intent="plain" className="w-full justify-start gap-2">
+      <Button intent="plain" className="w-full justify-start gap-2.5 px-1.5">
         <Avatar src={auth.user.gravatar} size="sm" />
         <span className="flex min-w-0 flex-col text-start">
-          <span className="truncate font-medium text-sm">{auth.user.name}</span>
-          <span className="truncate text-muted-foreground text-xs">{auth.user.email}</span>
+          <span className="truncate font-medium text-[13px] text-foreground">{auth.user.name}</span>
+          <span className="truncate text-[11px] text-muted-foreground">{auth.user.email}</span>
+        </span>
+        <span aria-hidden className="ml-auto text-muted-foreground text-sm">
+          ⌥
         </span>
       </Button>
       <MenuContent placement="top start" className="sm:min-w-56">
