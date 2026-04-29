@@ -15,16 +15,6 @@ class DashboardController extends Controller
     {
         $teamId = auth()->user()->current_team_id;
 
-        $counts = Monitor::query()
-            ->where('team_id', $teamId)
-            ->selectRaw("
-                COUNT(*) as total,
-                SUM(CASE WHEN status = 'up' THEN 1 ELSE 0 END) as up,
-                SUM(CASE WHEN status = 'down' THEN 1 ELSE 0 END) as down,
-                SUM(CASE WHEN status = 'paused' OR is_active = false THEN 1 ELSE 0 END) as paused
-            ")
-            ->first();
-
         $activeMonitorIds = Monitor::query()
             ->where('team_id', $teamId)
             ->where('is_active', true)
@@ -90,12 +80,6 @@ class DashboardController extends Controller
             ->get(['name', 'type', 'is_enabled']);
 
         return inertia('dashboard', [
-            'counts' => [
-                'total' => (int) $counts->total,
-                'up' => (int) $counts->up,
-                'down' => (int) $counts->down,
-                'paused' => (int) $counts->paused,
-            ],
             'team_uptime_30d' => $teamUptime30d,
             'avg_response_24h' => $avgResponse24h,
             'open_incidents' => $openIncidents,

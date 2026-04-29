@@ -61,7 +61,6 @@ interface LiveEvent {
 }
 
 interface Props {
-  counts: { total: number; up: number; down: number; paused: number }
   team_uptime_30d: number | null
   avg_response_24h: number | null
   open_incidents: OpenIncident[]
@@ -94,13 +93,20 @@ function formatTime(date: Date): string {
   return date.toTimeString().slice(0, 8)
 }
 
+interface KPICounts {
+  total: number
+  up: number
+  down: number
+  paused: number
+}
+
 function KPIStrip({
   counts,
   teamUptime30d,
   avgResponse24h,
   openIncidentsCount,
 }: {
-  counts: Props["counts"]
+  counts: KPICounts
   teamUptime30d: number | null
   avgResponse24h: number | null
   openIncidentsCount: number
@@ -671,7 +677,6 @@ function EmptyState() {
 }
 
 export default function Dashboard({
-  counts: initialCounts,
   monitors: initialMonitors,
   team_uptime_30d,
   avg_response_24h,
@@ -681,15 +686,12 @@ export default function Dashboard({
   useHydrateMonitors(initialMonitors)
   const monitors = useMonitors()
   const storeCounts = useMonitorCounts()
-  const counts =
-    monitors.length > 0
-      ? {
-          total: storeCounts.total,
-          up: storeCounts.up,
-          down: storeCounts.down,
-          paused: storeCounts.paused,
-        }
-      : initialCounts
+  const counts: KPICounts = {
+    total: storeCounts.total,
+    up: storeCounts.up,
+    down: storeCounts.down,
+    paused: storeCounts.paused,
+  }
 
   const [liveEvents, setLiveEvents] = useState<LiveEvent[]>([])
   const liveEventIdRef = useRef(0)

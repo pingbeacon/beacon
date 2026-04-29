@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import {
   __resetForTests,
+  getCountsSnapshot,
   getSnapshot,
   handleChecking,
   handleHeartbeat,
@@ -213,4 +214,105 @@ describe("monitor-realtime store", () => {
       expect(getSnapshot().byId[1]?.status).toBe("up")
     })
   })
+
+  describe("getCountsSnapshot", () => {
+    it("returns zero counts for empty store", () => {
+      expect(getCountsSnapshot()).toEqual({
+        total: 0,
+        up: 0,
+        down: 0,
+        pending: 0,
+        paused: 0,
+      })
+    })
+
+    it("derives total/up/down/pending/paused from monitors array", () => {
+      hydrate([
+        makeMonitor({ id: 1, status: "up" }),
+        makeMonitor({ id: 2, status: "up" }),
+        makeMonitor({ id: 3, status: "down" }),
+        makeMonitor({ id: 4, status: "pending" }),
+        makeMonitor({ id: 5, status: "paused" }),
+        makeMonitor({ id: 6, status: "paused" }),
+      ])
+      expect(getCountsSnapshot()).toEqual({
+        total: 6,
+        up: 2,
+        down: 1,
+        pending: 1,
+        paused: 2,
+      })
+    })
+
+    it("matches filter().length after sequence of handleStatusChanged events", () => {
+      hydrate([
+        makeMonitor({ id: 1, status: "up" }),
+        makeMonitor({ id: 2, status: "up" }),
+        makeMonitor({ id: 3, status: "up" }),
+        makeMonitor({ id: 4, status: "paused" }),
+      ])
+
+      handleStatusChanged({ monitorId: 1, oldStatus: "up", newStatus: "down", message: null })
+      handleStatusChanged({ monitorId: 2, oldStatus: "up", newStatus: "down", message: null })
+      handleStatusChanged({ monitorId: 1, oldStatus: "down", newStatus: "up", message: null })
+      handleStatusChanged({ monitorId: 4, oldStatus: "paused", newStatus: "up", message: null })
+      handleStatusChanged({ monitorId: 2, oldStatus: "down", newStatus: "down", message: null })
+
+      const counts = getCountsSnapshot()
+      const monitors = getSnapshot().monitors
+      const expected = {
+        total: monitors.length,
+        up: monitors.filter((m) => m.status === "up").length,
+        down: monitors.filter((m) => m.status === "down").length,
+        pending: monitors.filter((m) => m.status === "pending").length,
+        paused: monitors.filter((m) => m.status === "paused").length,
+      }
+      expect(counts).toEqual(expected)
+    })
+
+    it("is idempotent — duplicate status events do not drift counts", () => {
+      hydrate([
+        makeMonitor({ id: 1, status: "up" }),
+        makeMonitor({ id: 2, status: "up" }),
+      ])
+
+      const fire = (): void => {
+        handleStatusChanged({ monitorId: 1, oldStatus: "up", newStatus: "down", message: null })
+      }
+      fire()
+      fire()
+      fire()
+
+      expect(getCountsSnapshot()).toEqual({
+        total: 2,
+        up: 1,
+        down: 1,
+        pending: 0,
+        paused: 0,
+      })
+    })
+
+    it("returns same reference when state unchanged (memoized)", () => {
+      hydrate([makeMonitor({ id: 1, status: "up" })])
+      const a = getCountsSnapshot()
+      const b = getCountsSnapshot()
+      expect(b).toBe(a)
+    })
+
+    it("recomputes after handleChecking flips monitor to pending", () => {
+      hydrate([
+        makeMonitor({ id: 1, status: "up" }),
+        makeMonitor({ id: 2, status: "down" }),
+      ])
+      handleChecking({ monitorId: 1 })
+      expect(getCountsSnapshot()).toEqual({
+        total: 2,
+        up: 0,
+        down: 1,
+        pending: 1,
+        paused: 0,
+      })
+    })
+  })
 })
+

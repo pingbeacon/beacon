@@ -176,7 +176,7 @@ function getMonitorsSnapshot(): Monitor[] {
 let cachedCountsState: State | null = null
 let cachedCounts: MonitorCounts = { total: 0, up: 0, down: 0, pending: 0, paused: 0 }
 
-function getCountsSnapshot(): MonitorCounts {
+export function getCountsSnapshot(): MonitorCounts {
   if (cachedCountsState === state) {
     return cachedCounts
   }
