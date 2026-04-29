@@ -44,10 +44,10 @@ export default function MonitorsTrashed({ monitors }: Props) {
                     <Badge intent="secondary">Deleted</Badge>
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-sm">{monitor.name}</p>
-                      <p className="text-muted-fg text-xs">
+                      <p className="text-muted-foreground text-xs">
                         {monitor.type.toUpperCase()} - {monitor.url || monitor.host}
                       </p>
-                      <p className="text-muted-fg text-xs">
+                      <p className="text-muted-foreground text-xs">
                         Deleted {new Date(monitor.deleted_at).toLocaleDateString()}
                       </p>
                     </div>
@@ -75,7 +75,7 @@ export default function MonitorsTrashed({ monitors }: Props) {
                 ))}
               </div>
             ) : (
-              <div className="py-12 text-center text-muted-fg">
+              <div className="py-12 text-center text-muted-foreground">
                 <p className="font-medium text-lg">No trashed monitors</p>
                 <p className="mt-1 text-sm">
                   Deleted monitors will appear here and can be restored.

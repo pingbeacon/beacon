@@ -49,7 +49,7 @@ export default function NotificationChannelsIndex({ channels }: Props) {
                     </Badge>
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-sm">{channel.name}</p>
-                      <p className="text-muted-fg text-xs">
+                      <p className="text-muted-foreground text-xs">
                         {typeLabels[channel.type] ?? channel.type}
                       </p>
                     </div>
@@ -66,7 +66,7 @@ export default function NotificationChannelsIndex({ channels }: Props) {
                 ))}
               </div>
             ) : (
-              <div className="py-12 text-center text-muted-fg">
+              <div className="py-12 text-center text-muted-foreground">
                 <p className="font-medium text-lg">No notification channels yet</p>
                 <p className="mt-1 text-sm">
                   Add a channel to receive alerts when your monitors go down.

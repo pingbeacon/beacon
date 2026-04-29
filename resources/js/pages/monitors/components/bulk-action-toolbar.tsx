@@ -83,7 +83,7 @@ export default function BulkActionToolbar({ selectedIds, onClear }: BulkActionTo
       <div
         role="toolbar"
         aria-label="Bulk actions"
-        className="flex items-center gap-3 rounded-xl border bg-bg px-5 py-3 shadow-2xl"
+        className="flex items-center gap-3 rounded-xl border bg-background px-5 py-3 shadow-2xl"
       >
         <span className="text-sm font-medium tabular-nums" aria-live="polite" aria-atomic="true">
           {count} monitor{count > 1 ? "s" : ""} selected

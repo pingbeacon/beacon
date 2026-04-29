@@ -34,7 +34,7 @@ export default function TeamsIndex({ teams }: Props) {
                 <Badge>{team.pivot.role}</Badge>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-muted-fg text-sm">
+                <span className="text-muted-foreground text-sm">
                   {team.users_count ?? 0} members
                 </span>
                 <Link href={`/settings/teams/${team.id}/edit`}>

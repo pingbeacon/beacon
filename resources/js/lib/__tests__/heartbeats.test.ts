@@ -39,7 +39,7 @@ describe("heartbeatsToTracker", () => {
     const result = heartbeatsToTracker(heartbeats, 5)
 
     expect(result).toHaveLength(5)
-    expect(result[result.length - 1].color).toBe("bg-danger")
+    expect(result[result.length - 1].color).toBe("bg-destructive")
     expect(result[result.length - 2].color).toBe("bg-success")
     expect(result[result.length - 3].color).toBe("bg-success")
     expect(result[0].color).toBe("bg-muted")
@@ -88,7 +88,7 @@ describe("heartbeatsToTracker", () => {
           "tooltip": "Up — 120ms",
         },
         {
-          "color": "bg-danger",
+          "color": "bg-destructive",
           "key": "hb-2",
           "tooltip": "Down",
         },

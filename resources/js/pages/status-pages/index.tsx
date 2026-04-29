@@ -45,7 +45,7 @@ export default function StatusPagesIndex({ statusPages }: Props) {
                           {statusPage.is_published ? "Published" : "Draft"}
                         </Badge>
                       </div>
-                      <div className="mt-0.5 flex items-center gap-3 text-muted-fg text-xs">
+                      <div className="mt-0.5 flex items-center gap-3 text-muted-foreground text-xs">
                         <span>
                           {statusPage.monitors_count} monitor
                           {statusPage.monitors_count !== 1 ? "s" : ""}
@@ -82,7 +82,7 @@ export default function StatusPagesIndex({ statusPages }: Props) {
                 ))}
               </div>
             ) : (
-              <div className="py-12 text-center text-muted-fg">
+              <div className="py-12 text-center text-muted-foreground">
                 <p className="font-medium text-lg">No status pages yet</p>
                 <p className="mt-1 text-sm">
                   Create a public status page to share uptime with your users.

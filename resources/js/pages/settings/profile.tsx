@@ -69,7 +69,7 @@ export default function Profile({ mustVerifyEmail, status }: Props) {
                   Your email address is unverified.
                   <Link
                     href="/email/verification-notification"
-                    className="text-primary-subtle-fg hover:underline"
+                    className="text-primary hover:underline"
                     routerOptions={{
                       method: "post",
                     }}
@@ -79,7 +79,7 @@ export default function Profile({ mustVerifyEmail, status }: Props) {
                 </p>
 
                 {status === "verification-link-sent" && (
-                  <div className="mt-2 font-medium text-base/6 text-success-subtle-fg hover:underline sm:text-sm/6">
+                  <div className="mt-2 font-medium text-base/6 text-success hover:underline sm:text-sm/6">
                     A new verification link has been sent to your email address.
                   </div>
                 )}
@@ -90,7 +90,7 @@ export default function Profile({ mustVerifyEmail, status }: Props) {
               <Button type="submit" isDisabled={processing}>
                 Save
               </Button>
-              {recentlySuccessful && <p className="text-muted-fg text-sm">Saved.</p>}
+              {recentlySuccessful && <p className="text-muted-foreground text-sm">Saved.</p>}
             </div>
           </Form>
         </CardContent>

@@ -156,8 +156,8 @@ const SidebarProvider = ({
         }
         className={twMerge(
           "@container **:data-[slot=icon]:shrink-0",
-          "flex w-full text-sidebar-fg",
-          "group/sidebar-root peer/sidebar-root has-data-[intent=inset]:bg-sidebar dark:has-data-[intent=inset]:bg-bg",
+          "flex w-full text-sidebar-foreground",
+          "group/sidebar-root peer/sidebar-root has-data-[intent=inset]:bg-sidebar dark:has-data-[intent=inset]:bg-background",
           className,
         )}
         ref={ref}
@@ -193,7 +193,7 @@ const Sidebar = ({
         data-collapsible="none"
         data-slot="sidebar"
         className={twMerge(
-          "flex h-full w-(--sidebar-width) flex-col bg-sidebar text-sidebar-fg",
+          "flex h-full w-(--sidebar-width) flex-col bg-sidebar text-sidebar-foreground",
           className,
         )}
         {...props}
@@ -230,7 +230,7 @@ const Sidebar = ({
       data-intent={intent}
       data-side={side}
       data-slot="sidebar"
-      className="group peer hidden text-sidebar-fg md:block"
+      className="group peer hidden text-sidebar-foreground md:block"
       {...props}
     >
       <div
@@ -257,9 +257,9 @@ const Sidebar = ({
           side === "right" &&
             "right-0 group-data-[collapsible=hidden]:right-[calc(var(--sidebar-width)*-1)]",
           intent === "float" &&
-            "bg-bg p-2 group-data-[collapsible=dock]:w-[calc(--spacing(4)+2px)]",
+            "bg-background p-2 group-data-[collapsible=dock]:w-[calc(--spacing(4)+2px)]",
           intent === "inset" &&
-            "group-data-[collapsible=dock]:w-[calc(var(--sidebar-width-dock)+--spacing(2)+2px)] dark:bg-bg",
+            "group-data-[collapsible=dock]:w-[calc(var(--sidebar-width-dock)+--spacing(2)+2px)] dark:bg-background",
           intent === "default" && [
             "group-data-[collapsible=dock]:w-(--sidebar-width-dock)",
             "border-sidebar-border group-data-[side=left]:border-r group-data-[side=right]:border-l",
@@ -272,7 +272,7 @@ const Sidebar = ({
           data-sidebar="default"
           data-slot="sidebar-inner"
           className={twJoin(
-            "flex h-full w-full flex-col text-sidebar-fg",
+            "flex h-full w-full flex-col text-sidebar-foreground",
             "group-data-[intent=float]:rounded-lg group-data-[intent=float]:border group-data-[intent=float]:border-sidebar-border group-data-[intent=float]:bg-sidebar group-data-[intent=float]:shadow-xs",
           )}
         >
@@ -305,7 +305,7 @@ const SidebarFooter = ({ className, ...props }: React.ComponentProps<"div">) => 
     <div
       data-slot="sidebar-footer"
       className={twMerge([
-        "mt-auto flex shrink-0 items-center justify-center p-4 **:data-[slot=chevron]:text-muted-fg",
+        "mt-auto flex shrink-0 items-center justify-center p-4 **:data-[slot=chevron]:text-muted-foreground",
         "in-data-[intent=inset]:px-6 in-data-[intent=inset]:py-4",
         className,
       ])}
@@ -364,7 +364,7 @@ const SidebarSection = ({ className, ...props }: SidebarSectionProps) => {
       {...props}
     >
       {state !== "collapsed" && "label" in props && (
-        <Header className="mb-1 flex shrink-0 items-center rounded-md px-2 text-sidebar-fg/70 text-xs/6 outline-none ring-sidebar-ring transition-[margin,opa] duration-200 ease-linear *:data-[slot=icon]:size-4 *:data-[slot=icon]:shrink-0 group-data-[collapsible=dock]:-mt-8 group-data-[collapsible=dock]:opacity-0">
+        <Header className="mb-1 flex shrink-0 items-center rounded-md px-2 text-sidebar-foreground/70 text-xs/6 outline-none ring-sidebar-ring transition-[margin,opa] duration-200 ease-linear *:data-[slot=icon]:size-4 *:data-[slot=icon]:shrink-0 group-data-[collapsible=dock]:-mt-8 group-data-[collapsible=dock]:opacity-0">
           {props.label}
         </Header>
       )}
@@ -410,24 +410,24 @@ const SidebarItem = ({
         (className, { isPressed, isFocusVisible, isHovered, isDisabled }) =>
           twMerge([
             "href" in props ? "cursor-pointer" : "cursor-default",
-            "w-full min-w-0 items-center rounded-lg text-start font-medium text-base/6 text-sidebar-fg",
+            "w-full min-w-0 items-center rounded-lg text-start font-medium text-base/6 text-sidebar-foreground",
             "group/sidebar-item relative col-span-full overflow-hidden focus-visible:outline-hidden",
             "grid grid-cols-[auto_1fr_1.5rem_0.5rem_auto] **:last:data-[slot=icon]:ms-auto supports-[grid-template-columns:subgrid]:grid-cols-subgrid sm:text-sm/5",
             "p-2 has-[a]:p-0",
             // icon
-            "**:data-[slot=icon]:shrink-0 [&_[data-slot='icon']:not([class*='size-'])]:size-5 sm:[&_[data-slot='icon']:not([class*='size-'])]:size-4 [&_[data-slot='icon']:not([class*='text-'])]:text-muted-fg",
+            "**:data-[slot=icon]:shrink-0 [&_[data-slot='icon']:not([class*='size-'])]:size-5 sm:[&_[data-slot='icon']:not([class*='size-'])]:size-4 [&_[data-slot='icon']:not([class*='text-'])]:text-muted-foreground",
             "**:last:data-[slot=icon]:size-5 sm:**:last:data-[slot=icon]:size-4",
             "[&:has([data-slot=icon]+[data-slot=sidebar-label])_[data-slot=icon]:has(+[data-slot=sidebar-label])]:me-2",
 
             // avatar
             "**:data-[slot=avatar]:[--avatar-size:--spacing(5)]",
             "[&:has([data-slot=avatar]+[data-slot=sidebar-label])_[data-slot=avatar]:has(+[data-slot=sidebar-label])]:me-2",
-            "[--sidebar-current-bg:var(--color-sidebar-primary)] [--sidebar-current-fg:var(--color-sidebar-primary-fg)]",
+            "[--sidebar-current-bg:var(--color-sidebar-primary)] [--sidebar-current-foreground:var(--color-sidebar-primary-foreground)]",
             isCurrent &&
-              "font-medium text-(--sidebar-current-fg) hover:bg-(--sidebar-current-bg) hover:text-(--sidebar-current-fg) [&_.text-muted-fg]:text-fg/80 [&_[data-slot='icon']:not([class*='text-'])]:text-(--sidebar-current-fg) hover:[&_[data-slot='icon']:not([class*='text-'])]:text-(--sidebar-current-fg)",
+              "font-medium text-(--sidebar-current-foreground) hover:bg-(--sidebar-current-bg) hover:text-(--sidebar-current-foreground) [&_.text-muted-foreground]:text-foreground/80 [&_[data-slot='icon']:not([class*='text-'])]:text-(--sidebar-current-foreground) hover:[&_[data-slot='icon']:not([class*='text-'])]:text-(--sidebar-current-foreground)",
             isFocusVisible && "inset-ring inset-ring-sidebar-ring outline-hidden",
             (isPressed || isHovered) &&
-              "bg-sidebar-accent text-sidebar-accent-fg [&_[data-slot='icon']:not([class*='text-'])]:text-sidebar-accent-fg",
+              "bg-sidebar-accent text-sidebar-accent-foreground [&_[data-slot='icon']:not([class*='text-'])]:text-sidebar-accent-foreground",
             isDisabled && "opacity-50",
             className,
           ]),
@@ -442,7 +442,7 @@ const SidebarItem = ({
             (state !== "collapsed" ? (
               <span
                 data-slot="sidebar-badge"
-                className="absolute inset-ring-1 inset-ring-sidebar-border inset-y-1/2 end-1.5 h-5.5 w-auto -translate-y-1/2 rounded-full bg-fg/5 px-2 text-[10px]/5.5 group-hover/sidebar-item:inset-ring-muted-fg/30 group-current:inset-ring-transparent"
+                className="absolute inset-ring-1 inset-ring-sidebar-border inset-y-1/2 end-1.5 h-5.5 w-auto -translate-y-1/2 rounded-full bg-foreground/5 px-2 text-[10px]/5.5 group-hover/sidebar-item:inset-ring-muted-foreground/30 group-current:inset-ring-transparent"
               >
                 {badge}
               </span>
@@ -498,8 +498,8 @@ const SidebarInset = ({ className, ref, ...props }: React.ComponentProps<"main">
       data-slot="sidebar-inset"
       ref={ref}
       className={twMerge(
-        "relative flex w-full flex-1 flex-col bg-bg lg:min-w-0",
-        "group-has-data-[intent=inset]/sidebar-root:border group-has-data-[intent=inset]/sidebar-root:border-sidebar-border group-has-data-[intent=inset]/sidebar-root:bg-overlay",
+        "relative flex w-full flex-1 flex-col bg-background lg:min-w-0",
+        "group-has-data-[intent=inset]/sidebar-root:border group-has-data-[intent=inset]/sidebar-root:border-sidebar-border group-has-data-[intent=inset]/sidebar-root:bg-popover",
         "md:group-has-data-[intent=inset]/sidebar-root:m-2",
         "md:group-has-data-[side=left]:group-has-data-[intent=inset]/sidebar-root:ms-0",
         "md:group-has-data-[side=right]:group-has-data-[intent=inset]/sidebar-root:me-0",
@@ -562,16 +562,16 @@ const SidebarDisclosureTrigger = ({ className, ref, ...props }: SidebarDisclosur
           className,
           (className, { isPressed, isFocusVisible, isHovered, isDisabled }) =>
             twMerge(
-              "flex w-full min-w-0 items-center rounded-lg text-start font-medium text-base/6 text-sidebar-fg",
+              "flex w-full min-w-0 items-center rounded-lg text-start font-medium text-base/6 text-sidebar-foreground",
               "group/sidebar-disclosure-trigger relative col-span-full overflow-hidden focus-visible:outline-hidden",
-              "**:data-[slot=icon]:size-5 **:data-[slot=icon]:shrink-0 **:data-[slot=icon]:text-muted-fg sm:**:data-[slot=icon]:size-4",
+              "**:data-[slot=icon]:size-5 **:data-[slot=icon]:shrink-0 **:data-[slot=icon]:text-muted-foreground sm:**:data-[slot=icon]:size-4",
               "**:last:data-[slot=icon]:size-5 sm:**:last:data-[slot=icon]:size-4",
               "**:data-[slot=avatar]:size-6 sm:**:data-[slot=avatar]:size-5",
-              "col-span-full gap-3 p-2 **:data-[slot=chevron]:text-muted-fg **:last:data-[slot=icon]:ms-auto sm:gap-2 sm:text-sm/5",
+              "col-span-full gap-3 p-2 **:data-[slot=chevron]:text-muted-foreground **:last:data-[slot=icon]:ms-auto sm:gap-2 sm:text-sm/5",
 
               isFocusVisible && "inset-ring inset-ring-ring/70",
               (isPressed || isHovered) &&
-                "bg-sidebar-accent text-sidebar-accent-fg **:data-[slot=chevron]:text-sidebar-accent-fg **:data-[slot=icon]:text-sidebar-accent-fg **:last:data-[slot=icon]:text-sidebar-accent-fg",
+                "bg-sidebar-accent text-sidebar-accent-foreground **:data-[slot=chevron]:text-sidebar-accent-foreground **:data-[slot=icon]:text-sidebar-accent-foreground **:last:data-[slot=icon]:text-sidebar-accent-foreground",
               isDisabled && "opacity-50",
               className,
             ),
@@ -723,7 +723,7 @@ const SidebarNav = ({ isSticky = false, className, ...props }: SidebarNavProps) 
     <nav
       data-slot="sidebar-nav"
       className={twMerge(
-        "isolate flex items-center justify-between gap-x-2 px-(--container-padding,--spacing(4)) py-2.5 text-navbar-fg sm:justify-start sm:px-(--gutter,--spacing(4)) md:w-full",
+        "isolate flex items-center justify-between gap-x-2 px-(--container-padding,--spacing(4)) py-2.5 text-foreground sm:justify-start sm:px-(--gutter,--spacing(4)) md:w-full",
         isSticky && "static top-0 z-40 group-has-data-[intent=default]/sidebar-root:sticky",
         className,
       )}
@@ -746,8 +746,8 @@ const SidebarMenuTrigger = ({
         !alwaysVisible &&
           "opacity-0 pressed:opacity-100 group-hover/sidebar-item:opacity-100 group-focus-visible/sidebar-item:opacity-100 group/sidebar-item:pressed:opacity-100",
         "absolute end-0 flex h-full w-[calc(var(--sidebar-width)-90%)] items-center justify-end pe-2.5 outline-hidden",
-        "**:data-[slot=icon]:shrink-0 [&_[data-slot='icon']:not([class*='size-'])]:size-5 sm:[&_[data-slot='icon']:not([class*='size-'])]:size-4 pressed:[&_[data-slot='icon']:not([class*='text-'])]:text-fg",
-        "pressed:text-fg text-muted-fg hover:text-fg",
+        "**:data-[slot=icon]:shrink-0 [&_[data-slot='icon']:not([class*='size-'])]:size-5 sm:[&_[data-slot='icon']:not([class*='size-'])]:size-4 pressed:[&_[data-slot='icon']:not([class*='text-'])]:text-foreground",
+        "pressed:text-foreground text-muted-foreground hover:text-foreground",
         className,
       )}
       {...props}

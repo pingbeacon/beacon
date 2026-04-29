@@ -97,7 +97,7 @@ export default function StatusPageForm({ statusPage, monitors }: StatusPageFormP
       {monitors.length > 0 && (
         <fieldset>
           <legend className="mb-2 font-medium text-sm">Monitors</legend>
-          <p className="mb-3 text-muted-fg text-xs">
+          <p className="mb-3 text-muted-foreground text-xs">
             Select which monitors to display on this status page.
           </p>
           <div className="space-y-2">
@@ -115,7 +115,7 @@ export default function StatusPageForm({ statusPage, monitors }: StatusPageFormP
                 }}
               >
                 <span className="font-medium">{monitor.name}</span>
-                <span className="ml-1 text-muted-fg text-xs">({monitor.type.toUpperCase()})</span>
+                <span className="ml-1 text-muted-foreground text-xs">({monitor.type.toUpperCase()})</span>
               </Checkbox>
             ))}
           </div>
@@ -130,7 +130,7 @@ export default function StatusPageForm({ statusPage, monitors }: StatusPageFormP
         <div>
           <label className="mb-1 block font-medium text-sm">Logo</label>
           {statusPage?.logo_path && (
-            <p className="mb-1 text-muted-fg text-xs">Current: {statusPage.logo_path}</p>
+            <p className="mb-1 text-muted-foreground text-xs">Current: {statusPage.logo_path}</p>
           )}
           <input
             type="file"
@@ -138,13 +138,13 @@ export default function StatusPageForm({ statusPage, monitors }: StatusPageFormP
             onChange={(e) => setData("logo", e.target.files?.[0] ?? null)}
             className="text-sm"
           />
-          {errors.logo && <p className="mt-1 text-danger text-sm">{errors.logo}</p>}
+          {errors.logo && <p className="mt-1 text-destructive text-sm">{errors.logo}</p>}
         </div>
 
         <div>
           <label className="mb-1 block font-medium text-sm">Favicon</label>
           {statusPage?.favicon_path && (
-            <p className="mb-1 text-muted-fg text-xs">Current: {statusPage.favicon_path}</p>
+            <p className="mb-1 text-muted-foreground text-xs">Current: {statusPage.favicon_path}</p>
           )}
           <input
             type="file"
@@ -152,7 +152,7 @@ export default function StatusPageForm({ statusPage, monitors }: StatusPageFormP
             onChange={(e) => setData("favicon", e.target.files?.[0] ?? null)}
             className="text-sm"
           />
-          {errors.favicon && <p className="mt-1 text-danger text-sm">{errors.favicon}</p>}
+          {errors.favicon && <p className="mt-1 text-destructive text-sm">{errors.favicon}</p>}
         </div>
 
         <div className="grid grid-cols-3 gap-3">

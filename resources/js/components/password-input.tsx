@@ -17,7 +17,7 @@ export function PasswordInput({ className, ...props }: PasswordInputProps) {
       />
       <button
         type="button"
-        className="touch-hitbox absolute end-0 top-0 flex h-full items-center px-2.5 text-muted-fg transition-colors hover:text-fg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+        className="touch-hitbox absolute end-0 top-0 flex h-full items-center px-2.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         onClick={() => setVisible((v) => !v)}
         aria-label={visible ? "Hide password" : "Show password"}
         aria-pressed={visible}

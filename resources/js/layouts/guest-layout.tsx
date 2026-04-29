@@ -25,11 +25,11 @@ export default function GuestLayout({
       <div className="sticky top-0 hidden h-screen w-[420px] shrink-0 flex-col justify-between border-border border-r bg-sidebar px-12 py-10 lg:flex">
         <Link href="/" aria-label="Go to homepage" className="flex w-fit items-center gap-2.5">
           <Logo />
-          <span className="font-semibold text-fg">Beacon</span>
+          <span className="font-semibold text-foreground">Beacon</span>
         </Link>
 
         <div className="space-y-8">
-          <h1 className="font-bold text-3xl text-fg leading-snug">
+          <h1 className="font-bold text-3xl text-foreground leading-snug">
             Know the moment
             <br />
             something breaks.
@@ -41,13 +41,13 @@ export default function GuestLayout({
                   className="mt-0.5 size-4 shrink-0 text-primary"
                   aria-hidden="true"
                 />
-                <span className="text-muted-fg text-sm">{feature}</span>
+                <span className="text-muted-foreground text-sm">{feature}</span>
               </li>
             ))}
           </ul>
         </div>
 
-        <p className="text-muted-fg text-xs">© {new Date().getFullYear()} Beacon</p>
+        <p className="text-muted-foreground text-xs">© {new Date().getFullYear()} Beacon</p>
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
@@ -60,8 +60,8 @@ export default function GuestLayout({
         <div className="w-full max-w-md space-y-6">
           {(header || description) && (
             <div>
-              {header && <h2 className="font-semibold text-fg text-xl">{header}</h2>}
-              {description && <p className="mt-1 text-muted-fg text-sm">{description}</p>}
+              {header && <h2 className="font-semibold text-foreground text-xl">{header}</h2>}
+              {description && <p className="mt-1 text-muted-foreground text-sm">{description}</p>}
             </div>
           )}
           <Flash />

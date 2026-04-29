@@ -64,7 +64,7 @@ export default function ImportExportSection({ selectedIds = [] }: ImportExportSe
               <ModalTitle>Import Monitors</ModalTitle>
             </ModalHeader>
             <ModalBody>
-              <p className="mb-4 text-muted-fg text-sm">
+              <p className="mb-4 text-muted-foreground text-sm">
                 Upload a JSON file previously exported from this application.
                 Notification channels will not be imported.
               </p>
@@ -72,7 +72,7 @@ export default function ImportExportSection({ selectedIds = [] }: ImportExportSe
                 ref={fileInputRef}
                 type="file"
                 accept=".json"
-                className="block w-full text-sm file:mr-4 file:rounded file:border-0 file:bg-primary file:px-4 file:py-2 file:font-medium file:text-primary-fg file:text-sm hover:file:bg-primary/90"
+                className="block w-full text-sm file:mr-4 file:rounded file:border-0 file:bg-primary file:px-4 file:py-2 file:font-medium file:text-primary-foreground file:text-sm hover:file:bg-primary/90"
               />
             </ModalBody>
             <ModalFooter>

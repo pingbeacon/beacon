@@ -30,8 +30,8 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                     className={twMerge(
                       "block whitespace-nowrap rounded-lg px-3 py-2 font-medium text-sm transition-colors",
                       isActive
-                        ? "bg-secondary text-secondary-fg"
-                        : "text-muted-fg hover:bg-secondary/50 hover:text-fg",
+                        ? "bg-secondary text-secondary-foreground"
+                        : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
                     )}
                   >
                     {item.name}

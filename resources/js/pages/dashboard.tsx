@@ -114,14 +114,14 @@ function KPIStrip({
 }) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      <div className="flex flex-col rounded-lg border bg-overlay px-5 py-4">
-        <span className="text-[10px] text-muted-fg uppercase tracking-widest">Monitors</span>
+      <div className="flex flex-col rounded-lg border bg-popover px-5 py-4">
+        <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Monitors</span>
         <span className="mt-2 font-medium font-mono text-4xl tabular-nums">{counts.total}</span>
-        <span className="mt-1.5 text-muted-fg text-xs">
+        <span className="mt-1.5 text-muted-foreground text-xs">
           <span className="text-success">{counts.up} up</span>
           {" · "}
           {counts.down > 0 ? (
-            <span className="text-danger">{counts.down} down</span>
+            <span className="text-destructive">{counts.down} down</span>
           ) : (
             <span>0 down</span>
           )}
@@ -129,44 +129,44 @@ function KPIStrip({
         </span>
       </div>
 
-      <div className="flex flex-col rounded-lg border bg-overlay px-5 py-4">
-        <span className="text-[10px] text-muted-fg uppercase tracking-widest">Uptime · 30d</span>
+      <div className="flex flex-col rounded-lg border bg-popover px-5 py-4">
+        <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Uptime · 30d</span>
         <span
-          className={`mt-2 font-medium font-mono text-4xl tabular-nums ${teamUptime30d !== null ? uptimeColor(teamUptime30d) : "text-muted-fg"}`}
+          className={`mt-2 font-medium font-mono text-4xl tabular-nums ${teamUptime30d !== null ? uptimeColor(teamUptime30d) : "text-muted-foreground"}`}
         >
           {teamUptime30d !== null ? `${teamUptime30d}%` : "—"}
         </span>
-        <span className="mt-1.5 text-muted-fg text-xs">team average</span>
+        <span className="mt-1.5 text-muted-foreground text-xs">team average</span>
       </div>
 
-      <div className="flex flex-col rounded-lg border bg-overlay px-5 py-4">
-        <span className="text-[10px] text-muted-fg uppercase tracking-widest">
+      <div className="flex flex-col rounded-lg border bg-popover px-5 py-4">
+        <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
           Avg response · 24h
         </span>
         <span className="mt-2 font-medium font-mono text-4xl tabular-nums">
           {avgResponse24h !== null ? `${avgResponse24h}ms` : "—"}
         </span>
-        <span className="mt-1.5 text-muted-fg text-xs">across all monitors</span>
+        <span className="mt-1.5 text-muted-foreground text-xs">across all monitors</span>
       </div>
 
       <div
-        className={`flex flex-col rounded-lg border px-5 py-4 ${openIncidentsCount > 0 ? "border-danger/30 bg-danger/8" : "bg-overlay"}`}
+        className={`flex flex-col rounded-lg border px-5 py-4 ${openIncidentsCount > 0 ? "border-destructive/30 bg-destructive/8" : "bg-popover"}`}
       >
         <span
-          className={`text-[10px] uppercase tracking-widest ${openIncidentsCount > 0 ? "text-danger/70" : "text-muted-fg"}`}
+          className={`text-[10px] uppercase tracking-widest ${openIncidentsCount > 0 ? "text-destructive/70" : "text-muted-foreground"}`}
         >
           Open incidents
         </span>
         <span
-          className={`mt-2 font-medium font-mono tabular-nums ${openIncidentsCount > 0 ? "text-5xl text-danger" : "text-4xl"}`}
+          className={`mt-2 font-medium font-mono tabular-nums ${openIncidentsCount > 0 ? "text-5xl text-destructive" : "text-4xl"}`}
         >
           {openIncidentsCount}
         </span>
         {openIncidentsCount > 0 && (
-          <span className="mt-1.5 text-danger/70 text-xs">action required</span>
+          <span className="mt-1.5 text-destructive/70 text-xs">action required</span>
         )}
         {openIncidentsCount === 0 && (
-          <span className="mt-1.5 text-muted-fg text-xs">all clear</span>
+          <span className="mt-1.5 text-muted-foreground text-xs">all clear</span>
         )}
       </div>
     </div>
@@ -187,21 +187,21 @@ function ActiveIncidentBanner({ incidents }: { incidents: OpenIncident[] }) {
   if (incidents.length === 0 || !first) return null
 
   return (
-    <div className="rounded-lg border border-danger/30 bg-danger/8 px-5 py-4">
+    <div className="rounded-lg border border-destructive/30 bg-destructive/8 px-5 py-4">
       <div className="flex items-center gap-3">
         <span className="relative flex size-3 shrink-0">
-          <span className="absolute inline-flex size-full animate-ping rounded-full bg-danger opacity-30" />
-          <span className="relative inline-flex size-3 rounded-full bg-danger" />
+          <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive opacity-30" />
+          <span className="relative inline-flex size-3 rounded-full bg-destructive" />
         </span>
-        <span className="font-bold text-danger text-xs uppercase tracking-wider">
+        <span className="font-bold text-destructive text-xs uppercase tracking-wider">
           Active incident
         </span>
-        <span className="ml-auto font-mono text-danger/60 text-xs">{elapsed}</span>
+        <span className="ml-auto font-mono text-destructive/60 text-xs">{elapsed}</span>
       </div>
-      <div className="mt-2 font-semibold text-danger">{first.monitor_name}</div>
-      {first.cause && <div className="mt-0.5 text-danger/70 text-xs">{first.cause}</div>}
+      <div className="mt-2 font-semibold text-destructive">{first.monitor_name}</div>
+      {first.cause && <div className="mt-0.5 text-destructive/70 text-xs">{first.cause}</div>}
       {incidents.length > 1 && (
-        <div className="mt-1 text-danger/60 text-xs">+{incidents.length - 1} more</div>
+        <div className="mt-1 text-destructive/60 text-xs">+{incidents.length - 1} more</div>
       )}
       <div className="mt-3 flex gap-2">
         <Link href={monitorRoutes.index.url({ query: { status: "down" } })}>
@@ -239,21 +239,21 @@ function IncidentGantt({ monitors }: { monitors: Monitor[] }) {
   if (rows.length === 0) return null
 
   return (
-    <div className="rounded-lg border bg-overlay p-5">
+    <div className="rounded-lg border bg-popover p-5">
       <div className="flex items-start justify-between">
         <div>
           <div className="font-semibold text-sm">Incident timeline · 24h</div>
-          <div className="mt-0.5 text-muted-fg text-xs">
+          <div className="mt-0.5 text-muted-foreground text-xs">
             {rows.length} monitor{rows.length > 1 ? "s" : ""} with incidents in the last 24 hours
           </div>
         </div>
-        <div className="flex items-center gap-4 text-muted-fg text-xs">
+        <div className="flex items-center gap-4 text-muted-foreground text-xs">
           <span className="flex items-center gap-1.5">
             <span className="inline-block size-2.5 rounded-sm bg-success/40" />
             up
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="inline-block size-2.5 rounded-sm bg-danger" />
+            <span className="inline-block size-2.5 rounded-sm bg-destructive" />
             down
           </span>
         </div>
@@ -291,8 +291,8 @@ function IncidentGantt({ monitors }: { monitors: Monitor[] }) {
               style={{ gridTemplateColumns: "160px 1fr" }}
             >
               <div className="flex items-center gap-2 overflow-hidden">
-                <span className="truncate text-fg text-xs">{m.name}</span>
-                <span className="shrink-0 rounded bg-muted/20 px-1 py-px font-mono text-[10px] text-muted-fg uppercase">
+                <span className="truncate text-foreground text-xs">{m.name}</span>
+                <span className="shrink-0 rounded bg-muted/20 px-1 py-px font-mono text-[10px] text-muted-foreground uppercase">
                   {m.type}
                 </span>
               </div>
@@ -301,7 +301,7 @@ function IncidentGantt({ monitors }: { monitors: Monitor[] }) {
                   seg.status === "down" ? (
                     <div
                       key={i}
-                      className="absolute inset-y-0 bg-danger"
+                      className="absolute inset-y-0 bg-destructive"
                       style={{
                         left: `${seg.start}%`,
                         width: `${Math.max(0.5, seg.end - seg.start)}%`,
@@ -318,7 +318,7 @@ function IncidentGantt({ monitors }: { monitors: Monitor[] }) {
 
       <div className="mt-3 grid gap-3" style={{ gridTemplateColumns: "160px 1fr" }}>
         <div />
-        <div className="flex justify-between text-[10px] text-muted-fg/60">
+        <div className="flex justify-between text-[10px] text-muted-foreground/60">
           {["24h ago", "18h", "12h", "6h", "now"].map((h) => (
             <span key={h}>{h}</span>
           ))}
@@ -331,14 +331,14 @@ function IncidentGantt({ monitors }: { monitors: Monitor[] }) {
 function StatusDot({ status }: { status: Monitor["status"] }) {
   const colors: Record<Monitor["status"], string> = {
     up: "bg-success",
-    down: "bg-danger",
+    down: "bg-destructive",
     pending: "bg-warning",
     paused: "bg-muted",
   }
   return (
     <span className="relative flex size-2.5 shrink-0">
       {status === "down" && (
-        <span className="absolute inline-flex size-full animate-ping rounded-full bg-danger opacity-30" />
+        <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive opacity-30" />
       )}
       <span className={`relative inline-flex size-2.5 rounded-full ${colors[status]}`} />
     </span>
@@ -352,8 +352,8 @@ function MonitorCardImpl({ monitor }: { monitor: Monitor }) {
   return (
     <Link
       href={monitorRoutes.show.url(monitor.id)}
-      className={`flex flex-col gap-3 rounded-lg border p-4 transition-colors hover:border-fg/20 hover:bg-secondary/20 ${
-        isDown ? "border-danger/30 bg-danger/5" : "border-border"
+      className={`flex flex-col gap-3 rounded-lg border p-4 transition-colors hover:border-foreground/20 hover:bg-secondary/20 ${
+        isDown ? "border-destructive/30 bg-destructive/5" : "border-border"
       }`}
     >
       <div className="flex items-start justify-between gap-2">
@@ -361,7 +361,7 @@ function MonitorCardImpl({ monitor }: { monitor: Monitor }) {
           <StatusDot status={monitor.status} />
           <div className="min-w-0">
             <div className="truncate font-medium text-sm">{monitor.name}</div>
-            <div className="truncate text-muted-fg text-xs">
+            <div className="truncate text-muted-foreground text-xs">
               {monitor.type.toUpperCase()} · {monitor.url ?? monitor.host}
             </div>
           </div>
@@ -379,19 +379,19 @@ function MonitorCardImpl({ monitor }: { monitor: Monitor }) {
 
       <div className="grid grid-cols-4 gap-1 text-center">
         <div>
-          <div className="text-[10px] text-muted-fg uppercase tracking-wide">Uptime</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Uptime</div>
           <div
             className={`mt-0.5 font-medium font-mono text-sm tabular-nums ${
               monitor.uptime_percentage != null
                 ? uptimeColor(monitor.uptime_percentage)
-                : "text-muted-fg"
+                : "text-muted-foreground"
             }`}
           >
             {monitor.uptime_percentage != null ? `${monitor.uptime_percentage}%` : "—"}
           </div>
         </div>
         <div>
-          <div className="text-[10px] text-muted-fg uppercase tracking-wide">Avg</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Avg</div>
           <div className="mt-0.5 font-mono text-sm tabular-nums">
             {monitor.average_response_time != null
               ? `${Math.round(monitor.average_response_time)}ms`
@@ -399,14 +399,14 @@ function MonitorCardImpl({ monitor }: { monitor: Monitor }) {
           </div>
         </div>
         <div>
-          <div className="text-[10px] text-muted-fg uppercase tracking-wide">Interval</div>
-          <div className="mt-0.5 font-mono text-muted-fg text-sm tabular-nums">
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Interval</div>
+          <div className="mt-0.5 font-mono text-muted-foreground text-sm tabular-nums">
             {formatInterval(monitor.interval)}
           </div>
         </div>
         <div>
-          <div className="text-[10px] text-muted-fg uppercase tracking-wide">Last check</div>
-          <div className="mt-0.5 font-mono text-muted-fg text-xs">{lastChecked}</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Last check</div>
+          <div className="mt-0.5 font-mono text-muted-foreground text-xs">{lastChecked}</div>
         </div>
       </div>
     </Link>
@@ -446,14 +446,14 @@ function MonitorGrid({ monitors }: { monitors: Monitor[] }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 rounded-lg border bg-overlay p-1">
+        <div className="flex items-center gap-1.5 rounded-lg border bg-popover p-1">
           {tabs.map((t) => (
             <button
               type="button"
               key={t.key}
               onClick={() => setFilter(t.key)}
               className={`rounded-md px-3 py-1.5 font-medium text-xs transition-colors ${
-                filter === t.key ? "bg-primary text-primary-fg" : "text-muted-fg hover:text-fg"
+                filter === t.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {t.label}
@@ -475,7 +475,7 @@ function MonitorGrid({ monitors }: { monitors: Monitor[] }) {
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed py-8 text-center text-muted-fg text-sm">
+        <div className="rounded-lg border border-dashed py-8 text-center text-muted-foreground text-sm">
           No {filter === "all" ? "" : filter} monitors.
         </div>
       )}
@@ -487,21 +487,21 @@ function SSLExpiryWidget({ certs }: { certs: SslCert[] }) {
   if (certs.length === 0) return null
 
   const certColor = (days: number | null, isValid: boolean) => {
-    if (!isValid) return "text-danger"
-    if (days === null) return "text-muted-fg"
-    if (days <= 7) return "text-danger"
+    if (!isValid) return "text-destructive"
+    if (days === null) return "text-muted-foreground"
+    if (days <= 7) return "text-destructive"
     if (days <= 30) return "text-warning"
     return "text-success"
   }
 
   return (
-    <div className="rounded-lg border bg-overlay p-4">
+    <div className="rounded-lg border bg-popover p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 font-semibold text-sm">
-          <ShieldCheckIcon className="size-4 text-muted-fg" />
+          <ShieldCheckIcon className="size-4 text-muted-foreground" />
           SSL Expiry
         </div>
-        <span className="text-muted-fg text-xs">{certs.length} monitored</span>
+        <span className="text-muted-foreground text-xs">{certs.length} monitored</span>
       </div>
       <div className="mt-3 space-y-0">
         {certs.map((c, i) => (
@@ -519,7 +519,7 @@ function SSLExpiryWidget({ certs }: { certs: SslCert[] }) {
               </span>
             </div>
             {c.issuer && (
-              <div className="mt-0.5 truncate text-[10px] text-muted-fg">{c.issuer}</div>
+              <div className="mt-0.5 truncate text-[10px] text-muted-foreground">{c.issuer}</div>
             )}
           </div>
         ))}
@@ -540,10 +540,10 @@ function NotificationChannelsWidget({ channels }: { channels: NotifChannel[] }) 
   }
 
   return (
-    <div className="rounded-lg border bg-overlay p-4">
+    <div className="rounded-lg border bg-popover p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 font-semibold text-sm">
-          <BellIcon className="size-4 text-muted-fg" />
+          <BellIcon className="size-4 text-muted-foreground" />
           Notifications
         </div>
         <Link
@@ -559,7 +559,7 @@ function NotificationChannelsWidget({ channels }: { channels: NotifChannel[] }) 
             <span
               className={`size-2 shrink-0 rounded-full ${c.is_enabled ? "bg-success" : "bg-muted"}`}
             />
-            <span className="w-16 shrink-0 text-muted-fg">{typeLabel[c.type] ?? c.type}</span>
+            <span className="w-16 shrink-0 text-muted-foreground">{typeLabel[c.type] ?? c.type}</span>
             <span className="min-w-0 truncate">{c.name}</span>
           </div>
         ))}
@@ -571,10 +571,10 @@ function NotificationChannelsWidget({ channels }: { channels: NotifChannel[] }) 
 function LiveFeed({ events }: { events: LiveEvent[] }) {
   const alertKinds = new Set(["DOWN", "DEGRADED"])
   return (
-    <div className="rounded-lg border bg-overlay p-4">
+    <div className="rounded-lg border bg-popover p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 font-semibold text-sm">
-          <SignalIcon className="size-4 text-muted-fg" />
+          <SignalIcon className="size-4 text-muted-foreground" />
           Live feed
         </div>
         <div className="flex items-center gap-1.5 text-success text-xs">
@@ -587,7 +587,7 @@ function LiveFeed({ events }: { events: LiveEvent[] }) {
       </div>
       <div className="mt-3 font-mono text-xs">
         {events.length === 0 ? (
-          <div className="py-6 text-center text-muted-fg">Waiting for events…</div>
+          <div className="py-6 text-center text-muted-foreground">Waiting for events…</div>
         ) : (
           <div className="space-y-0.5">
             {events.slice(0, 15).map((e) => (
@@ -596,13 +596,13 @@ function LiveFeed({ events }: { events: LiveEvent[] }) {
                 className="grid items-center gap-3 py-1"
                 style={{ gridTemplateColumns: "5.5rem 4rem 1fr" }}
               >
-                <span className="text-muted-fg/60">{formatTime(e.timestamp)}</span>
+                <span className="text-muted-foreground/60">{formatTime(e.timestamp)}</span>
                 <span
-                  className={`font-semibold uppercase ${alertKinds.has(e.kind) ? "text-danger" : e.kind === "UP" ? "text-success" : "text-muted-fg"}`}
+                  className={`font-semibold uppercase ${alertKinds.has(e.kind) ? "text-destructive" : e.kind === "UP" ? "text-success" : "text-muted-foreground"}`}
                 >
                   {e.kind}
                 </span>
-                <span className="truncate text-muted-fg">
+                <span className="truncate text-muted-foreground">
                   {e.monitorName}
                   {e.detail ? ` · ${e.detail}` : ""}
                 </span>
@@ -666,7 +666,7 @@ function EmptyState() {
     <div className="py-8">
       <div className="mb-10">
         <Heading level={2}>Get started</Heading>
-        <p className="mt-1 text-muted-fg text-sm">
+        <p className="mt-1 text-muted-foreground text-sm">
           Three steps to know the moment your services go down.
         </p>
       </div>
@@ -675,18 +675,18 @@ function EmptyState() {
         {steps.map(({ icon: Icon, step, title, description, action }, index) => (
           <div
             key={step}
-            className="fade-in slide-in-from-bottom-2 flex animate-in items-start gap-4 rounded-lg border bg-bg fill-mode-both px-5 py-4 transition-colors duration-300 hover:bg-secondary/20"
+            className="fade-in slide-in-from-bottom-2 flex animate-in items-start gap-4 rounded-lg border bg-background fill-mode-both px-5 py-4 transition-colors duration-300 hover:bg-secondary/20"
             style={{ animationDelay: `${index * 80}ms` }}
           >
-            <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md bg-primary-subtle">
-              <Icon className="size-4 text-primary-subtle-fg" />
+            <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/12">
+              <Icon className="size-4 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-muted-fg text-xs">{step}</span>
+                <span className="font-mono text-muted-foreground text-xs">{step}</span>
                 <span className="font-semibold text-sm">{title}</span>
               </div>
-              <p className="mt-0.5 text-muted-fg text-xs leading-relaxed">{description}</p>
+              <p className="mt-0.5 text-muted-foreground text-xs leading-relaxed">{description}</p>
             </div>
             <div className="shrink-0 pt-0.5">{action}</div>
           </div>

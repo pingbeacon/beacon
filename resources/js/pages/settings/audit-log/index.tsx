@@ -78,7 +78,7 @@ export default function AuditLogIndex({ logs, filters }: Props) {
       <Card>
         <CardContent className="p-0">
           {logs.data.length === 0 ? (
-            <div className="p-8 text-center text-muted-fg">No audit logs found.</div>
+            <div className="p-8 text-center text-muted-foreground">No audit logs found.</div>
           ) : (
             <div className="divide-y">
               {logs.data.map((log) => (
@@ -91,12 +91,12 @@ export default function AuditLogIndex({ logs, filters }: Props) {
                       <p className="text-sm">
                         <span className="font-medium">{log.user?.name ?? "System"}</span>
                         {" "}{log.action}{" "}
-                        <span className="text-muted-fg">{formatType(log.auditable_type)}</span>
+                        <span className="text-muted-foreground">{formatType(log.auditable_type)}</span>
                         {" "}#{log.auditable_id}
                       </p>
                     </div>
                   </div>
-                  <span className="text-muted-fg text-xs">
+                  <span className="text-muted-foreground text-xs">
                     {new Date(log.created_at).toLocaleString()}
                   </span>
                 </div>
@@ -113,7 +113,7 @@ export default function AuditLogIndex({ logs, filters }: Props) {
               <Button intent="outline" size="sm">Previous</Button>
             </Link>
           )}
-          <span className="flex items-center px-3 text-muted-fg text-sm">
+          <span className="flex items-center px-3 text-muted-foreground text-sm">
             Page {logs.current_page} of {logs.last_page}
           </span>
           {logs.next_page_url && (

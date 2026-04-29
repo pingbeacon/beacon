@@ -129,7 +129,7 @@ const TableColumn = ({ isResizable = false, className, ...props }: TableColumnPr
       {...props}
       className={cx(
         [
-          "text-start font-medium text-muted-fg",
+          "text-start font-medium text-muted-foreground",
           "relative allows-sorting:cursor-default dragging:cursor-grabbing outline-hidden",
           "px-4 py-(--gutter-y)",
           "first:ps-(--gutter,--spacing(2)) last:pe-(--gutter,--spacing(2))",
@@ -146,8 +146,8 @@ const TableColumn = ({ isResizable = false, className, ...props }: TableColumnPr
           {values.allowsSorting && (
             <span
               className={twJoin(
-                "grid size-[1.15rem] flex-none shrink-0 place-content-center rounded bg-secondary text-fg *:data-[slot=icon]:size-3.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:transition-transform *:data-[slot=icon]:duration-200",
-                values.isHovered ? "bg-secondary-fg/10" : "",
+                "grid size-[1.15rem] flex-none shrink-0 place-content-center rounded bg-secondary text-foreground *:data-[slot=icon]:size-3.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:transition-transform *:data-[slot=icon]:duration-200",
+                values.isHovered ? "bg-secondary-foreground/10" : "",
               )}
             >
               <ChevronDownIcon
@@ -244,14 +244,14 @@ const TableRow = <T extends object>({
             "group relative cursor-default outline outline-transparent",
             isFocusVisible &&
               "bg-primary/5 outline-primary ring-3 ring-ring/20 hover:bg-primary/10",
-            isDragging && "cursor-grabbing bg-primary/10 text-fg outline-primary",
-            isSelected && "bg-(--table-selected-bg) text-fg hover:bg-(--table-selected-bg)/50",
+            isDragging && "cursor-grabbing bg-primary/10 text-foreground outline-primary",
+            isSelected && "bg-(--table-selected-bg) text-foreground hover:bg-(--table-selected-bg)/50",
             striped && "even:bg-muted",
             (props.href || props.onAction || selectionMode === "multiple") &&
-              "hover:bg-(--table-selected-bg) hover:text-fg",
+              "hover:bg-(--table-selected-bg) hover:text-foreground",
             (props.href || props.onAction || selectionMode === "multiple") &&
               isFocusVisibleWithin &&
-              "bg-(--table-selected-bg)/50 selected:bg-(--table-selected-bg)/50 text-fg",
+              "bg-(--table-selected-bg)/50 selected:bg-(--table-selected-bg)/50 text-foreground",
             isDisabled && "opacity-50",
             className,
           ),
@@ -309,7 +309,7 @@ const TableCell = ({ className, ref, ...props }: TableCellProps) => {
       {...props}
       className={cx(
         twJoin(
-          "group px-4 py-(--gutter-y) align-middle outline-hidden first:ps-(--gutter,--spacing(2)) last:pe-(--gutter,--spacing(2)) group-has-data-focus-visible-within:text-fg",
+          "group px-4 py-(--gutter-y) align-middle outline-hidden first:ps-(--gutter,--spacing(2)) last:pe-(--gutter,--spacing(2)) group-has-data-focus-visible-within:text-foreground",
           !striped && "border-b",
           grid && "border-l first:border-l-0",
           !bleed && "sm:last:pe-1 sm:first:ps-1",

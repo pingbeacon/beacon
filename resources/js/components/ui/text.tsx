@@ -8,13 +8,13 @@ export function Text({ className, ...props }: React.ComponentPropsWithoutRef<"p"
     <p
       data-slot="text"
       {...props}
-      className={twMerge("text-base/6 text-muted-fg sm:text-sm/6", className)}
+      className={twMerge("text-base/6 text-muted-foreground sm:text-sm/6", className)}
     />
   )
 }
 
 export const textLinkStyles = tv({
-  base: "text-primary-subtle-fg decoration-primary-subtle-fg/50 hover:underline hover:decoration-primary-subtle-fg has-data-[slot=icon]:inline-flex has-data-[slot=icon]:items-center has-data-[slot=icon]:gap-x-1",
+  base: "text-primary decoration-primary/50 hover:underline hover:decoration-primary has-data-[slot=icon]:inline-flex has-data-[slot=icon]:items-center has-data-[slot=icon]:gap-x-1",
 })
 
 export function TextLink({ className, ...props }: React.ComponentPropsWithoutRef<typeof Link>) {

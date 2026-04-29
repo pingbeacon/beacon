@@ -40,12 +40,12 @@ const Calendar = <T extends DateValue>({ className, ...props }: CalendarProps<T>
               date={date}
               className={composeRenderProps(className, (className, { isSelected, isDisabled }) =>
                 twMerge(
-                  "relative flex size-11 cursor-default items-center justify-center rounded-lg text-fg tabular-nums outline-hidden hover:bg-secondary-fg/15 sm:size-9 sm:text-sm/6 forced-colors:text-[ButtonText] forced-colors:outline-0",
+                  "relative flex size-11 cursor-default items-center justify-center rounded-lg text-foreground tabular-nums outline-hidden hover:bg-secondary-foreground/15 sm:size-9 sm:text-sm/6 forced-colors:text-[ButtonText] forced-colors:outline-0",
                   isSelected &&
-                    "bg-primary pressed:bg-primary text-primary-fg hover:bg-primary/90 data-invalid:bg-danger data-invalid:text-danger-fg forced-colors:bg-[Highlight] forced-colors:text-[Highlight] forced-colors:data-invalid:bg-[Mark]",
-                  isDisabled && "text-muted-fg forced-colors:text-[GrayText]",
+                    "bg-primary pressed:bg-primary text-primary-foreground hover:bg-primary/90 data-invalid:bg-destructive data-invalid:text-destructive-foreground forced-colors:bg-[Highlight] forced-colors:text-[Highlight] forced-colors:data-invalid:bg-[Mark]",
+                  isDisabled && "text-muted-foreground forced-colors:text-[GrayText]",
                   date.compare(now) === 0 &&
-                    "after:pointer-events-none after:absolute after:start-1/2 after:bottom-1 after:z-10 after:size-0.75 after:-translate-x-1/2 after:rounded-full after:bg-primary selected:after:bg-primary-fg focus-visible:after:bg-primary-fg",
+                    "after:pointer-events-none after:absolute after:start-1/2 after:bottom-1 after:z-10 after:size-0.75 after:-translate-x-1/2 after:rounded-full after:bg-primary selected:after:bg-primary-foreground focus-visible:after:bg-primary-foreground",
                   className,
                 ),
               )}
@@ -80,7 +80,7 @@ const CalendarHeader = ({
       <div className="flex items-center gap-1">
         <Button
           size="sq-sm"
-          className="size-8 **:data-[slot=icon]:text-fg sm:size-7"
+          className="size-8 **:data-[slot=icon]:text-foreground sm:size-7"
           isCircle
           intent="plain"
           slot="previous"
@@ -89,7 +89,7 @@ const CalendarHeader = ({
         </Button>
         <Button
           size="sq-sm"
-          className="size-8 **:data-[slot=icon]:text-fg sm:size-7"
+          className="size-8 **:data-[slot=icon]:text-foreground sm:size-7"
           isCircle
           intent="plain"
           slot="next"
@@ -195,7 +195,7 @@ const CalendarGridHeader = () => {
   return (
     <CalendarGridHeaderPrimitive>
       {(day) => (
-        <CalendarHeaderCell className="pb-2 text-center font-semibold text-muted-fg text-sm/6 sm:px-0 sm:py-0.5 lg:text-xs">
+        <CalendarHeaderCell className="pb-2 text-center font-semibold text-muted-foreground text-sm/6 sm:px-0 sm:py-0.5 lg:text-xs">
           {day}
         </CalendarHeaderCell>
       )}

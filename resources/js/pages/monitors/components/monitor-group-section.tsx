@@ -21,7 +21,7 @@ export default function MonitorGroupSection({ group, children, monitorCount }: M
         <button
           type="button"
           onClick={() => setCollapsed(!collapsed)}
-          className="text-muted-fg hover:text-fg"
+          className="text-muted-foreground hover:text-foreground"
         >
           {collapsed ? (
             <ChevronRightIcon className="size-5" />
@@ -31,9 +31,9 @@ export default function MonitorGroupSection({ group, children, monitorCount }: M
         </button>
         <div className="flex-1 min-w-0">
           <span className="font-medium text-sm">{group.name}</span>
-          <span className="ml-2 text-muted-fg text-xs">({monitorCount})</span>
+          <span className="ml-2 text-muted-foreground text-xs">({monitorCount})</span>
           {group.description && (
-            <p className="truncate text-muted-fg text-xs">{group.description}</p>
+            <p className="truncate text-muted-foreground text-xs">{group.description}</p>
           )}
         </div>
         <div className="flex gap-1">
