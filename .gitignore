@@ -25,3 +25,5 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+/docs
+/test-results
