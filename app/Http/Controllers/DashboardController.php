@@ -106,7 +106,10 @@ class DashboardController extends Controller
                 ->with([
                     'tags',
                     'heartbeats' => fn ($q) => $q->latest('created_at')->limit(90),
-                    'incidents' => fn ($q) => $q->where('started_at', '>=', now()->subHours(24))->limit(1),
+                    'incidents' => fn ($q) => $q->where(function ($q) {
+                        $q->where('started_at', '>=', now()->subHours(24))
+                            ->orWhereNull('resolved_at');
+                    })->limit(1),
                 ])
                 ->latest()
                 ->get()
