@@ -22,6 +22,7 @@ Built with Laravel, React, and WebSockets — real-time status updates without p
 - **Import / export** — JSON-based monitor backup and restore
 - **Multi-user teams** — Owner, Admin, Member, Viewer roles
 - **Audit log** — track all configuration changes
+- **REST API** — full API v1 with personal access tokens and per-resource scopes
 
 ---
 
@@ -183,6 +184,54 @@ php artisan test
 | `MAIL_USERNAME` | SMTP username | — |
 | `MAIL_PASSWORD` | SMTP password | — |
 | `MAIL_FROM_ADDRESS` | Sender address | — |
+
+---
+
+## REST API
+
+Beacon exposes a versioned REST API for programmatic access to monitors, heartbeats, incidents, status pages, and tags.
+
+**Base URL:** `{APP_URL}/api/v1`
+
+**Authentication:** Bearer token — create tokens at **Settings → API Tokens**.
+
+```bash
+curl https://your-beacon.example.com/api/v1/monitors \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Accept: application/json"
+```
+
+**Available scopes:**
+
+| Scope | Access |
+|---|---|
+| `monitors:read` | List and view monitors |
+| `monitors:write` | Create, update, delete monitors |
+| `heartbeats:read` | List and view heartbeats |
+| `incidents:read` | List and view incidents |
+| `status-pages:read` | List and view status pages |
+| `status-pages:write` | Create, update, delete status pages |
+| `tags:read` | List tags |
+
+**Endpoints:**
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/v1/monitors` | List monitors |
+| `POST` | `/api/v1/monitors` | Create monitor |
+| `GET` | `/api/v1/monitors/{id}` | Get monitor |
+| `PUT` | `/api/v1/monitors/{id}` | Update monitor |
+| `DELETE` | `/api/v1/monitors/{id}` | Delete monitor |
+| `GET` | `/api/v1/monitors/{id}/heartbeats` | List heartbeats |
+| `GET` | `/api/v1/monitors/{id}/incidents` | List incidents |
+| `GET` | `/api/v1/status-pages` | List status pages |
+| `POST` | `/api/v1/status-pages` | Create status page |
+| `GET` | `/api/v1/status-pages/{id}` | Get status page |
+| `PUT` | `/api/v1/status-pages/{id}` | Update status page |
+| `DELETE` | `/api/v1/status-pages/{id}` | Delete status page |
+| `GET` | `/api/v1/tags` | List tags |
+
+All list endpoints support `?page=` and `?per_page=` (max 100). Full curl reference: [`docs/api.md`](docs/api.md).
 
 ---
 

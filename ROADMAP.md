@@ -39,8 +39,19 @@
 
 ## Phase 4 — Planned
 
-- [ ] API token management (personal access tokens)
-- [ ] Public REST API for monitors, heartbeats, and status pages
+- [ ] API token management (personal access tokens, team-scoped, fine-grained scopes, optional expiry)
+- [ ] Public REST API v1: monitors (CRUD), heartbeats (read), status pages (CRUD), incidents (read), tags (read)
+
+### API — Future Improvements
+
+- [ ] Cursor-based pagination for heartbeats (high-volume)
+- [ ] Maintenance windows API (CRUD)
+- [ ] Monitor groups API (CRUD)
+- [ ] Notification channels API (read-only, no credential exposure)
+- [ ] Webhook events (push events to external URLs on monitor status change)
+- [ ] API v2 with breaking changes if needed
+- [ ] OAuth2 app authorization (third-party integrations)
+- [ ] Read-only public token (no auth, for open dashboards)
 
 ## Phase 5 — Future
 
