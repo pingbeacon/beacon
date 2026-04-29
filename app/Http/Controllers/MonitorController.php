@@ -27,7 +27,7 @@ class MonitorController extends Controller
 
         $monitors = Monitor::query()
             ->where('team_id', $teamId)
-            ->with(['tags', 'monitorGroup', 'heartbeats' => fn ($q) => $q->latest()->limit(20)])
+            ->with(['tags', 'monitorGroup', 'heartbeats' => fn ($q) => $q->latest()->limit(90)])
             ->latest()
             ->get()
             ->each(function (Monitor $monitor) {
