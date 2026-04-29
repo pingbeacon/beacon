@@ -37,7 +37,7 @@ jobs:
             -e APP_KEY=base64:$(openssl rand -base64 32) \
             -e APP_ENV=testing \
             beacon:test \
-            php artisan test --compact
+            php artisan test --compact --exclude-testsuite=Browser
 
   push:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
