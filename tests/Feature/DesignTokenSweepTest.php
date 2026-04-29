@@ -39,17 +39,17 @@ it('does not reference old design tokens as CSS variables', function () {
     $files = sweepFiles();
 
     $patterns = [
-        'var(--bg)' => '/var\(--bg\)/',
-        'var(--fg)' => '/var\(--fg\)/',
-        'var(--danger)' => '/var\(--danger\)/',
-        'var(--primary-fg)' => '/var\(--primary-fg\)/',
-        'var(--primary-subtle)' => '/var\(--primary-subtle\)/',
-        'var(--success-subtle)' => '/var\(--success-subtle\)/',
-        'var(--danger-subtle)' => '/var\(--danger-subtle\)/',
-        'var(--warning-subtle)' => '/var\(--warning-subtle\)/',
-        'var(--info-subtle)' => '/var\(--info-subtle\)/',
-        'var(--overlay)' => '/var\(--overlay\)/',
-        'var(--navbar)' => '/var\(--navbar\)/',
+        'var(--bg)' => '/var\(\s*--bg\s*\)/',
+        'var(--fg)' => '/var\(\s*--fg\s*\)/',
+        'var(--danger)' => '/var\(\s*--danger\s*\)/',
+        'var(--primary-fg)' => '/var\(\s*--primary-fg\s*\)/',
+        'var(--primary-subtle)' => '/var\(\s*--primary-subtle\s*\)/',
+        'var(--success-subtle)' => '/var\(\s*--success-subtle\s*\)/',
+        'var(--danger-subtle)' => '/var\(\s*--danger-subtle\s*\)/',
+        'var(--warning-subtle)' => '/var\(\s*--warning-subtle\s*\)/',
+        'var(--info-subtle)' => '/var\(\s*--info-subtle\s*\)/',
+        'var(--overlay)' => '/var\(\s*--overlay\s*\)/',
+        'var(--navbar)' => '/var\(\s*--navbar\s*\)/',
     ];
 
     foreach ($patterns as $label => $pattern) {

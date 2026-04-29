@@ -579,7 +579,7 @@ const ChartLegendContent = ({
             key={key}
             id={key}
             className={twMerge(
-              "*:data-[slot=icon]:-mx-0.5 flex items-center gap-2 rounded-sm px-2 py-1 text-muted-foreground *:data-[slot=icon]:size-2.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-muted-foreground",
+              "flex items-center gap-2 rounded-sm px-2 py-1 text-muted-foreground *:data-[slot=icon]:-mx-0.5 *:data-[slot=icon]:size-2.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-muted-foreground",
               "selected:bg-secondary/70 selected:text-secondary-foreground",
               "hover:bg-secondary/70 hover:text-secondary-foreground",
             )}

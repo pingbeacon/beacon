@@ -128,11 +128,12 @@ export default function StatusPageForm({ statusPage, monitors }: StatusPageFormP
         <legend className="px-2 font-medium text-sm">Branding</legend>
 
         <div>
-          <label className="mb-1 block font-medium text-sm">Logo</label>
+          <Label htmlFor="logo">Logo</Label>
           {statusPage?.logo_path && (
             <p className="mb-1 text-muted-foreground text-xs">Current: {statusPage.logo_path}</p>
           )}
           <input
+            id="logo"
             type="file"
             accept="image/*"
             onChange={(e) => setData("logo", e.target.files?.[0] ?? null)}
@@ -142,11 +143,12 @@ export default function StatusPageForm({ statusPage, monitors }: StatusPageFormP
         </div>
 
         <div>
-          <label className="mb-1 block font-medium text-sm">Favicon</label>
+          <Label htmlFor="favicon">Favicon</Label>
           {statusPage?.favicon_path && (
             <p className="mb-1 text-muted-foreground text-xs">Current: {statusPage.favicon_path}</p>
           )}
           <input
+            id="favicon"
             type="file"
             accept="image/*"
             onChange={(e) => setData("favicon", e.target.files?.[0] ?? null)}
