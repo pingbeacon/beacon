@@ -41,4 +41,29 @@ class StoreMonitorRequest extends FormRequest
             'ssl_expiry_notification_days.*' => ['integer', 'min:1'],
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Monitor name is required.',
+            'type.required' => 'Monitor type is required.',
+            'type.in' => 'Type must be one of: http, tcp, ping, dns, push.',
+            'url.required_if' => 'A URL is required for HTTP monitors.',
+            'url.url' => 'URL must be a valid URL.',
+            'host.required_if' => 'Host is required for tcp, ping, and dns monitors.',
+            'port.required_if' => 'Port is required for tcp monitors.',
+            'port.between' => 'Port must be between 1 and 65535.',
+            'dns_record_type.required_if' => 'DNS record type is required for dns monitors.',
+            'dns_record_type.in' => 'DNS record type must be one of: A, AAAA, CNAME, MX, TXT, NS, SOA.',
+            'method.in' => 'HTTP method must be one of: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS.',
+            'interval.min' => 'Interval must be at least 10 seconds.',
+            'interval.max' => 'Interval may not be greater than 3600 seconds.',
+            'timeout.min' => 'Timeout must be at least 1 second.',
+            'timeout.max' => 'Timeout may not be greater than 120 seconds.',
+            'retry_count.max' => 'Retry count may not be greater than 10.',
+        ];
+    }
 }

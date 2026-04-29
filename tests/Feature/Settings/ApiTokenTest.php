@@ -79,6 +79,19 @@ test('token contains team ability', function () {
     expect($abilities)->toContain('monitors:read');
 });
 
+test('token creation fails with invalid expiry', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->post('/settings/api-tokens', [
+            'name' => 'Bad Expiry',
+            'team_id' => $user->current_team_id,
+            'scopes' => ['monitors:read'],
+            'expires_at' => 'tomorrow',
+        ])
+        ->assertSessionHasErrors('expires_at');
+});
+
 test('token can be created with expiry', function () {
     $user = User::factory()->create();
     $teamId = $user->current_team_id;

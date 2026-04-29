@@ -98,6 +98,16 @@ test('status page creation fails with duplicate slug', function () {
         ->assertUnprocessable();
 });
 
+test('token with only status-pages:read cannot update a status page', function () {
+    $user = User::factory()->create();
+    $statusPage = StatusPage::factory()->for($user)->create(['team_id' => $user->current_team_id]);
+    $token = $user->createToken('Read Only', ["team:{$user->current_team_id}", 'status-pages:read']);
+
+    $this->withToken($token->plainTextToken)
+        ->putJson("/api/v1/status-pages/{$statusPage->id}", ['title' => 'Sneaky Update'])
+        ->assertForbidden();
+});
+
 test('user can update a status page', function () {
     $user = User::factory()->create();
     $statusPage = StatusPage::factory()->for($user)->create(['team_id' => $user->current_team_id]);

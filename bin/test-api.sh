@@ -113,7 +113,7 @@ fi
 header "Monitors"
 
 # List
-list_response=$(run "GET /monitors" "$API/monitors")
+run "GET /monitors" "$API/monitors"
 
 # Create
 create_response=$(run "POST /monitors" -X POST "$API/monitors" \

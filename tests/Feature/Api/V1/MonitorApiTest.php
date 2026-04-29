@@ -66,6 +66,78 @@ test('push_token is not exposed in api response', function () {
     expect($response->json('data.0'))->not->toHaveKey('push_token');
 });
 
+test('sensitive request headers are redacted in api response', function () {
+    $user = User::factory()->create();
+    $monitor = Monitor::factory()->for($user)->create([
+        'team_id' => $user->current_team_id,
+        'headers' => [
+            'Authorization' => 'Bearer secret',
+            'Set-Cookie' => 'session=abc',
+            'Api-Key' => 'k-123',
+            'X-Access-Token' => 't-456',
+            'X-CSRF-Token' => 'c-789',
+            'X-Custom' => 'safe-value',
+        ],
+    ]);
+
+    $response = $this->withToken(makeToken($user))
+        ->getJson("/api/v1/monitors/{$monitor->id}")
+        ->assertOk();
+
+    expect($response->json('data.headers.Authorization'))->toBe('[REDACTED]');
+    expect($response->json('data.headers.Set-Cookie'))->toBe('[REDACTED]');
+    expect($response->json('data.headers.Api-Key'))->toBe('[REDACTED]');
+    expect($response->json('data.headers.X-Access-Token'))->toBe('[REDACTED]');
+    expect($response->json('data.headers.X-CSRF-Token'))->toBe('[REDACTED]');
+    expect($response->json('data.headers.X-Custom'))->toBe('safe-value');
+});
+
+test('sensitive json body keys are redacted in api response', function () {
+    $user = User::factory()->create();
+    $monitor = Monitor::factory()->for($user)->create([
+        'team_id' => $user->current_team_id,
+        'body' => json_encode([
+            'username' => 'alice',
+            'password' => 'p4ss',
+            'api_key' => 'k-1',
+            'token' => 't-1',
+            'access_token' => 'a-1',
+            'refresh_token' => 'r-1',
+            'client_secret' => 's-1',
+            'note' => 'safe',
+        ]),
+    ]);
+
+    $response = $this->withToken(makeToken($user))
+        ->getJson("/api/v1/monitors/{$monitor->id}")
+        ->assertOk();
+
+    $body = json_decode($response->json('data.body'), true);
+
+    expect($body['password'])->toBe('[REDACTED]');
+    expect($body['api_key'])->toBe('[REDACTED]');
+    expect($body['token'])->toBe('[REDACTED]');
+    expect($body['access_token'])->toBe('[REDACTED]');
+    expect($body['refresh_token'])->toBe('[REDACTED]');
+    expect($body['client_secret'])->toBe('[REDACTED]');
+    expect($body['username'])->toBe('alice');
+    expect($body['note'])->toBe('safe');
+});
+
+test('non-json body is returned unchanged', function () {
+    $user = User::factory()->create();
+    $monitor = Monitor::factory()->for($user)->create([
+        'team_id' => $user->current_team_id,
+        'body' => 'plain string body',
+    ]);
+
+    $response = $this->withToken(makeToken($user))
+        ->getJson("/api/v1/monitors/{$monitor->id}")
+        ->assertOk();
+
+    expect($response->json('data.body'))->toBe('plain string body');
+});
+
 // --- Show monitor ---
 
 test('user can fetch a single monitor', function () {
