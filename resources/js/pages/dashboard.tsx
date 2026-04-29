@@ -8,7 +8,7 @@ import {
   ShieldCheckIcon,
   SignalIcon,
 } from "@heroicons/react/20/solid"
-import { Head, WhenVisible } from "@inertiajs/react"
+import { Head, router, WhenVisible } from "@inertiajs/react"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -20,6 +20,7 @@ import AppLayout from "@/layouts/app-layout"
 import { statusBadgeIntent, uptimeColor } from "@/lib/color"
 import { formatInterval, heartbeatsToTracker } from "@/lib/heartbeats"
 import monitorRoutes from "@/routes/monitors"
+import notificationChannelRoutes from "@/routes/notification-channels"
 import {
   getSnapshot,
   subscribeToEvents,
@@ -215,13 +216,24 @@ function ActiveIncidentBanner({ incidents }: { incidents: OpenIncident[] }) {
 }
 
 function IncidentGantt({ monitors }: { monitors: Monitor[] }) {
-  const now = useMemo(() => Date.now(), [])
   const windowMs = 24 * 60 * 60 * 1000
+  const bucketMs = 5 * 60 * 1000
+  const timeBucket = Math.floor(Date.now() / bucketMs)
+  const now = timeBucket * bucketMs
   const windowStart = now - windowMs
 
   const rows = useMemo(
-    () => monitors.filter((m) => m.heartbeats?.some((hb) => hb.status === "down")).slice(0, 8),
-    [monitors],
+    () =>
+      monitors
+        .filter(
+          (m) =>
+            m.has_incidents_24h ||
+            m.heartbeats?.some(
+              (hb) => hb.status === "down" && new Date(hb.created_at).getTime() >= windowStart,
+            ),
+        )
+        .slice(0, 8),
+    [monitors, windowStart],
   )
 
   if (rows.length === 0) return null
@@ -255,21 +267,20 @@ function IncidentGantt({ monitors }: { monitors: Monitor[] }) {
 
           type Seg = { start: number; end: number; status: string }
           const segs: Seg[] = []
-          const slotWidth = hbs.length > 0 ? 100 / hbs.length : 0
 
           for (let i = 0; i < hbs.length; i++) {
             const hb = hbs[i]
             const t = new Date(hb.created_at).getTime()
             const pct = ((t - windowStart) / windowMs) * 100
+            const nextHb = hbs[i + 1]
+            const nextPct = nextHb
+              ? ((new Date(nextHb.created_at).getTime() - windowStart) / windowMs) * 100
+              : 100
             const last = segs[segs.length - 1]
             if (!last || last.status !== hb.status) {
-              segs.push({
-                start: Math.max(0, pct),
-                end: Math.min(100, pct + slotWidth),
-                status: hb.status,
-              })
+              segs.push({ start: Math.max(0, pct), end: Math.min(100, nextPct), status: hb.status })
             } else {
-              last.end = Math.min(100, pct + slotWidth)
+              last.end = Math.min(100, nextPct)
             }
           }
 
@@ -438,8 +449,8 @@ function MonitorGrid({ monitors }: { monitors: Monitor[] }) {
         <div className="flex items-center gap-1.5 rounded-lg border bg-overlay p-1">
           {tabs.map((t) => (
             <button
-              key={t.key}
               type="button"
+              key={t.key}
               onClick={() => setFilter(t.key)}
               className={`rounded-md px-3 py-1.5 font-medium text-xs transition-colors ${
                 filter === t.key ? "bg-primary text-primary-fg" : "text-muted-fg hover:text-fg"
@@ -535,7 +546,10 @@ function NotificationChannelsWidget({ channels }: { channels: NotifChannel[] }) 
           <BellIcon className="size-4 text-muted-fg" />
           Notifications
         </div>
-        <Link href="/notification-channels" className="text-primary text-xs hover:underline">
+        <Link
+          href={notificationChannelRoutes.index.url()}
+          className="text-primary text-xs hover:underline"
+        >
           manage →
         </Link>
       </div>
@@ -625,7 +639,7 @@ function EmptyState() {
       description:
         "Get alerted via email, Slack, Discord, or webhook when a monitor goes down — before your users notice.",
       action: (
-        <Link href="/notification-channels">
+        <Link href={notificationChannelRoutes.index.url()}>
           <Button intent="outline" size="sm">
             Set up channels
           </Button>
@@ -761,9 +775,20 @@ export default function Dashboard({
           timestamp: new Date(),
           isAlert: event.payload.newStatus === "down",
         })
+        router.reload({ only: ["monitors"], preserveUrl: true })
       }
     })
   }, [addLiveEvent])
+
+  useEffect(() => {
+    const id = window.setInterval(
+      () => {
+        router.reload({ only: ["monitors"], preserveUrl: true })
+      },
+      5 * 60 * 1000,
+    )
+    return () => window.clearInterval(id)
+  }, [])
 
   return (
     <>

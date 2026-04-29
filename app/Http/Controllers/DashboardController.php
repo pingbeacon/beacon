@@ -87,7 +87,14 @@ class DashboardController extends Controller
             'notification_channels' => $notificationChannels,
             'monitors' => Inertia::defer(fn () => Monitor::query()
                 ->where('team_id', $teamId)
-                ->with(['tags', 'heartbeats' => fn ($q) => $q->latest('created_at')->limit(90)])
+                ->with([
+                    'tags',
+                    'heartbeats' => fn ($q) => $q->latest('created_at')->limit(90),
+                    'incidents' => fn ($q) => $q->where(function ($q) {
+                        $q->where('started_at', '>=', now()->subHours(24))
+                            ->orWhereNull('resolved_at');
+                    })->limit(1),
+                ])
                 ->latest()
                 ->get()
                 ->map(function (Monitor $monitor) {
@@ -97,6 +104,7 @@ class DashboardController extends Controller
                         ...$monitor->toArray(),
                         'uptime_percentage' => $monitor->uptimePercentage(24),
                         'average_response_time' => $monitor->averageResponseTime(24),
+                        'has_incidents_24h' => $monitor->incidents->isNotEmpty(),
                     ];
                 })
             ),
