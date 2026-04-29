@@ -1,6 +1,28 @@
 import { useEffect, useSyncExternalStore } from "react"
 import type { Heartbeat, Monitor, MonitorStatus } from "@/types/monitor"
 
+const HEARTBEAT_LIMIT = 90
+
+function mergeHeartbeats(
+  existing: Heartbeat[] | undefined,
+  incoming: Heartbeat[] | undefined,
+): Heartbeat[] {
+  const a = existing ?? []
+  const b = incoming ?? []
+  if (a.length === 0) return b.slice(-HEARTBEAT_LIMIT)
+  if (b.length === 0) return a.slice(-HEARTBEAT_LIMIT)
+  const seen = new Set<number>()
+  const merged: Heartbeat[] = []
+  const all = [...a, ...b]
+  all.sort((x, y) => new Date(x.created_at).getTime() - new Date(y.created_at).getTime())
+  for (const hb of all) {
+    if (seen.has(hb.id)) continue
+    seen.add(hb.id)
+    merged.push(hb)
+  }
+  return merged.slice(-HEARTBEAT_LIMIT)
+}
+
 export interface HeartbeatPayload {
   monitorId: number
   heartbeat: Heartbeat
@@ -38,8 +60,6 @@ export type RealtimeEvent =
   | { type: "heartbeat"; payload: HeartbeatPayload }
   | { type: "status"; payload: StatusChangedPayload }
   | { type: "checking"; payload: CheckingPayload }
-
-const HEARTBEAT_LIMIT = 90
 
 let state: State = { monitors: [], byId: {} }
 const listeners = new Set<() => void>()
@@ -97,10 +117,13 @@ export function hydrate(monitors: Monitor[] | undefined | null): void {
       changed = true
       continue
     }
-    if (timestamp(existing.last_checked_at) > timestamp(incoming.last_checked_at)) {
-      continue
+    const existingNewer = timestamp(existing.last_checked_at) > timestamp(incoming.last_checked_at)
+    const base = existingNewer ? existing : incoming
+    const merged: Monitor = {
+      ...base,
+      heartbeats: mergeHeartbeats(existing.heartbeats, incoming.heartbeats),
     }
-    byId[incoming.id] = incoming
+    byId[incoming.id] = merged
     changed = true
   }
   if (!changed) {
@@ -115,7 +138,7 @@ export function handleHeartbeat(payload: HeartbeatPayload): void {
   if (!existing) {
     return
   }
-  const heartbeats = [...(existing.heartbeats ?? []), payload.heartbeat].slice(-HEARTBEAT_LIMIT)
+  const heartbeats = mergeHeartbeats(existing.heartbeats, [payload.heartbeat])
   const updated: Monitor = {
     ...existing,
     status: payload.monitorStatus as MonitorStatus,

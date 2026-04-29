@@ -30,7 +30,7 @@ import AppLayout from "@/layouts/app-layout"
 import { statusBadgeIntent, uptimeColor } from "@/lib/color"
 import { formatInterval, heartbeatsToTracker } from "@/lib/heartbeats"
 import monitorRoutes from "@/routes/monitors"
-import { subscribeToEvents, useHydrateMonitor, useMonitor } from "@/stores/monitor-realtime"
+import { hydrate, subscribeToEvents, useMonitor } from "@/stores/monitor-realtime"
 import type {
   ChartDataPoint,
   Heartbeat,
@@ -128,7 +128,16 @@ export default function MonitorsShow({
   sslCertificate,
   chartPeriod: initialChartPeriod,
 }: Props) {
-  useHydrateMonitor(initialMonitor)
+  useEffect(() => {
+    const seed: Monitor = {
+      ...initialMonitor,
+      heartbeats:
+        initialHeartbeats?.data && initialHeartbeats.meta?.current_page === 1
+          ? initialHeartbeats.data
+          : initialMonitor.heartbeats,
+    }
+    hydrate([seed])
+  }, [initialMonitor, initialHeartbeats])
   const monitor = useMonitor(initialMonitor.id) ?? initialMonitor
   const [heartbeats, setHeartbeats] = useState(initialHeartbeats)
   const [incidents, setIncidents] = useState(initialIncidents)
@@ -193,10 +202,6 @@ export default function MonitorsShow({
     return subscribeToEvents((event) => {
       if (event.payload.monitorId !== monitorId) return
       if (event.type === "heartbeat") {
-        setHeartbeats((prev) => {
-          if (!prev) return prev
-          return { ...prev, data: [...prev.data, event.payload.heartbeat].slice(-90) }
-        })
         if (
           event.payload.heartbeat.response_time !== null &&
           (chartPeriod === "1h" || chartPeriod === "24h")
@@ -239,8 +244,10 @@ export default function MonitorsShow({
     })
   }, [monitorId, chartPeriod])
 
-  const trackerData = heartbeatsToTracker(heartbeats?.data)
-  const heartbeatsNewestFirst = heartbeats ? [...heartbeats.data].reverse() : []
+  const liveHeartbeats = monitor.heartbeats ?? []
+  const trackerData = heartbeatsToTracker(liveHeartbeats)
+  const liveHeartbeatsNewestFirst = [...liveHeartbeats].reverse()
+  const heartbeatsTableNewestFirst = heartbeats ? [...heartbeats.data].reverse() : []
 
   return (
     <>
@@ -699,38 +706,33 @@ export default function MonitorsShow({
                 {/* Live Log */}
                 <div className="rounded-lg border border-border p-4">
                   <SectionLabel>Live log</SectionLabel>
-                  <WhenVisible
-                    data="heartbeats"
-                    fallback={<div className="mt-3 h-32 animate-pulse rounded-sm bg-muted" />}
-                  >
-                    {heartbeats && heartbeats.data.length > 0 ? (
-                      <div className="mt-3 space-y-1.5 font-mono">
-                        {heartbeatsNewestFirst.slice(0, 15).map((hb) => (
-                          <div key={hb.id} className="flex items-start gap-2.5 text-xs">
-                            <span className="shrink-0 text-muted-fg">
-                              {new Date(hb.created_at).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                second: "2-digit",
-                              })}
-                            </span>
-                            <span
-                              className={`shrink-0 font-semibold ${
-                                hb.status === "up" ? "text-success" : "text-danger"
-                              }`}
-                            >
-                              {hb.status.toUpperCase()}
-                            </span>
-                            <span className="truncate text-muted-fg">
-                              {hb.response_time ? `${hb.response_time}ms` : (hb.message ?? "—")}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="mt-3 text-muted-fg text-sm">No heartbeats yet.</p>
-                    )}
-                  </WhenVisible>
+                  {liveHeartbeats.length > 0 ? (
+                    <div className="mt-3 space-y-1.5 font-mono">
+                      {liveHeartbeatsNewestFirst.slice(0, 15).map((hb) => (
+                        <div key={hb.id} className="flex items-start gap-2.5 text-xs">
+                          <span className="shrink-0 text-muted-fg">
+                            {new Date(hb.created_at).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              second: "2-digit",
+                            })}
+                          </span>
+                          <span
+                            className={`shrink-0 font-semibold ${
+                              hb.status === "up" ? "text-success" : "text-danger"
+                            }`}
+                          >
+                            {hb.status.toUpperCase()}
+                          </span>
+                          <span className="truncate text-muted-fg">
+                            {hb.response_time ? `${hb.response_time}ms` : (hb.message ?? "—")}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-muted-fg text-sm">No heartbeats yet.</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -752,7 +754,7 @@ export default function MonitorsShow({
                         <TableColumn>Response Time</TableColumn>
                         <TableColumn>Time</TableColumn>
                       </TableHeader>
-                      <TableBody items={heartbeatsNewestFirst}>
+                      <TableBody items={heartbeatsTableNewestFirst}>
                         {(hb) => (
                           <TableRow id={hb.id}>
                             <TableCell>

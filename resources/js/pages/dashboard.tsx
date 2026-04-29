@@ -167,14 +167,17 @@ function KPIStrip({
 }
 
 function ActiveIncidentBanner({ incidents }: { incidents: OpenIncident[] }) {
-  if (incidents.length === 0) return null
   const first = incidents[0]
-  const [elapsed, setElapsed] = useState(() => formatElapsed(first.started_at))
+  const startedAt = first?.started_at ?? null
+  const [elapsed, setElapsed] = useState(() => (startedAt ? formatElapsed(startedAt) : ""))
 
   useEffect(() => {
-    const t = setInterval(() => setElapsed(formatElapsed(first.started_at)), 1000)
+    if (!startedAt) return
+    const t = setInterval(() => setElapsed(formatElapsed(startedAt)), 1000)
     return () => clearInterval(t)
-  }, [first.started_at])
+  }, [startedAt])
+
+  if (incidents.length === 0 || !first) return null
 
   return (
     <div className="rounded-lg border border-danger/30 bg-danger/8 px-5 py-4">
@@ -391,13 +394,7 @@ function MonitorCard({ monitor }: { monitor: Monitor }) {
 
 type GridFilter = "all" | "up" | "down" | "paused"
 
-function MonitorGrid({
-  monitors,
-  onAddMonitor,
-}: {
-  monitors: Monitor[]
-  onAddMonitor: () => void
-}) {
+function MonitorGrid({ monitors }: { monitors: Monitor[] }) {
   const [filter, setFilter] = useState<GridFilter>("all")
 
   const counts = useMemo(
@@ -430,6 +427,7 @@ function MonitorGrid({
           {tabs.map((t) => (
             <button
               key={t.key}
+              type="button"
               onClick={() => setFilter(t.key)}
               className={`rounded-md px-3 py-1.5 font-medium text-xs transition-colors ${
                 filter === t.key ? "bg-primary text-primary-fg" : "text-muted-fg hover:text-fg"
@@ -783,7 +781,7 @@ export default function Dashboard({
 
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_280px]">
                 <div className="space-y-4">
-                  <MonitorGrid monitors={monitors} onAddMonitor={() => {}} />
+                  <MonitorGrid monitors={monitors} />
                   <LiveFeed events={liveEvents} />
                 </div>
                 <div className="space-y-4">

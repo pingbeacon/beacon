@@ -124,7 +124,8 @@ class MonitorController extends Controller
     {
         $this->authorize('view', $monitor);
 
-        $monitor->load('tags', 'notificationChannels');
+        $monitor->load(['tags', 'notificationChannels', 'heartbeats' => fn ($q) => $q->latest()->limit(90)]);
+        $monitor->setRelation('heartbeats', $monitor->heartbeats->reverse()->values());
 
         $period = request()->query('period', '24h');
         $allowedPeriods = ['1h', '24h', '7d', '30d'];
