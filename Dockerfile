@@ -11,13 +11,16 @@ COPY . .
 RUN composer dump-autoload --optimize --no-dev
 
 # Stage 1b: Install PHP dependencies (with dev, for testing)
+# pest-plugin-browser requires ext-sockets which the composer image lacks; the
+# runtime test stage installs ext-sockets, so resolution is fine to skip here.
 FROM composer:2 AS composer-builder-dev
 WORKDIR /app
 COPY composer.json composer.lock ./
 RUN composer install \
     --optimize-autoloader \
     --no-scripts \
-    --no-interaction
+    --no-interaction \
+    --ignore-platform-req=ext-sockets
 COPY . .
 RUN composer dump-autoload --optimize
 
