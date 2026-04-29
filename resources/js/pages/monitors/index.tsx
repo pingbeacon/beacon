@@ -1,37 +1,27 @@
-import AppLayout from "@/layouts/app-layout"
-import type { SharedData } from "@/types/shared"
-import { Head, router, usePage, WhenVisible } from "@inertiajs/react"
-import { useEcho } from "@laravel/echo-react"
+import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/20/solid"
+import { Head, router, WhenVisible } from "@inertiajs/react"
+import { useCallback, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Link } from "@/components/ui/link"
-import type { Monitor, Tag, Heartbeat, MonitorGroup } from "@/types/monitor"
 import { Checkbox } from "@/components/ui/checkbox"
-import { PlusIcon, MagnifyingGlassIcon } from "@heroicons/react/20/solid"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Link } from "@/components/ui/link"
+import { useMonitorFilters } from "@/hooks/use-monitor-filters"
+import AppLayout from "@/layouts/app-layout"
+import { uptimeColor } from "@/lib/color"
+import { formatInterval } from "@/lib/heartbeats"
+import monitorRoutes from "@/routes/monitors"
+import { useHydrateMonitors, useMonitors } from "@/stores/monitor-realtime"
+import type { Heartbeat, Monitor, MonitorGroup, Tag } from "@/types/monitor"
+import BulkActionToolbar from "./components/bulk-action-toolbar"
 import CreateMonitorModal from "./components/create-monitor-modal"
+import ImportExportSection from "./components/import-export-section"
 import MonitorGroupModal from "./components/monitor-group-modal"
 import MonitorGroupSection from "./components/monitor-group-section"
-import BulkActionToolbar from "./components/bulk-action-toolbar"
-import ImportExportSection from "./components/import-export-section"
-import { useMonitorFilters } from "@/hooks/use-monitor-filters"
-import { uptimeColor, statusBadgeIntent } from "@/lib/color"
-import monitorRoutes from "@/routes/monitors"
-import { formatInterval } from "@/lib/heartbeats"
 
 interface Props {
   monitors?: Monitor[]
   tags: Tag[]
   groups: MonitorGroup[]
   trashedCount: number
-}
-
-interface HeartbeatPayload {
-  monitorId: number
-  heartbeat: Heartbeat
-  monitorStatus: string
-  uptimePercentage: number
-  averageResponseTime: number | null
 }
 
 const HEARTBEAT_COUNT = 48
@@ -85,14 +75,17 @@ function HeartbeatBars({ heartbeats, status }: { heartbeats?: Heartbeat[]; statu
 
   if (status === "paused") {
     return (
-      <div className="flex items-center h-[22px]">
+      <div className="flex h-[22px] items-center">
         <span className="text-muted-fg text-xs">—</span>
       </div>
     )
   }
 
   return (
-    <div className="grid gap-[1.5px] h-[22px] w-full" style={{ gridTemplateColumns: `repeat(${HEARTBEAT_COUNT}, 1fr)` }}>
+    <div
+      className="grid h-[22px] w-full gap-[1.5px]"
+      style={{ gridTemplateColumns: `repeat(${HEARTBEAT_COUNT}, 1fr)` }}
+    >
       {bars.map((b, i) => (
         <div
           key={i}
@@ -100,10 +93,13 @@ function HeartbeatBars({ heartbeats, status }: { heartbeats?: Heartbeat[]; statu
             borderRadius: 1,
             height: "100%",
             background:
-              b === "up"    ? "var(--color-success)" :
-              b === "slow"  ? "var(--color-warning)" :
-              b === "down"  ? "var(--color-danger)"  :
-                              "var(--color-muted-fg)",
+              b === "up"
+                ? "var(--color-success)"
+                : b === "slow"
+                  ? "var(--color-warning)"
+                  : b === "down"
+                    ? "var(--color-danger)"
+                    : "var(--color-muted-fg)",
             opacity: b === "up" ? 0.4 : b === "empty" ? 0.18 : 1,
           }}
         />
@@ -136,7 +132,7 @@ function ResponseSparkline({ heartbeats, status }: { heartbeats?: Heartbeat[]; s
   }, [heartbeats, status])
 
   if (!path) {
-    return <div className="h-8 flex items-center text-muted-fg text-xs">—</div>
+    return <div className="flex h-8 items-center text-muted-fg text-xs">—</div>
   }
 
   const isDown = status === "down"
@@ -148,7 +144,7 @@ function ResponseSparkline({ heartbeats, status }: { heartbeats?: Heartbeat[]; s
       height="32"
       viewBox="0 0 120 24"
       preserveAspectRatio="none"
-      className="block mt-1"
+      className="mt-1 block"
     >
       <defs>
         <linearGradient id={id.current} x1="0" x2="0" y1="0" y2="1">
@@ -178,13 +174,14 @@ const STATUS_LABEL_CLASS: Record<string, string> = {
 
 // Matches design: 32px 280px 70px 0.9fr 88px 220px 84px 110px 36px
 const COL_STYLE: React.CSSProperties = {
-  gridTemplateColumns: "32px minmax(0, 280px) 70px minmax(0, 0.9fr) 88px minmax(0, 220px) 84px 110px 36px",
+  gridTemplateColumns:
+    "32px minmax(0, 280px) 70px minmax(0, 0.9fr) 88px minmax(0, 220px) 84px 110px 36px",
 }
 
 function TableHeader() {
   return (
     <div
-      className="grid gap-x-4 px-6 py-3 bg-muted/30 border-b border-border text-muted-fg text-xs uppercase tracking-wider font-medium"
+      className="grid gap-x-4 border-border border-b bg-muted/30 px-6 py-3 font-medium text-muted-fg text-xs uppercase tracking-wider"
       style={COL_STYLE}
     >
       <div />
@@ -214,7 +211,7 @@ function MonitorRow({
 
   return (
     <div
-      className="grid gap-x-4 px-6 py-3.5 border-t border-border items-center text-sm transition-colors hover:bg-muted/20"
+      className="grid items-center gap-x-4 border-border border-t px-6 py-3.5 text-sm transition-colors hover:bg-muted/20"
       style={COL_STYLE}
     >
       {/* checkbox */}
@@ -231,12 +228,12 @@ function MonitorRow({
       {/* name + url */}
       <Link
         href={monitorRoutes.show.url(monitor.id)}
-        className="flex items-center gap-3 min-w-0 no-underline"
+        className="flex min-w-0 items-center gap-3 no-underline"
       >
-        <span className={`shrink-0 w-2.5 h-2.5 rounded-full ${dot}`} />
+        <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${dot}`} />
         <div className="min-w-0">
-          <div className="font-medium text-fg text-sm truncate">{monitor.name}</div>
-          <div className="text-muted-fg text-xs truncate mt-0.5">
+          <div className="truncate font-medium text-fg text-sm">{monitor.name}</div>
+          <div className="mt-0.5 truncate text-muted-fg text-xs">
             {monitor.url || monitor.host || "—"}
           </div>
         </div>
@@ -244,7 +241,7 @@ function MonitorRow({
 
       {/* type */}
       <div>
-        <span className="border border-border rounded-lg text-muted-fg text-xs px-2 py-0.5 rounded-sm font-mono">
+        <span className="rounded-lg rounded-sm border border-border px-2 py-0.5 font-mono text-muted-fg text-xs">
           {monitor.type.toUpperCase()}
         </span>
       </div>
@@ -255,7 +252,7 @@ function MonitorRow({
       {/* uptime */}
       <div>
         <div
-          className={`font-medium tabular-nums text-sm ${
+          className={`font-medium text-sm tabular-nums ${
             monitor.uptime_percentage !== undefined
               ? uptimeColor(monitor.uptime_percentage)
               : "text-muted-fg"
@@ -265,12 +262,12 @@ function MonitorRow({
             ? `${monitor.uptime_percentage.toFixed(2)}%`
             : "—"}
         </div>
-        <div className="text-muted-fg text-xs mt-0.5">30d</div>
+        <div className="mt-0.5 text-muted-fg text-xs">30d</div>
       </div>
 
       {/* response + sparkline */}
       <div>
-        <div className="text-fg tabular-nums text-sm">
+        <div className="text-fg text-sm tabular-nums">
           {monitor.average_response_time != null
             ? `${Math.round(monitor.average_response_time)} ms`
             : "—"}
@@ -279,16 +276,16 @@ function MonitorRow({
       </div>
 
       {/* interval */}
-      <div className="text-muted-fg text-xs font-mono">
+      <div className="font-mono text-muted-fg text-xs">
         every {formatInterval(monitor.interval)}
       </div>
 
       {/* last check */}
       <div className="text-right">
-        <div className="text-muted-fg text-xs font-mono">
+        <div className="font-mono text-muted-fg text-xs">
           {monitor.status === "paused" ? "paused" : timeAgo(monitor.last_checked_at)}
         </div>
-        <div className={`text-[10px] mt-0.5 uppercase tracking-wide font-mono ${labelClass}`}>
+        <div className={`mt-0.5 font-mono text-[10px] uppercase tracking-wide ${labelClass}`}>
           {monitor.status}
         </div>
       </div>
@@ -301,7 +298,7 @@ function MonitorRow({
             e.preventDefault()
             router.visit(monitorRoutes.show.url(monitor.id))
           }}
-          className="text-muted-fg hover:text-fg text-base leading-none p-1 rounded"
+          className="rounded p-1 text-base text-muted-fg leading-none hover:text-fg"
           aria-label={`Actions for ${monitor.name}`}
         >
           ⋯
@@ -340,7 +337,7 @@ function MonitorToolbar({
   ]
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-3 border-b border-border">
+    <div className="flex flex-wrap items-center justify-between gap-3 border-border border-b px-6 py-3">
       {/* left: status + tag pills */}
       <div className="flex flex-wrap items-center gap-2">
         {statusPills.map(({ key, label, count }) => {
@@ -351,10 +348,10 @@ function MonitorToolbar({
               type="button"
               onClick={() => onStatusFilterChange(key)}
               className={[
-                "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors",
+                "flex items-center gap-1.5 rounded-full px-3 py-1 font-medium text-xs transition-colors",
                 active
                   ? "bg-primary text-primary-fg"
-                  : "border border-border rounded-lg text-muted-fg hover:text-fg hover:border-fg/30",
+                  : "rounded-lg border border-border text-muted-fg hover:border-fg/30 hover:text-fg",
               ].join(" ")}
             >
               <span>{label}</span>
@@ -365,7 +362,7 @@ function MonitorToolbar({
 
         {tags.length > 0 && (
           <>
-            <div className="w-px h-4 bg-border mx-1" />
+            <div className="mx-1 h-4 w-px bg-border" />
             <span className="text-muted-fg text-xs">tags</span>
             {tags.map((tag) => {
               const active = tagFilter === tag.id
@@ -375,16 +372,12 @@ function MonitorToolbar({
                   type="button"
                   onClick={() => onTagFilterChange(active ? null : tag.id)}
                   className={[
-                    "px-3 py-1 rounded-full text-xs transition-colors",
+                    "rounded-full px-3 py-1 text-xs transition-colors",
                     active
                       ? "border-2 font-medium"
-                      : "border border-border rounded-lg text-muted-fg hover:text-fg hover:border-fg/30",
+                      : "rounded-lg border border-border text-muted-fg hover:border-fg/30 hover:text-fg",
                   ].join(" ")}
-                  style={
-                    active
-                      ? { borderColor: tag.color, color: tag.color }
-                      : undefined
-                  }
+                  style={active ? { borderColor: tag.color, color: tag.color } : undefined}
                 >
                   #{tag.name}
                 </button>
@@ -395,17 +388,17 @@ function MonitorToolbar({
       </div>
 
       {/* right: search */}
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex shrink-0 items-center gap-2">
         <div className="relative flex items-center">
-          <MagnifyingGlassIcon className="absolute left-2.5 size-3.5 text-muted-fg pointer-events-none" />
+          <MagnifyingGlassIcon className="pointer-events-none absolute left-2.5 size-3.5 text-muted-fg" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="name, url, tag…"
-            className="pl-8 pr-8 py-1.5 text-xs rounded-md border border-border rounded-lg bg-transparent text-fg placeholder:text-muted-fg focus:outline-none focus:ring-1 focus:ring-ring w-52"
+            className="w-52 rounded-lg rounded-md border border-border bg-transparent py-1.5 pr-8 pl-8 text-fg text-xs placeholder:text-muted-fg focus:outline-none focus:ring-1 focus:ring-ring"
           />
-          <span className="absolute right-2 text-[10px] text-muted-fg border border-border rounded-lg rounded px-1 pointer-events-none">
+          <span className="pointer-events-none absolute right-2 rounded rounded-lg border border-border px-1 text-[10px] text-muted-fg">
             /
           </span>
         </div>
@@ -468,13 +461,13 @@ function MonitorTable({
   return (
     <div>
       {/* select-all row */}
-      <div className="flex items-center gap-2 px-6 py-2 border-b border-border">
+      <div className="flex items-center gap-2 border-border border-b px-6 py-2">
         <Checkbox
           isSelected={selectedIds.length === filteredMonitors.length && filteredMonitors.length > 0}
           onChange={toggleSelectAll}
           aria-label="Select all monitors"
         />
-        <span className="text-xs text-muted-fg">Select all</span>
+        <span className="text-muted-fg text-xs">Select all</span>
       </div>
 
       <TableHeader />
@@ -501,7 +494,7 @@ function MonitorTable({
       {ungroupedMonitors.length > 0 && (
         <div>
           {hasGroups && groupedMonitors[0] && (
-            <div className="px-6 py-2 text-muted-fg text-xs uppercase tracking-wider font-medium border-b border-border">
+            <div className="border-border border-b px-6 py-2 font-medium text-muted-fg text-xs uppercase tracking-wider">
               Ungrouped
             </div>
           )}
@@ -521,23 +514,22 @@ function MonitorTable({
           .filter((g) => !groupedMonitors[g.id]?.length)
           .map((group) => (
             <MonitorGroupSection key={group.id} group={group} monitorCount={0}>
-              <p className="py-4 text-center text-muted-fg text-sm">
-                No monitors in this group.
-              </p>
+              <p className="py-4 text-center text-muted-fg text-sm">No monitors in this group.</p>
             </MonitorGroupSection>
           ))}
     </div>
   )
 }
 
-export default function MonitorsIndex({ monitors: initialMonitors, tags, groups, trashedCount }: Props) {
-  const { auth } = usePage<SharedData>().props
-  const [monitors, setMonitors] = useState(initialMonitors)
+export default function MonitorsIndex({
+  monitors: initialMonitors,
+  tags,
+  groups,
+  trashedCount,
+}: Props) {
+  useHydrateMonitors(initialMonitors)
+  const monitors = useMonitors()
   const [selectedIds, setSelectedIds] = useState<number[]>([])
-
-  useEffect(() => {
-    if (initialMonitors) setMonitors(initialMonitors)
-  }, [initialMonitors])
 
   const {
     filteredMonitors,
@@ -548,53 +540,10 @@ export default function MonitorsIndex({ monitors: initialMonitors, tags, groups,
     tagFilter,
     setTagFilter,
     isFiltering,
-  } = useMonitorFilters(monitors ?? [])
-
-  const handleChecking = useCallback((payload: { monitorId: number }) => {
-    setMonitors((prev) =>
-      prev?.map((m) =>
-        m.id === payload.monitorId ? { ...m, status: "pending" as Monitor["status"] } : m,
-      ),
-    )
-  }, [])
-
-  const handleHeartbeat = useCallback((payload: HeartbeatPayload) => {
-    setMonitors((prev) =>
-      prev?.map((m) => {
-        if (m.id !== payload.monitorId) return m
-        const updatedHeartbeats = [...(m.heartbeats ?? []), payload.heartbeat].slice(-90)
-        return {
-          ...m,
-          status: payload.monitorStatus as Monitor["status"],
-          heartbeats: updatedHeartbeats,
-          uptime_percentage: payload.uptimePercentage,
-          average_response_time: payload.averageResponseTime,
-        }
-      }),
-    )
-  }, [])
-
-  const handleStatusChanged = useCallback(
-    (payload: { monitorId: number; newStatus: string }) => {
-      setMonitors((prev) =>
-        prev?.map((m) =>
-          m.id === payload.monitorId
-            ? { ...m, status: payload.newStatus as Monitor["status"] }
-            : m,
-        ),
-      )
-    },
-    [],
-  )
-
-  useEcho(`monitors.${auth.user.id}`, ".MonitorChecking", handleChecking)
-  useEcho(`monitors.${auth.user.id}`, ".HeartbeatRecorded", handleHeartbeat)
-  useEcho(`monitors.${auth.user.id}`, ".MonitorStatusChanged", handleStatusChanged)
+  } = useMonitorFilters(monitors)
 
   const toggleSelect = useCallback((id: number) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
-    )
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]))
   }, [])
 
   const toggleSelectAll = useCallback(() => {
@@ -605,23 +554,26 @@ export default function MonitorsIndex({ monitors: initialMonitors, tags, groups,
     }
   }, [filteredMonitors, selectedIds.length])
 
-  const totalCount = monitors?.length ?? 0
+  const totalCount = monitors.length
 
   return (
     <>
       <Head title="Monitors" />
       <div className="min-h-screen">
         {/* page header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-border gap-4">
+        <div className="flex items-center justify-between gap-4 border-border border-b px-6 py-5">
           <div>
-            <h1 className="text-2xl font-medium tracking-tight text-fg">
-              Monitors{" "}
-              <span className="text-muted-fg font-normal text-lg">· {totalCount}</span>
+            <h1 className="font-medium text-2xl text-fg tracking-tight">
+              Monitors <span className="font-normal text-lg text-muted-fg">· {totalCount}</span>
             </h1>
           </div>
           <div className="flex items-center gap-2">
             {trashedCount > 0 && (
-              <Button intent="outline" size="sm" onPress={() => router.visit(monitorRoutes.trashed.url())}>
+              <Button
+                intent="outline"
+                size="sm"
+                onPress={() => router.visit(monitorRoutes.trashed.url())}
+              >
                 Trash ({trashedCount})
               </Button>
             )}
@@ -665,10 +617,7 @@ export default function MonitorsIndex({ monitors: initialMonitors, tags, groups,
                 tagFilter={tagFilter}
                 onTagFilterChange={setTagFilter}
               />
-              <BulkActionToolbar
-                selectedIds={selectedIds}
-                onClear={() => setSelectedIds([])}
-              />
+              <BulkActionToolbar selectedIds={selectedIds} onClear={() => setSelectedIds([])} />
               <MonitorTable
                 filteredMonitors={filteredMonitors}
                 groups={groups}
@@ -682,7 +631,7 @@ export default function MonitorsIndex({ monitors: initialMonitors, tags, groups,
               />
 
               {/* footer */}
-              <div className="flex items-center justify-between px-6 py-4 border-t border-border text-xs text-muted-fg font-mono">
+              <div className="flex items-center justify-between border-border border-t px-6 py-4 font-mono text-muted-fg text-xs">
                 <div>
                   showing {filteredMonitors.length} of {totalCount}
                 </div>
@@ -694,7 +643,7 @@ export default function MonitorsIndex({ monitors: initialMonitors, tags, groups,
           ) : (
             <div className="py-16 text-center">
               <p className="font-medium text-fg">No monitors yet</p>
-              <p className="mt-1 text-sm text-muted-fg">
+              <p className="mt-1 text-muted-fg text-sm">
                 Add a URL, host, or IP to start tracking uptime.
               </p>
               <CreateMonitorModal>

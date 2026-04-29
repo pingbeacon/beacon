@@ -5,9 +5,8 @@ import {
   PlayIcon,
   TrashIcon,
 } from "@heroicons/react/20/solid"
-import { Head, router, usePage, WhenVisible } from "@inertiajs/react"
-import { useEcho } from "@laravel/echo-react"
-import { useCallback, useEffect, useState } from "react"
+import { Head, router, WhenVisible } from "@inertiajs/react"
+import { useEffect, useState } from "react"
 import { Area, AreaChart } from "recharts"
 import CheckSslCertificateController from "@/actions/App/Http/Controllers/CheckSslCertificateController"
 import ConfirmDeleteModal from "@/components/confirm-delete-modal"
@@ -31,6 +30,7 @@ import AppLayout from "@/layouts/app-layout"
 import { statusBadgeIntent, uptimeColor } from "@/lib/color"
 import { formatInterval, heartbeatsToTracker } from "@/lib/heartbeats"
 import monitorRoutes from "@/routes/monitors"
+import { subscribeToEvents, useHydrateMonitor, useMonitor } from "@/stores/monitor-realtime"
 import type {
   ChartDataPoint,
   Heartbeat,
@@ -39,7 +39,6 @@ import type {
   SslCertificate,
   UptimeStats,
 } from "@/types/monitor"
-import type { SharedData } from "@/types/shared"
 
 interface PaginationLinks {
   first: string | null
@@ -65,22 +64,6 @@ interface Props {
   uptimeStats?: UptimeStats
   sslCertificate?: SslCertificate | null
   chartPeriod?: string
-}
-
-interface HeartbeatPayload {
-  monitorId: number
-  heartbeat: Heartbeat
-  monitorStatus: string
-  lastCheckedAt: string
-  uptimePercentage: number
-  averageResponseTime: number | null
-}
-
-interface StatusChangedPayload {
-  monitorId: number
-  oldStatus: string
-  newStatus: string
-  message: string | null
 }
 
 function formatDuration(start: string, end: string | null): string {
@@ -145,8 +128,8 @@ export default function MonitorsShow({
   sslCertificate,
   chartPeriod: initialChartPeriod,
 }: Props) {
-  const { auth } = usePage<SharedData>().props
-  const [monitor, setMonitor] = useState(initialMonitor)
+  useHydrateMonitor(initialMonitor)
+  const monitor = useMonitor(initialMonitor.id) ?? initialMonitor
   const [heartbeats, setHeartbeats] = useState(initialHeartbeats)
   const [incidents, setIncidents] = useState(initialIncidents)
   const [chartData, setChartData] = useState(initialChartData)
@@ -167,10 +150,6 @@ export default function MonitorsShow({
     params.set("tab", tab)
     window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`)
   }
-
-  useEffect(() => {
-    setMonitor(initialMonitor)
-  }, [initialMonitor])
 
   useEffect(() => {
     if (initialHeartbeats) setHeartbeats(initialHeartbeats)
@@ -208,78 +187,57 @@ export default function MonitorsShow({
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   }
 
-  const handleHeartbeat = useCallback(
-    (payload: HeartbeatPayload) => {
-      if (payload.monitorId !== monitor.id) return
-      setMonitor((prev) => ({
-        ...prev,
-        status: payload.monitorStatus as Monitor["status"],
-        last_checked_at: payload.lastCheckedAt,
-      }))
-      setHeartbeats((prev) => {
-        if (!prev) return prev
-        return { ...prev, data: [...prev.data, payload.heartbeat].slice(-90) }
-      })
-      if (
-        payload.heartbeat.response_time !== null &&
-        (chartPeriod === "1h" || chartPeriod === "24h")
-      ) {
-        setChartData((prev) => {
+  const monitorId = monitor.id
+
+  useEffect(() => {
+    return subscribeToEvents((event) => {
+      if (event.payload.monitorId !== monitorId) return
+      if (event.type === "heartbeat") {
+        setHeartbeats((prev) => {
           if (!prev) return prev
-          return [
-            ...prev,
-            {
-              created_at: payload.heartbeat.created_at,
-              response_time: payload.heartbeat.response_time,
-              status: payload.heartbeat.status,
-            },
-          ]
+          return { ...prev, data: [...prev.data, event.payload.heartbeat].slice(-90) }
         })
+        if (
+          event.payload.heartbeat.response_time !== null &&
+          (chartPeriod === "1h" || chartPeriod === "24h")
+        ) {
+          setChartData((prev) => {
+            if (!prev) return prev
+            return [
+              ...prev,
+              {
+                created_at: event.payload.heartbeat.created_at,
+                response_time: event.payload.heartbeat.response_time,
+                status: event.payload.heartbeat.status,
+              },
+            ]
+          })
+        }
+      } else if (event.type === "status") {
+        if (event.payload.newStatus === "down" && event.payload.oldStatus !== "down") {
+          setIncidents((prev) => [
+            {
+              id: Date.now(),
+              monitor_id: monitorId,
+              started_at: new Date().toISOString(),
+              resolved_at: null,
+              cause: event.payload.message ?? null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            } as Incident,
+            ...(prev ?? []),
+          ])
+        }
+        if (event.payload.newStatus === "up" && event.payload.oldStatus === "down") {
+          setIncidents((prev) =>
+            (prev ?? []).map((inc) =>
+              inc.resolved_at === null ? { ...inc, resolved_at: new Date().toISOString() } : inc,
+            ),
+          )
+        }
       }
-    },
-    [monitor.id, chartPeriod],
-  )
-
-  const handleStatusChanged = useCallback(
-    (payload: StatusChangedPayload) => {
-      if (payload.monitorId !== monitor.id) return
-      setMonitor((prev) => ({ ...prev, status: payload.newStatus as Monitor["status"] }))
-      if (payload.newStatus === "down" && payload.oldStatus !== "down") {
-        setIncidents((prev) => [
-          {
-            id: Date.now(),
-            monitor_id: monitor.id,
-            started_at: new Date().toISOString(),
-            resolved_at: null,
-            cause: payload.message ?? null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          } as Incident,
-          ...(prev ?? []),
-        ])
-      }
-      if (payload.newStatus === "up" && payload.oldStatus === "down") {
-        setIncidents((prev) =>
-          (prev ?? []).map((inc) =>
-            inc.resolved_at === null ? { ...inc, resolved_at: new Date().toISOString() } : inc,
-          ),
-        )
-      }
-    },
-    [monitor.id],
-  )
-
-  const handleChecking = useCallback(
-    (payload: { monitorId: number }) => {
-      if (payload.monitorId !== monitor.id) return
-      setMonitor((prev) => ({ ...prev, status: "pending" as Monitor["status"] }))
-    },
-    [monitor.id],
-  )
-
-  useEcho(`monitors.${auth.user.id}`, ".MonitorChecking", handleChecking)
-  useEcho(`monitors.${auth.user.id}`, ".HeartbeatRecorded", handleHeartbeat)
-  useEcho(`monitors.${auth.user.id}`, ".MonitorStatusChanged", handleStatusChanged)
+    })
+  }, [monitorId, chartPeriod])
 
   const trackerData = heartbeatsToTracker(heartbeats?.data)
   const heartbeatsNewestFirst = heartbeats ? [...heartbeats.data].reverse() : []
@@ -352,52 +310,46 @@ export default function MonitorsShow({
           </div>
 
           {/* KPI strip */}
-          <div className="mt-5 grid grid-cols-2 border border-border rounded-lg sm:grid-cols-4">
+          <div className="mt-5 grid grid-cols-2 rounded-lg border border-border sm:grid-cols-4">
             <WhenVisible
               data="uptimeStats"
-              fallback={
-                <>
-                  {Array(3)
-                    .fill(null)
-                    .map((_, i) => (
-                      <div key={i} className="border-border border-r p-4">
-                        <div className="mb-2 h-2.5 w-20 animate-pulse rounded-sm bg-muted" />
-                        <div className="h-7 w-16 animate-pulse rounded-sm bg-muted" />
-                      </div>
-                    ))}
-                </>
-              }
+              fallback={Array(3)
+                .fill(null)
+                .map((_, i) => (
+                  <div key={i} className="border-border border-r p-4">
+                    <div className="mb-2 h-2.5 w-20 animate-pulse rounded-sm bg-muted" />
+                    <div className="h-7 w-16 animate-pulse rounded-sm bg-muted" />
+                  </div>
+                ))}
             >
-              <>
-                <div className="border-border border-r p-4">
-                  <p className="text-muted-fg text-xs uppercase tracking-widest">30d Uptime</p>
-                  <p
-                    className={`mt-1 font-medium text-2xl ${uptimeStats ? uptimeColor(uptimeStats.uptime_30d) : "text-fg"}`}
-                  >
-                    {uptimeStats ? `${uptimeStats.uptime_30d}%` : "—"}
-                  </p>
-                </div>
-                <div className="border-border border-r p-4">
-                  <p className="text-muted-fg text-xs uppercase tracking-widest">
-                    Avg Response · 24h
-                  </p>
-                  <p className="mt-1 font-medium text-2xl text-fg">
-                    {uptimeStats?.avg_response_24h
-                      ? `${Math.round(uptimeStats.avg_response_24h)} ms`
-                      : "—"}
-                  </p>
-                </div>
-                <div className="border-border border-r p-4">
-                  <p className="text-muted-fg text-xs uppercase tracking-widest">
-                    Avg Response · 30d
-                  </p>
-                  <p className="mt-1 font-medium text-2xl text-fg">
-                    {uptimeStats?.avg_response_30d
-                      ? `${Math.round(uptimeStats.avg_response_30d)} ms`
-                      : "—"}
-                  </p>
-                </div>
-              </>
+              <div className="border-border border-r p-4">
+                <p className="text-muted-fg text-xs uppercase tracking-widest">30d Uptime</p>
+                <p
+                  className={`mt-1 font-medium text-2xl ${uptimeStats ? uptimeColor(uptimeStats.uptime_30d) : "text-fg"}`}
+                >
+                  {uptimeStats ? `${uptimeStats.uptime_30d}%` : "—"}
+                </p>
+              </div>
+              <div className="border-border border-r p-4">
+                <p className="text-muted-fg text-xs uppercase tracking-widest">
+                  Avg Response · 24h
+                </p>
+                <p className="mt-1 font-medium text-2xl text-fg">
+                  {uptimeStats?.avg_response_24h
+                    ? `${Math.round(uptimeStats.avg_response_24h)} ms`
+                    : "—"}
+                </p>
+              </div>
+              <div className="border-border border-r p-4">
+                <p className="text-muted-fg text-xs uppercase tracking-widest">
+                  Avg Response · 30d
+                </p>
+                <p className="mt-1 font-medium text-2xl text-fg">
+                  {uptimeStats?.avg_response_30d
+                    ? `${Math.round(uptimeStats.avg_response_30d)} ms`
+                    : "—"}
+                </p>
+              </div>
             </WhenVisible>
             <div className="p-4">
               <p className="text-muted-fg text-xs uppercase tracking-widest">Last Check</p>
@@ -425,7 +377,7 @@ export default function MonitorsShow({
               {/* Left: main content */}
               <div className="space-y-4 lg:col-span-2">
                 {/* Uptime Tracker */}
-                <div className="border border-border rounded-lg p-4">
+                <div className="rounded-lg border border-border p-4">
                   <SectionLabel>Uptime Tracker</SectionLabel>
                   <p className="mt-1 mb-3 text-muted-fg text-xs">Last 90 heartbeats</p>
                   <WhenVisible
@@ -440,7 +392,7 @@ export default function MonitorsShow({
                 </div>
 
                 {/* Response Time + Distribution */}
-                <div className="border border-border rounded-lg">
+                <div className="rounded-lg border border-border">
                   <div className="flex items-center justify-between border-border border-b px-4 py-3">
                     <SectionLabel>
                       Response Time · {periodLabels[chartPeriod] ?? chartPeriod}
@@ -517,7 +469,7 @@ export default function MonitorsShow({
                                       if (!active || !payload?.length) return null
                                       const point = payload[0]
                                       return (
-                                        <div className="border border-border rounded-lg bg-secondary px-3 py-2 font-mono text-xs">
+                                        <div className="rounded-lg border border-border bg-secondary px-3 py-2 font-mono text-xs">
                                           <p className="text-muted-fg">
                                             {point?.payload?.time
                                               ? formatTime(
@@ -582,7 +534,7 @@ export default function MonitorsShow({
               <div className="space-y-4">
                 {/* SSL Certificate */}
                 {monitor.type === "http" && monitor.ssl_monitoring_enabled && (
-                  <div className="border border-border rounded-lg p-4">
+                  <div className="rounded-lg border border-border p-4">
                     <div className="flex items-center justify-between">
                       <SectionLabel>SSL Certificate</SectionLabel>
                       <Button
@@ -691,7 +643,7 @@ export default function MonitorsShow({
                 )}
 
                 {/* Recent Incidents */}
-                <div className="border border-border rounded-lg p-4">
+                <div className="rounded-lg border border-border p-4">
                   <SectionLabel>Incidents</SectionLabel>
                   <WhenVisible
                     data="incidents"
@@ -731,7 +683,7 @@ export default function MonitorsShow({
 
                 {/* Notification Channels */}
                 {monitor.notification_channels && monitor.notification_channels.length > 0 && (
-                  <div className="border border-border rounded-lg p-4">
+                  <div className="rounded-lg border border-border p-4">
                     <SectionLabel>Notification channels</SectionLabel>
                     <div className="mt-3 space-y-1.5">
                       {monitor.notification_channels.map((ch) => (
@@ -745,7 +697,7 @@ export default function MonitorsShow({
                 )}
 
                 {/* Live Log */}
-                <div className="border border-border rounded-lg p-4">
+                <div className="rounded-lg border border-border p-4">
                   <SectionLabel>Live log</SectionLabel>
                   <WhenVisible
                     data="heartbeats"
@@ -786,7 +738,7 @@ export default function MonitorsShow({
 
           {/* ── Heartbeats tab ── */}
           <TabPanel id="heartbeats" className="pt-4">
-            <div className="border border-border rounded-lg">
+            <div className="rounded-lg border border-border">
               <WhenVisible
                 fallback={<div className="m-4 h-64 animate-pulse rounded-sm bg-muted" />}
                 data="heartbeats"
@@ -883,7 +835,7 @@ export default function MonitorsShow({
 
           {/* ── Incidents tab ── */}
           <TabPanel id="incidents" className="pt-4">
-            <div className="border border-border rounded-lg p-4">
+            <div className="rounded-lg border border-border p-4">
               <WhenVisible
                 fallback={<div className="h-64 animate-pulse rounded-sm bg-muted" />}
                 data="incidents"
@@ -893,7 +845,7 @@ export default function MonitorsShow({
                     {incidents.map((incident) => (
                       <div
                         key={incident.id}
-                        className="flex items-center justify-between border border-border rounded-lg p-4"
+                        className="flex items-center justify-between rounded-lg border border-border p-4"
                       >
                         <div>
                           <p className="font-medium text-sm">{incident.cause ?? "Unknown cause"}</p>
@@ -928,7 +880,7 @@ export default function MonitorsShow({
           {/* ── SSL tab ── */}
           {monitor.type === "http" && monitor.ssl_monitoring_enabled && (
             <TabPanel id="ssl" className="pt-4">
-              <div className="border border-border rounded-lg p-4">
+              <div className="rounded-lg border border-border p-4">
                 <div className="mb-4 flex items-center justify-between">
                   <SectionLabel>SSL Certificate</SectionLabel>
                   <Button
@@ -958,7 +910,7 @@ export default function MonitorsShow({
                   {sslCertificate ? (
                     <div className="space-y-4">
                       <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="border border-border rounded-lg p-4">
+                        <div className="rounded-lg border border-border p-4">
                           <p className="text-muted-fg text-sm">Status</p>
                           <p
                             className={`mt-1 font-semibold text-lg ${sslCertificate.is_valid ? "text-success" : "text-danger"}`}
@@ -966,7 +918,7 @@ export default function MonitorsShow({
                             {sslCertificate.is_valid ? "Valid" : "Invalid"}
                           </p>
                         </div>
-                        <div className="border border-border rounded-lg p-4">
+                        <div className="rounded-lg border border-border p-4">
                           <p className="text-muted-fg text-sm">Days Until Expiry</p>
                           <p
                             className={`mt-1 font-semibold text-lg ${sslExpiryColor(sslCertificate.days_until_expiry)}`}

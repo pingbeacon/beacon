@@ -1,30 +1,3 @@
-import { router, usePage } from "@inertiajs/react"
-import { useEcho } from "@laravel/echo-react"
-import { useCallback, useEffect, useState } from "react"
-import { Avatar } from "@/components/ui/avatar"
-import { Logo } from "@/components/logo"
-import type { SharedData, SidebarMonitor } from "@/types/shared"
-import { Link } from "@/components/ui/link"
-import { MonitorCommandPalette } from "@/components/monitor-command-palette"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarItem,
-  SidebarLabel,
-  SidebarSection,
-} from "@/components/ui/sidebar"
-import {
-  Menu,
-  MenuContent,
-  MenuItem,
-  MenuLabel,
-  MenuSection,
-  MenuSeparator,
-  MenuHeader,
-} from "@/components/ui/menu"
-import { Button } from "@/components/ui/button"
 import {
   ArrowRightEndOnRectangleIcon,
   ArrowRightStartOnRectangleIcon,
@@ -36,6 +9,33 @@ import {
   UserPlusIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline"
+import { router, usePage } from "@inertiajs/react"
+import { useEffect, useMemo, useState } from "react"
+import { Logo } from "@/components/logo"
+import { MonitorCommandPalette } from "@/components/monitor-command-palette"
+import { Avatar } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Link } from "@/components/ui/link"
+import {
+  Menu,
+  MenuContent,
+  MenuHeader,
+  MenuItem,
+  MenuLabel,
+  MenuSection,
+  MenuSeparator,
+} from "@/components/ui/menu"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarItem,
+  SidebarLabel,
+  SidebarSection,
+} from "@/components/ui/sidebar"
+import { useMonitors } from "@/stores/monitor-realtime"
+import type { SharedData, SidebarMonitor } from "@/types/shared"
 
 const statusDot: Record<string, string> = {
   up: "bg-success",
@@ -52,26 +52,27 @@ const secondaryNav = [
   { name: "Settings", href: "/settings", icon: Cog6ToothIcon },
 ]
 
-interface HeartbeatPayload {
-  monitorId: number
-  monitorStatus: string
-}
-
-interface StatusChangedPayload {
-  monitorId: number
-  newStatus: string
-}
-
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const page = usePage()
   const { auth, currentTeam, teams, sidebarMonitors: initialMonitors } = usePage<SharedData>().props
 
-  const [monitors, setMonitors] = useState<SidebarMonitor[]>(initialMonitors ?? [])
-  const [paletteOpen, setPaletteOpen] = useState(false)
+  const storeMonitors = useMonitors()
+  const monitors = useMemo<SidebarMonitor[]>(() => {
+    if (storeMonitors.length > 0) {
+      return storeMonitors.map((m) => ({
+        id: m.id,
+        name: m.name,
+        status: m.status,
+        type: m.type,
+        url: m.url,
+        host: m.host,
+        port: m.port,
+      }))
+    }
+    return initialMonitors ?? []
+  }, [storeMonitors, initialMonitors])
 
-  useEffect(() => {
-    setMonitors(initialMonitors ?? [])
-  }, [initialMonitors])
+  const [paletteOpen, setPaletteOpen] = useState(false)
   const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/.test(navigator.platform)
 
   useEffect(() => {
@@ -84,29 +85,6 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
   }, [])
-
-  const handleHeartbeat = useCallback((payload: HeartbeatPayload) => {
-    setMonitors((prev) =>
-      prev.map((m) =>
-        m.id === payload.monitorId
-          ? { ...m, status: payload.monitorStatus as SidebarMonitor["status"] }
-          : m,
-      ),
-    )
-  }, [])
-
-  const handleStatusChanged = useCallback((payload: StatusChangedPayload) => {
-    setMonitors((prev) =>
-      prev.map((m) =>
-        m.id === payload.monitorId
-          ? { ...m, status: payload.newStatus as SidebarMonitor["status"] }
-          : m,
-      ),
-    )
-  }, [])
-
-  useEcho(`monitors.${auth.user?.id}`, ".HeartbeatRecorded", handleHeartbeat)
-  useEcho(`monitors.${auth.user?.id}`, ".MonitorStatusChanged", handleStatusChanged)
 
   return (
     <Sidebar {...props}>
@@ -122,11 +100,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         <button
           type="button"
           onClick={() => setPaletteOpen(true)}
-          className="mt-3 flex w-full cursor-pointer items-center gap-2 rounded border border-border rounded-lg bg-transparent px-3 py-2 text-xs text-muted-fg transition-colors hover:border-primary/40 hover:text-fg"
+          className="mt-3 flex w-full cursor-pointer items-center gap-2 rounded rounded-lg border border-border bg-transparent px-3 py-2 text-muted-fg text-xs transition-colors hover:border-primary/40 hover:text-fg"
         >
           <span className="text-sm leading-none">⌕</span>
           <span className="flex-1 text-left">Search monitors…</span>
-          <kbd className="rounded border border-border rounded-lg px-1.5 py-0.5 font-mono text-[10px] text-muted-fg">
+          <kbd className="rounded rounded-lg border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-fg">
             {isMac ? "⌘K" : "Ctrl K"}
           </kbd>
         </button>
@@ -134,13 +112,13 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarContent className="flex flex-col overflow-hidden">
         {/* Monitor list */}
-        <div className="flex shrink-0 items-center justify-between px-4 pb-1.5 pt-0.5">
-          <span className="text-[10px] font-medium uppercase tracking-widest text-muted-fg">
+        <div className="flex shrink-0 items-center justify-between px-4 pt-0.5 pb-1.5">
+          <span className="font-medium text-[10px] text-muted-fg uppercase tracking-widest">
             Monitors · {monitors.length}
           </span>
           <Link
             href="/monitors/create"
-            className="text-[11px] font-medium text-primary transition-colors hover:text-primary/70"
+            className="font-medium text-[11px] text-primary transition-colors hover:text-primary/70"
           >
             + new
           </Link>
@@ -148,7 +126,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 
         <div className="flex-1 overflow-y-auto px-2 pb-2">
           {monitors.length === 0 && (
-            <p className="px-3 py-4 text-xs text-muted-fg">No monitors yet.</p>
+            <p className="px-3 py-4 text-muted-fg text-xs">No monitors yet.</p>
           )}
           {monitors.map((monitor) => {
             const isActive =
@@ -190,11 +168,10 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             )
           })}
         </div>
-
       </SidebarContent>
 
       {/* Secondary nav — outside scrollable content, above footer */}
-      <div className="shrink-0 border-t border-sidebar-border px-2 py-1">
+      <div className="shrink-0 border-sidebar-border border-t px-2 py-1">
         <SidebarSection>
           {secondaryNav.map((item) => (
             <SidebarItem
@@ -211,17 +188,14 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 
         {auth.user && currentTeam && teams.length > 1 && (
           <Menu>
-            <Button intent="plain" className="w-full justify-start gap-2 text-xs text-muted-fg">
+            <Button intent="plain" className="w-full justify-start gap-2 text-muted-fg text-xs">
               <span className="truncate">{currentTeam.name}</span>
               <span className="ml-auto text-[10px] text-muted-fg/60">switch</span>
             </Button>
             <MenuContent placement="top start" className="sm:min-w-48">
               <MenuHeader separator>Switch Team</MenuHeader>
               {teams.map((team) => (
-                <MenuItem
-                  key={team.id}
-                  onAction={() => router.post(`/switch-team/${team.id}`)}
-                >
+                <MenuItem key={team.id} onAction={() => router.post(`/switch-team/${team.id}`)}>
                   <MenuLabel>{team.name}</MenuLabel>
                   {team.id === currentTeam.id && <CheckCircleIcon className="size-4" />}
                 </MenuItem>
@@ -264,15 +238,15 @@ function UserMenu() {
       <Button intent="plain" className="w-full justify-start gap-2">
         <Avatar src={auth.user.gravatar} size="sm" />
         <span className="flex min-w-0 flex-col text-start">
-          <span className="truncate text-sm font-medium">{auth.user.name}</span>
-          <span className="truncate text-xs text-muted-fg">{auth.user.email}</span>
+          <span className="truncate font-medium text-sm">{auth.user.name}</span>
+          <span className="truncate text-muted-fg text-xs">{auth.user.email}</span>
         </span>
       </Button>
       <MenuContent placement="top start" className="sm:min-w-56">
         <MenuSection>
           <MenuHeader separator className="relative">
             <div>{auth.user.name}</div>
-            <div className="truncate whitespace-nowrap pr-6 text-sm font-normal text-muted-fg">
+            <div className="truncate whitespace-nowrap pr-6 font-normal text-muted-fg text-sm">
               {auth.user.email}
             </div>
           </MenuHeader>

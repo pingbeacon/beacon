@@ -1,30 +1,34 @@
-import AppLayout from "@/layouts/app-layout"
-import type { SharedData } from "@/types/shared"
-import { Head, router, usePage, WhenVisible } from "@inertiajs/react"
-import { useEcho } from "@laravel/echo-react"
-import { Container } from "@/components/ui/container"
-import { Badge } from "@/components/ui/badge"
-import { Tracker } from "@/components/ui/tracker"
-import { Button } from "@/components/ui/button"
-import { Link } from "@/components/ui/link"
-import { Heading } from "@/components/ui/heading"
-import type { Monitor, Tag, Heartbeat } from "@/types/monitor"
 import {
   BellAlertIcon,
-  CheckCircleIcon,
+  BellIcon,
   ComputerDesktopIcon,
   ExclamationCircleIcon,
   GlobeAltIcon,
   PlusIcon,
   ShieldCheckIcon,
-  BellIcon,
   SignalIcon,
 } from "@heroicons/react/20/solid"
+import { Head, WhenVisible } from "@inertiajs/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import CreateMonitorModal from "./monitors/components/create-monitor-modal"
-import { uptimeColor, statusBadgeIntent } from "@/lib/color"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Container } from "@/components/ui/container"
+import { Heading } from "@/components/ui/heading"
+import { Link } from "@/components/ui/link"
+import { Tracker } from "@/components/ui/tracker"
+import AppLayout from "@/layouts/app-layout"
+import { statusBadgeIntent, uptimeColor } from "@/lib/color"
+import { formatInterval, heartbeatsToTracker } from "@/lib/heartbeats"
 import monitorRoutes from "@/routes/monitors"
-import { heartbeatsToTracker, formatInterval } from "@/lib/heartbeats"
+import {
+  getSnapshot,
+  subscribeToEvents,
+  useHydrateMonitors,
+  useMonitorCounts,
+  useMonitors,
+} from "@/stores/monitor-realtime"
+import type { Monitor } from "@/types/monitor"
+import CreateMonitorModal from "./monitors/components/create-monitor-modal"
 
 interface OpenIncident {
   id: number
@@ -66,21 +70,6 @@ interface Props {
   monitors?: Monitor[]
 }
 
-interface HeartbeatPayload {
-  monitorId: number
-  heartbeat: Heartbeat
-  monitorStatus: string
-  uptimePercentage: number
-  averageResponseTime: number | null
-}
-
-interface StatusChangedPayload {
-  monitorId: number
-  oldStatus: string
-  newStatus: string
-  message: string | null
-}
-
 function formatRelativeTime(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
   const s = Math.floor(diff / 1000)
@@ -119,44 +108,58 @@ function KPIStrip({
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <div className="flex flex-col rounded-lg border bg-overlay px-5 py-4">
-        <span className="text-[10px] uppercase tracking-widest text-muted-fg">Monitors</span>
-        <span className="mt-2 font-mono text-4xl font-medium tabular-nums">{counts.total}</span>
-        <span className="mt-1.5 text-xs text-muted-fg">
+        <span className="text-[10px] text-muted-fg uppercase tracking-widest">Monitors</span>
+        <span className="mt-2 font-medium font-mono text-4xl tabular-nums">{counts.total}</span>
+        <span className="mt-1.5 text-muted-fg text-xs">
           <span className="text-success">{counts.up} up</span>
           {" · "}
-          {counts.down > 0 ? <span className="text-danger">{counts.down} down</span> : <span>0 down</span>}
+          {counts.down > 0 ? (
+            <span className="text-danger">{counts.down} down</span>
+          ) : (
+            <span>0 down</span>
+          )}
           {counts.paused > 0 && <span> · {counts.paused} paused</span>}
         </span>
       </div>
 
       <div className="flex flex-col rounded-lg border bg-overlay px-5 py-4">
-        <span className="text-[10px] uppercase tracking-widest text-muted-fg">Uptime · 30d</span>
-        <span className={`mt-2 font-mono text-4xl font-medium tabular-nums ${teamUptime30d !== null ? uptimeColor(teamUptime30d) : "text-muted-fg"}`}>
+        <span className="text-[10px] text-muted-fg uppercase tracking-widest">Uptime · 30d</span>
+        <span
+          className={`mt-2 font-medium font-mono text-4xl tabular-nums ${teamUptime30d !== null ? uptimeColor(teamUptime30d) : "text-muted-fg"}`}
+        >
           {teamUptime30d !== null ? `${teamUptime30d}%` : "—"}
         </span>
-        <span className="mt-1.5 text-xs text-muted-fg">team average</span>
+        <span className="mt-1.5 text-muted-fg text-xs">team average</span>
       </div>
 
       <div className="flex flex-col rounded-lg border bg-overlay px-5 py-4">
-        <span className="text-[10px] uppercase tracking-widest text-muted-fg">Avg response · 24h</span>
-        <span className="mt-2 font-mono text-4xl font-medium tabular-nums">
+        <span className="text-[10px] text-muted-fg uppercase tracking-widest">
+          Avg response · 24h
+        </span>
+        <span className="mt-2 font-medium font-mono text-4xl tabular-nums">
           {avgResponse24h !== null ? `${avgResponse24h}ms` : "—"}
         </span>
-        <span className="mt-1.5 text-xs text-muted-fg">across all monitors</span>
+        <span className="mt-1.5 text-muted-fg text-xs">across all monitors</span>
       </div>
 
-      <div className={`flex flex-col rounded-lg border px-5 py-4 ${openIncidentsCount > 0 ? "border-danger/30 bg-danger/8" : "bg-overlay"}`}>
-        <span className={`text-[10px] uppercase tracking-widest ${openIncidentsCount > 0 ? "text-danger/70" : "text-muted-fg"}`}>
+      <div
+        className={`flex flex-col rounded-lg border px-5 py-4 ${openIncidentsCount > 0 ? "border-danger/30 bg-danger/8" : "bg-overlay"}`}
+      >
+        <span
+          className={`text-[10px] uppercase tracking-widest ${openIncidentsCount > 0 ? "text-danger/70" : "text-muted-fg"}`}
+        >
           Open incidents
         </span>
-        <span className={`mt-2 font-mono font-medium tabular-nums ${openIncidentsCount > 0 ? "text-5xl text-danger" : "text-4xl"}`}>
+        <span
+          className={`mt-2 font-medium font-mono tabular-nums ${openIncidentsCount > 0 ? "text-5xl text-danger" : "text-4xl"}`}
+        >
           {openIncidentsCount}
         </span>
         {openIncidentsCount > 0 && (
-          <span className="mt-1.5 text-xs text-danger/70">action required</span>
+          <span className="mt-1.5 text-danger/70 text-xs">action required</span>
         )}
         {openIncidentsCount === 0 && (
-          <span className="mt-1.5 text-xs text-muted-fg">all clear</span>
+          <span className="mt-1.5 text-muted-fg text-xs">all clear</span>
         )}
       </div>
     </div>
@@ -180,13 +183,15 @@ function ActiveIncidentBanner({ incidents }: { incidents: OpenIncident[] }) {
           <span className="absolute inline-flex size-full animate-ping rounded-full bg-danger opacity-30" />
           <span className="relative inline-flex size-3 rounded-full bg-danger" />
         </span>
-        <span className="text-xs font-bold uppercase tracking-wider text-danger">Active incident</span>
-        <span className="ml-auto font-mono text-xs text-danger/60">{elapsed}</span>
+        <span className="font-bold text-danger text-xs uppercase tracking-wider">
+          Active incident
+        </span>
+        <span className="ml-auto font-mono text-danger/60 text-xs">{elapsed}</span>
       </div>
       <div className="mt-2 font-semibold text-danger">{first.monitor_name}</div>
-      {first.cause && <div className="mt-0.5 text-xs text-danger/70">{first.cause}</div>}
+      {first.cause && <div className="mt-0.5 text-danger/70 text-xs">{first.cause}</div>}
       {incidents.length > 1 && (
-        <div className="mt-1 text-xs text-danger/60">+{incidents.length - 1} more</div>
+        <div className="mt-1 text-danger/60 text-xs">+{incidents.length - 1} more</div>
       )}
       <div className="mt-3 flex gap-2">
         <Link href={monitorRoutes.index.url({ query: { status: "down" } })}>
@@ -206,10 +211,7 @@ function IncidentGantt({ monitors }: { monitors: Monitor[] }) {
   const windowStart = now - windowMs
 
   const rows = useMemo(
-    () =>
-      monitors
-        .filter((m) => m.heartbeats?.some((hb) => hb.status === "down"))
-        .slice(0, 8),
+    () => monitors.filter((m) => m.heartbeats?.some((hb) => hb.status === "down")).slice(0, 8),
     [monitors],
   )
 
@@ -220,11 +222,11 @@ function IncidentGantt({ monitors }: { monitors: Monitor[] }) {
       <div className="flex items-start justify-between">
         <div>
           <div className="font-semibold text-sm">Incident timeline · 24h</div>
-          <div className="mt-0.5 text-xs text-muted-fg">
+          <div className="mt-0.5 text-muted-fg text-xs">
             {rows.length} monitor{rows.length > 1 ? "s" : ""} with incidents in the last 24 hours
           </div>
         </div>
-        <div className="flex items-center gap-4 text-xs text-muted-fg">
+        <div className="flex items-center gap-4 text-muted-fg text-xs">
           <span className="flex items-center gap-1.5">
             <span className="inline-block size-2.5 rounded-sm bg-success/40" />
             up
@@ -252,17 +254,25 @@ function IncidentGantt({ monitors }: { monitors: Monitor[] }) {
             const pct = ((t - windowStart) / windowMs) * 100
             const last = segs[segs.length - 1]
             if (!last || last.status !== hb.status) {
-              segs.push({ start: Math.max(0, pct), end: Math.min(100, pct + slotWidth), status: hb.status })
+              segs.push({
+                start: Math.max(0, pct),
+                end: Math.min(100, pct + slotWidth),
+                status: hb.status,
+              })
             } else {
               last.end = Math.min(100, pct + slotWidth)
             }
           }
 
           return (
-            <div key={m.id} className="grid items-center gap-3" style={{ gridTemplateColumns: "160px 1fr" }}>
+            <div
+              key={m.id}
+              className="grid items-center gap-3"
+              style={{ gridTemplateColumns: "160px 1fr" }}
+            >
               <div className="flex items-center gap-2 overflow-hidden">
-                <span className="truncate text-xs text-fg">{m.name}</span>
-                <span className="shrink-0 rounded bg-muted/20 px-1 py-px font-mono text-[10px] uppercase text-muted-fg">
+                <span className="truncate text-fg text-xs">{m.name}</span>
+                <span className="shrink-0 rounded bg-muted/20 px-1 py-px font-mono text-[10px] text-muted-fg uppercase">
                   {m.type}
                 </span>
               </div>
@@ -272,7 +282,10 @@ function IncidentGantt({ monitors }: { monitors: Monitor[] }) {
                     <div
                       key={i}
                       className="absolute inset-y-0 bg-danger"
-                      style={{ left: `${seg.start}%`, width: `${Math.max(0.5, seg.end - seg.start)}%` }}
+                      style={{
+                        left: `${seg.start}%`,
+                        width: `${Math.max(0.5, seg.end - seg.start)}%`,
+                      }}
                     />
                   ) : null,
                 )}
@@ -327,8 +340,8 @@ function MonitorCard({ monitor }: { monitor: Monitor }) {
         <div className="flex min-w-0 items-center gap-2.5">
           <StatusDot status={monitor.status} />
           <div className="min-w-0">
-            <div className="truncate text-sm font-medium">{monitor.name}</div>
-            <div className="truncate text-xs text-muted-fg">
+            <div className="truncate font-medium text-sm">{monitor.name}</div>
+            <div className="truncate text-muted-fg text-xs">
               {monitor.type.toUpperCase()} · {monitor.url ?? monitor.host}
             </div>
           </div>
@@ -346,26 +359,30 @@ function MonitorCard({ monitor }: { monitor: Monitor }) {
 
       <div className="grid grid-cols-4 gap-1 text-center">
         <div>
-          <div className="text-[10px] uppercase tracking-wide text-muted-fg">Uptime</div>
-          <div className={`mt-0.5 font-mono text-sm font-medium tabular-nums ${uptimeColor(monitor.uptime_percentage ?? 100)}`}>
+          <div className="text-[10px] text-muted-fg uppercase tracking-wide">Uptime</div>
+          <div
+            className={`mt-0.5 font-medium font-mono text-sm tabular-nums ${uptimeColor(monitor.uptime_percentage ?? 100)}`}
+          >
             {monitor.uptime_percentage !== undefined ? `${monitor.uptime_percentage}%` : "—"}
           </div>
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-wide text-muted-fg">Avg</div>
+          <div className="text-[10px] text-muted-fg uppercase tracking-wide">Avg</div>
           <div className="mt-0.5 font-mono text-sm tabular-nums">
-            {monitor.average_response_time != null ? `${Math.round(monitor.average_response_time)}ms` : "—"}
+            {monitor.average_response_time != null
+              ? `${Math.round(monitor.average_response_time)}ms`
+              : "—"}
           </div>
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-wide text-muted-fg">Interval</div>
-          <div className="mt-0.5 font-mono text-sm tabular-nums text-muted-fg">
+          <div className="text-[10px] text-muted-fg uppercase tracking-wide">Interval</div>
+          <div className="mt-0.5 font-mono text-muted-fg text-sm tabular-nums">
             {formatInterval(monitor.interval)}
           </div>
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-wide text-muted-fg">Last check</div>
-          <div className="mt-0.5 font-mono text-xs text-muted-fg">{lastChecked}</div>
+          <div className="text-[10px] text-muted-fg uppercase tracking-wide">Last check</div>
+          <div className="mt-0.5 font-mono text-muted-fg text-xs">{lastChecked}</div>
         </div>
       </div>
     </Link>
@@ -374,7 +391,13 @@ function MonitorCard({ monitor }: { monitor: Monitor }) {
 
 type GridFilter = "all" | "up" | "down" | "paused"
 
-function MonitorGrid({ monitors, onAddMonitor }: { monitors: Monitor[]; onAddMonitor: () => void }) {
+function MonitorGrid({
+  monitors,
+  onAddMonitor,
+}: {
+  monitors: Monitor[]
+  onAddMonitor: () => void
+}) {
   const [filter, setFilter] = useState<GridFilter>("all")
 
   const counts = useMemo(
@@ -408,10 +431,8 @@ function MonitorGrid({ monitors, onAddMonitor }: { monitors: Monitor[]; onAddMon
             <button
               key={t.key}
               onClick={() => setFilter(t.key)}
-              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                filter === t.key
-                  ? "bg-primary text-primary-fg"
-                  : "text-muted-fg hover:text-fg"
+              className={`rounded-md px-3 py-1.5 font-medium text-xs transition-colors ${
+                filter === t.key ? "bg-primary text-primary-fg" : "text-muted-fg hover:text-fg"
               }`}
             >
               {t.label}
@@ -433,7 +454,7 @@ function MonitorGrid({ monitors, onAddMonitor }: { monitors: Monitor[]; onAddMon
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed py-8 text-center text-sm text-muted-fg">
+        <div className="rounded-lg border border-dashed py-8 text-center text-muted-fg text-sm">
           No {filter === "all" ? "" : filter} monitors.
         </div>
       )}
@@ -455,22 +476,25 @@ function SSLExpiryWidget({ certs }: { certs: SslCert[] }) {
   return (
     <div className="rounded-lg border bg-overlay p-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-semibold">
+        <div className="flex items-center gap-2 font-semibold text-sm">
           <ShieldCheckIcon className="size-4 text-muted-fg" />
           SSL Expiry
         </div>
-        <span className="text-xs text-muted-fg">{certs.length} monitored</span>
+        <span className="text-muted-fg text-xs">{certs.length} monitored</span>
       </div>
       <div className="mt-3 space-y-0">
         {certs.map((c, i) => (
-          <div
-            key={i}
-            className={`${i > 0 ? "border-t border-border" : ""} py-2.5`}
-          >
+          <div key={i} className={`${i > 0 ? "border-border border-t" : ""} py-2.5`}>
             <div className="flex items-center justify-between gap-2">
-              <span className="min-w-0 truncate text-xs font-medium">{c.monitor_name}</span>
-              <span className={`shrink-0 font-mono text-xs font-semibold ${certColor(c.days_until_expiry, c.is_valid)}`}>
-                {c.is_valid && c.days_until_expiry !== null ? `${c.days_until_expiry}d` : c.is_valid ? "—" : "invalid"}
+              <span className="min-w-0 truncate font-medium text-xs">{c.monitor_name}</span>
+              <span
+                className={`shrink-0 font-mono font-semibold text-xs ${certColor(c.days_until_expiry, c.is_valid)}`}
+              >
+                {c.is_valid && c.days_until_expiry !== null
+                  ? `${c.days_until_expiry}d`
+                  : c.is_valid
+                    ? "—"
+                    : "invalid"}
               </span>
             </div>
             {c.issuer && (
@@ -497,18 +521,20 @@ function NotificationChannelsWidget({ channels }: { channels: NotifChannel[] }) 
   return (
     <div className="rounded-lg border bg-overlay p-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-semibold">
+        <div className="flex items-center gap-2 font-semibold text-sm">
           <BellIcon className="size-4 text-muted-fg" />
           Notifications
         </div>
-        <Link href="/notification-channels" className="text-xs text-primary hover:underline">
+        <Link href="/notification-channels" className="text-primary text-xs hover:underline">
           manage →
         </Link>
       </div>
       <div className="mt-3 space-y-2">
         {channels.map((c, i) => (
           <div key={i} className="flex items-center gap-2.5 text-xs">
-            <span className={`size-2 shrink-0 rounded-full ${c.is_enabled ? "bg-success" : "bg-muted"}`} />
+            <span
+              className={`size-2 shrink-0 rounded-full ${c.is_enabled ? "bg-success" : "bg-muted"}`}
+            />
             <span className="w-16 shrink-0 text-muted-fg">{typeLabel[c.type] ?? c.type}</span>
             <span className="min-w-0 truncate">{c.name}</span>
           </div>
@@ -523,11 +549,11 @@ function LiveFeed({ events }: { events: LiveEvent[] }) {
   return (
     <div className="rounded-lg border bg-overlay p-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-semibold">
+        <div className="flex items-center gap-2 font-semibold text-sm">
           <SignalIcon className="size-4 text-muted-fg" />
           Live feed
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-success">
+        <div className="flex items-center gap-1.5 text-success text-xs">
           <span className="relative flex size-2">
             <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-40" />
             <span className="relative inline-flex size-2 rounded-full bg-success" />
@@ -547,7 +573,9 @@ function LiveFeed({ events }: { events: LiveEvent[] }) {
                 style={{ gridTemplateColumns: "5.5rem 4rem 1fr" }}
               >
                 <span className="text-muted-fg/60">{formatTime(e.timestamp)}</span>
-                <span className={`font-semibold uppercase ${alertKinds.has(e.kind) ? "text-danger" : e.kind === "UP" ? "text-success" : "text-muted-fg"}`}>
+                <span
+                  className={`font-semibold uppercase ${alertKinds.has(e.kind) ? "text-danger" : e.kind === "UP" ? "text-success" : "text-muted-fg"}`}
+                >
                   {e.kind}
                 </span>
                 <span className="truncate text-muted-fg">
@@ -614,14 +642,16 @@ function EmptyState() {
     <div className="py-8">
       <div className="mb-10">
         <Heading level={2}>Get started</Heading>
-        <p className="mt-1 text-muted-fg text-sm">Three steps to know the moment your services go down.</p>
+        <p className="mt-1 text-muted-fg text-sm">
+          Three steps to know the moment your services go down.
+        </p>
       </div>
 
       <div className="space-y-3">
         {steps.map(({ icon: Icon, step, title, description, action }, index) => (
           <div
             key={step}
-            className="animate-in fade-in slide-in-from-bottom-2 fill-mode-both flex items-start gap-4 rounded-lg border bg-bg px-5 py-4 transition-colors duration-300 hover:bg-secondary/20"
+            className="fade-in slide-in-from-bottom-2 flex animate-in items-start gap-4 rounded-lg border bg-bg fill-mode-both px-5 py-4 transition-colors duration-300 hover:bg-secondary/20"
             style={{ animationDelay: `${index * 80}ms` }}
           >
             <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md bg-primary-subtle">
@@ -629,7 +659,7 @@ function EmptyState() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-xs text-muted-fg">{step}</span>
+                <span className="font-mono text-muted-fg text-xs">{step}</span>
                 <span className="font-semibold text-sm">{title}</span>
               </div>
               <p className="mt-0.5 text-muted-fg text-xs leading-relaxed">{description}</p>
@@ -647,128 +677,83 @@ export default function Dashboard({
   monitors: initialMonitors,
   team_uptime_30d,
   avg_response_24h,
-  open_incidents,
   ssl_certs,
   notification_channels,
 }: Props) {
-  const { auth } = usePage<SharedData>().props
-  const [monitors, setMonitors] = useState(initialMonitors)
-  const [counts, setCounts] = useState(initialCounts)
-  const [openIncidents, setOpenIncidents] = useState(open_incidents)
+  useHydrateMonitors(initialMonitors)
+  const monitors = useMonitors()
+  const storeCounts = useMonitorCounts()
+  const counts =
+    monitors.length > 0
+      ? {
+          total: storeCounts.total,
+          up: storeCounts.up,
+          down: storeCounts.down,
+          paused: storeCounts.paused,
+        }
+      : initialCounts
+
   const [liveEvents, setLiveEvents] = useState<LiveEvent[]>([])
   const liveEventIdRef = useRef(0)
 
-  useEffect(() => {
-    if (initialMonitors) setMonitors(initialMonitors)
-  }, [initialMonitors])
-
-  useEffect(() => {
-    setCounts(initialCounts)
-  }, [initialCounts])
-
-  useEffect(() => {
-    setOpenIncidents(open_incidents)
-  }, [open_incidents])
-
-  const monitorMap = useMemo(() => {
-    const map = new Map<number, { name: string; type: string }>()
-    monitors?.forEach((m) => map.set(m.id, { name: m.name, type: m.type }))
-    return map
+  const openIncidents = useMemo<OpenIncident[]>(() => {
+    return monitors
+      .filter((m) => m.status === "down")
+      .map((m) => {
+        const lastDown = [...(m.heartbeats ?? [])].reverse().find((h) => h.status === "down")
+        return {
+          id: m.id,
+          monitor_id: m.id,
+          monitor_name: m.name,
+          started_at: lastDown?.created_at ?? m.last_checked_at ?? new Date().toISOString(),
+          cause: lastDown?.message ?? null,
+        }
+      })
   }, [monitors])
 
-  const addLiveEvent = useCallback(
-    (event: Omit<LiveEvent, "id">) => {
-      setLiveEvents((prev) => [{ ...event, id: ++liveEventIdRef.current }, ...prev].slice(0, 20))
-    },
-    [],
-  )
+  const addLiveEvent = useCallback((event: Omit<LiveEvent, "id">) => {
+    setLiveEvents((prev) => [{ ...event, id: ++liveEventIdRef.current }, ...prev].slice(0, 20))
+  }, [])
 
-  const handleHeartbeat = useCallback(
-    (payload: HeartbeatPayload) => {
-      setMonitors((prev) =>
-        prev?.map((m) => {
-          if (m.id !== payload.monitorId) return m
-          const updatedHeartbeats = [...(m.heartbeats ?? []), payload.heartbeat].slice(-90)
-          return {
-            ...m,
-            status: payload.monitorStatus as Monitor["status"],
-            heartbeats: updatedHeartbeats,
-            uptime_percentage: payload.uptimePercentage,
-            average_response_time: payload.averageResponseTime,
-          }
-        }),
-      )
-      const info = monitorMap.get(payload.monitorId)
-      addLiveEvent({
-        kind: info?.type.toUpperCase() ?? "CHECK",
-        monitorName: info?.name ?? `Monitor #${payload.monitorId}`,
-        detail: [
-          payload.heartbeat.status_code ? String(payload.heartbeat.status_code) : null,
-          payload.heartbeat.response_time != null ? `${payload.heartbeat.response_time}ms` : null,
-        ]
-          .filter(Boolean)
-          .join(" · "),
-        timestamp: new Date(),
-        isAlert: payload.heartbeat.status === "down",
-      })
-    },
-    [monitorMap, addLiveEvent],
-  )
-
-  const handleStatusChanged = useCallback(
-    (payload: StatusChangedPayload) => {
-      setMonitors((prev) =>
-        prev?.map((m) =>
-          m.id === payload.monitorId ? { ...m, status: payload.newStatus as Monitor["status"] } : m,
-        ),
-      )
-      setCounts((prev) => {
-        const updated = { ...prev }
-        if (payload.oldStatus === "up") updated.up--
-        if (payload.oldStatus === "down") updated.down--
-        if (payload.newStatus === "up") updated.up++
-        if (payload.newStatus === "down") updated.down++
-        return updated
-      })
-
-      if (payload.newStatus === "up") {
-        setOpenIncidents((prev) => prev.filter((i) => i.monitor_id !== payload.monitorId))
-      } else if (payload.newStatus === "down") {
-        router.reload({ only: ["open_incidents"], preserveUrl: true })
+  useEffect(() => {
+    return subscribeToEvents((event) => {
+      if (event.type === "heartbeat") {
+        const info = getSnapshot().byId[event.payload.monitorId]
+        addLiveEvent({
+          kind: info?.type.toUpperCase() ?? "CHECK",
+          monitorName: info?.name ?? `Monitor #${event.payload.monitorId}`,
+          detail: [
+            event.payload.heartbeat.status_code
+              ? String(event.payload.heartbeat.status_code)
+              : null,
+            event.payload.heartbeat.response_time != null
+              ? `${event.payload.heartbeat.response_time}ms`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" · "),
+          timestamp: new Date(),
+          isAlert: event.payload.heartbeat.status === "down",
+        })
+      } else if (event.type === "status") {
+        const info = getSnapshot().byId[event.payload.monitorId]
+        addLiveEvent({
+          kind: event.payload.newStatus.toUpperCase(),
+          monitorName: info?.name ?? `Monitor #${event.payload.monitorId}`,
+          detail:
+            event.payload.message ??
+            (event.payload.newStatus === "up" ? "recovered" : "incident started"),
+          timestamp: new Date(),
+          isAlert: event.payload.newStatus === "down",
+        })
       }
-
-      const info = monitorMap.get(payload.monitorId)
-      addLiveEvent({
-        kind: payload.newStatus.toUpperCase(),
-        monitorName: info?.name ?? `Monitor #${payload.monitorId}`,
-        detail: payload.message ?? (payload.newStatus === "up" ? "recovered" : "incident started"),
-        timestamp: new Date(),
-        isAlert: payload.newStatus === "down",
-      })
-    },
-    [monitorMap, addLiveEvent],
-  )
-
-  const handleChecking = useCallback(
-    (payload: { monitorId: number }) => {
-      setMonitors((prev) =>
-        prev?.map((m) =>
-          m.id === payload.monitorId ? { ...m, status: "pending" as Monitor["status"] } : m,
-        ),
-      )
-    },
-    [],
-  )
-
-  useEcho(`monitors.${auth.user.id}`, ".MonitorChecking", handleChecking)
-  useEcho(`monitors.${auth.user.id}`, ".HeartbeatRecorded", handleHeartbeat)
-  useEcho(`monitors.${auth.user.id}`, ".MonitorStatusChanged", handleStatusChanged)
+    })
+  }, [addLiveEvent])
 
   return (
     <>
       <Head title="Dashboard" />
       <Container className="space-y-4 pt-2 pb-8">
-
         {counts.total > 0 && (
           <KPIStrip
             counts={counts}
