@@ -2,15 +2,17 @@ import { usePage } from "@inertiajs/react"
 import { useEcho } from "@laravel/echo-react"
 import { useCallback, useEffect } from "react"
 import {
-  type CheckingPayload,
-  type HeartbeatPayload,
   handleChecking,
   handleHeartbeat,
   handleStatusChanged,
   hydrate,
-  type StatusChangedPayload,
 } from "@/stores/monitor-realtime"
-import type { Monitor } from "@/types/monitor"
+import type {
+  CheckingPayload,
+  HeartbeatPayload,
+  Monitor,
+  StatusChangedPayload,
+} from "@/types/monitor"
 import type { SharedData, SidebarMonitor } from "@/types/shared"
 
 function sidebarToMonitor(s: SidebarMonitor): Monitor {

@@ -1,5 +1,12 @@
 import { useEffect, useSyncExternalStore } from "react"
-import type { Heartbeat, Monitor, MonitorStatus } from "@/types/monitor"
+import type {
+  CheckingPayload,
+  Heartbeat,
+  HeartbeatPayload,
+  Monitor,
+  MonitorStatus,
+  StatusChangedPayload,
+} from "@/types/monitor"
 
 const HEARTBEAT_LIMIT = 90
 
@@ -21,26 +28,6 @@ function mergeHeartbeats(
     merged.push(hb)
   }
   return merged.slice(-HEARTBEAT_LIMIT)
-}
-
-export interface HeartbeatPayload {
-  monitorId: number
-  heartbeat: Heartbeat
-  monitorStatus: string
-  lastCheckedAt?: string
-  uptimePercentage: number
-  averageResponseTime: number | null
-}
-
-export interface StatusChangedPayload {
-  monitorId: number
-  oldStatus: string
-  newStatus: string
-  message: string | null
-}
-
-export interface CheckingPayload {
-  monitorId: number
 }
 
 export interface MonitorCounts {

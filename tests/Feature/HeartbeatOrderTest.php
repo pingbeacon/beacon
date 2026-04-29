@@ -97,3 +97,32 @@ test('HeartbeatRecorded broadcast payload exposes heartbeat created_at as ISO st
 
     expect($payload['heartbeat']['created_at'])->toBe($heartbeat->created_at->toISOString());
 });
+
+test('HeartbeatRecorded broadcast payload includes lastCheckedAt as ISO timestamp', function () {
+    $user = User::factory()->create();
+    $checkedAt = now()->subSeconds(10);
+    $monitor = Monitor::factory()->for($user)->create([
+        'last_checked_at' => $checkedAt,
+    ]);
+    $heartbeat = Heartbeat::factory()->for($monitor)->create();
+
+    $event = new HeartbeatRecorded($monitor->refresh(), $heartbeat->refresh());
+    $payload = $event->broadcastWith();
+
+    expect($payload)->toHaveKey('lastCheckedAt');
+    expect($payload['lastCheckedAt'])->toBe($monitor->last_checked_at->toISOString());
+});
+
+test('HeartbeatRecorded broadcast payload lastCheckedAt is null when monitor never checked', function () {
+    $user = User::factory()->create();
+    $monitor = Monitor::factory()->for($user)->create([
+        'last_checked_at' => null,
+    ]);
+    $heartbeat = Heartbeat::factory()->for($monitor)->create();
+
+    $event = new HeartbeatRecorded($monitor->refresh(), $heartbeat->refresh());
+    $payload = $event->broadcastWith();
+
+    expect($payload)->toHaveKey('lastCheckedAt');
+    expect($payload['lastCheckedAt'])->toBeNull();
+});

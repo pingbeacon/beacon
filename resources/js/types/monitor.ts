@@ -184,6 +184,26 @@ export interface TeamMember {
     pivot: { role: TeamRole }
 }
 
+export interface HeartbeatPayload {
+    monitorId: number
+    heartbeat: Heartbeat
+    monitorStatus: string
+    lastCheckedAt?: string | null
+    uptimePercentage: number
+    averageResponseTime: number | null
+}
+
+export interface StatusChangedPayload {
+    monitorId: number
+    oldStatus: string
+    newStatus: string
+    message: string | null
+}
+
+export interface CheckingPayload {
+    monitorId: number
+}
+
 export interface AuditLog {
     id: number
     team_id: number

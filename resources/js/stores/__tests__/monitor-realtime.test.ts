@@ -142,6 +142,31 @@ describe("monitor-realtime store", () => {
       expect(m1?.heartbeats?.[89].id).toBe(1000)
     })
 
+    it("sets last_checked_at from payload lastCheckedAt", () => {
+      hydrate([makeMonitor({ id: 1, last_checked_at: "2026-04-28T00:00:00Z" })])
+      handleHeartbeat({
+        monitorId: 1,
+        heartbeat: makeHeartbeat({ id: 42, created_at: "2026-04-28T00:30:00Z" }),
+        monitorStatus: "up",
+        lastCheckedAt: "2026-04-28T00:30:00Z",
+        uptimePercentage: 100,
+        averageResponseTime: 200,
+      })
+      expect(getSnapshot().byId[1]?.last_checked_at).toBe("2026-04-28T00:30:00Z")
+    })
+
+    it("preserves existing last_checked_at when payload omits lastCheckedAt", () => {
+      hydrate([makeMonitor({ id: 1, last_checked_at: "2026-04-28T00:00:00Z" })])
+      handleHeartbeat({
+        monitorId: 1,
+        heartbeat: makeHeartbeat({ id: 43, created_at: "2026-04-28T00:30:00Z" }),
+        monitorStatus: "up",
+        uptimePercentage: 100,
+        averageResponseTime: 200,
+      })
+      expect(getSnapshot().byId[1]?.last_checked_at).toBe("2026-04-28T00:00:00Z")
+    })
+
     it("ignores heartbeats for unknown monitor", () => {
       hydrate([makeMonitor({ id: 1 })])
       handleHeartbeat({
