@@ -37,9 +37,7 @@ export function Header({
             {title}
           </h1>
         ) : null}
-        {description ? (
-          <p className="text-muted-foreground text-xs">{description}</p>
-        ) : null}
+        {description ? <p className="text-muted-foreground text-xs">{description}</p> : null}
       </div>
       {actions ? (
         <div className="flex shrink-0 items-center gap-2 text-[13px]">{actions}</div>

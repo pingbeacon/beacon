@@ -103,9 +103,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           type="button"
           data-slot="search-trigger"
           onClick={() => setPaletteOpen(true)}
-          className="mt-2 flex w-full cursor-pointer items-center gap-2 rounded-md border border-border bg-transparent px-3 py-2 text-muted-foreground text-[13px] transition-colors hover:border-border-strong hover:text-foreground"
+          className="mt-2 flex w-full cursor-pointer items-center gap-2 rounded-md border border-border bg-transparent px-3 py-2 text-[13px] text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground"
         >
-          <span aria-hidden className="text-sm leading-none">⌕</span>
+          <span aria-hidden className="text-sm leading-none">
+            ⌕
+          </span>
           <span className="flex-1 text-left">Search…</span>
           <kbd className="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
             {isMac ? "⌘K" : "Ctrl K"}
@@ -189,7 +191,10 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 
         {auth.user && currentTeam && teams.length > 1 && (
           <Menu>
-            <Button intent="plain" className="w-full justify-start gap-2 text-muted-foreground text-xs">
+            <Button
+              intent="plain"
+              className="w-full justify-start gap-2 text-muted-foreground text-xs"
+            >
               <span className="truncate">{currentTeam.name}</span>
               <span className="ml-auto text-[10px] text-muted-foreground/60">switch</span>
             </Button>
@@ -242,7 +247,9 @@ function UserMenu() {
           <span className="truncate font-medium text-[13px] text-foreground">{auth.user.name}</span>
           <span className="truncate text-[11px] text-muted-foreground">{auth.user.email}</span>
         </span>
-        <span aria-hidden className="ml-auto text-muted-foreground text-sm">⌥</span>
+        <span aria-hidden className="ml-auto text-muted-foreground text-sm">
+          ⌥
+        </span>
       </Button>
       <MenuContent placement="top start" className="sm:min-w-56">
         <MenuSection>

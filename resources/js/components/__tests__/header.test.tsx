@@ -18,9 +18,7 @@ describe("page Header", () => {
   })
 
   it("renders an action slot in the trailing area", () => {
-    render(
-      <Header title="Monitors" actions={<button type="button">+ new monitor</button>} />,
-    )
+    render(<Header title="Monitors" actions={<button type="button">+ new monitor</button>} />)
     expect(screen.getByRole("button", { name: /new monitor/i })).toBeInTheDocument()
   })
 })
