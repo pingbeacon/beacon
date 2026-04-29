@@ -140,7 +140,10 @@ class MonitorSeeder extends Seeder
                 ),
                 'flap' => mt_rand(1, 100) <= (int) ($profile['flap_down_pct'] ?? 20)
                     ? self::downRecord(500, 'HTTP 500 Internal Server Error', $current)
-                    : self::upRecord(rand(5, 50), $current),
+                    : self::upRecord(
+                        rand((int) ($profile['latency_min'] ?? 30), (int) ($profile['latency_max'] ?? 250)),
+                        $current
+                    ),
                 'down_500' => self::downRecord(500, 'HTTP 500 Internal Server Error', $current),
                 'unbound' => self::downRecord(null, 'Connection refused', $current),
                 'timeout' => self::downRecord(null, "Request exceeded timeout of {$monitorTimeoutMs}ms", $current),

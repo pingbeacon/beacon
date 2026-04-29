@@ -46,13 +46,17 @@ switch ($kind) {
         break;
 
     case 'flap':
+        $min = (int) ($profile['latency_min'] ?? 30);
+        $max = (int) ($profile['latency_max'] ?? 250);
+        $latencyMs = $max > $min ? mt_rand($min, $max) : $min;
+        usleep($latencyMs * 1000);
         $downPct = (int) ($profile['flap_down_pct'] ?? 20);
         if (mt_rand(1, 100) <= $downPct) {
             http_response_code(500);
             header('Content-Type: text/plain');
             echo "fake-server flap: simulated 500\n";
         } else {
-            respondOk($kind, 0);
+            respondOk($kind, $latencyMs);
         }
         break;
 

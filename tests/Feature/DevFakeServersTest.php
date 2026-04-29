@@ -82,6 +82,38 @@ test('flap profile produces a status mix near the declared down ratio', function
     expect($ratio)->toBeLessThan(0.30);
 });
 
+test('flap UP records honor the configured latency band', function () {
+    $records = MonitorSeeder::localServerHistory(24, 30, [
+        'kind' => 'flap',
+        'flap_down_pct' => 20,
+        'latency_min' => 30,
+        'latency_max' => 250,
+    ]);
+
+    $upRecords = collect($records)->where('status', 'up');
+
+    expect($upRecords)->not->toBeEmpty();
+    foreach ($upRecords as $r) {
+        expect($r['response_time'])->toBeGreaterThanOrEqual(30);
+        expect($r['response_time'])->toBeLessThanOrEqual(250);
+    }
+});
+
+test('registry flap profile carries a realistic latency band', function () {
+    $registry = DevFakeServersCommand::profileRegistry();
+
+    foreach ($registry as $profile) {
+        if ($profile['kind'] !== 'flap') {
+            continue;
+        }
+        expect($profile)->toHaveKey('latency_min');
+        expect($profile)->toHaveKey('latency_max');
+        expect($profile['latency_min'])->toBeGreaterThanOrEqual(20);
+        expect($profile['latency_max'])->toBeLessThanOrEqual(500);
+        expect($profile['latency_max'])->toBeGreaterThan($profile['latency_min']);
+    }
+});
+
 test('spike profile keeps most latencies fast and a tail above the spike threshold', function () {
     $records = MonitorSeeder::localServerHistory(24, 30, [
         'kind' => 'spike',

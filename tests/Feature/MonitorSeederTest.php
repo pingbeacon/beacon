@@ -53,10 +53,11 @@ test('seeder retains the two HTTPS demo monitors for SSL coverage', function () 
     expect(Monitor::where('url', 'https://example.com')->where('ssl_monitoring_enabled', true)->exists())->toBeTrue();
 });
 
-test('seeder produces 20 local fake-server monitors', function () {
+test('seeder produces 20 local fake-server monitors and 35 total', function () {
     (new MonitorSeeder)->run();
 
     $local = Monitor::where('url', 'like', 'http://127.0.0.1:%')->count();
 
     expect($local)->toBe(20);
+    expect(Monitor::count())->toBe(35);
 });

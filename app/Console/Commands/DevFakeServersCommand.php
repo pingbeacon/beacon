@@ -7,7 +7,7 @@ use Symfony\Component\Process\Process;
 
 class DevFakeServersCommand extends Command
 {
-    protected $signature = 'dev:fake-servers {--stream : Stream child server output to STDERR}';
+    protected $signature = 'dev:fake-servers';
 
     protected $description = 'Spawn a fleet of local fake HTTP servers (ports 9001-9020) for dev monitor targets.';
 
@@ -100,6 +100,8 @@ class DevFakeServersCommand extends Command
                 'kind' => 'flap',
                 'name' => "Flapping Service :{$port}",
                 'interval' => 30,
+                'latency_min' => 30,
+                'latency_max' => 250,
                 'flap_down_pct' => 20,
                 'bind' => true,
             ];
@@ -131,7 +133,7 @@ class DevFakeServersCommand extends Command
             return self::FAILURE;
         }
 
-        $stream = (bool) $this->option('stream');
+        $stream = $this->output->isVerbose();
 
         /** @var array<int, Process> $processes */
         $processes = [];
@@ -154,11 +156,15 @@ class DevFakeServersCommand extends Command
                 ['FAKE_SERVER_PROFILE' => json_encode($profile)],
             );
             $process->setTimeout(null);
-            $process->start(function ($type, $buffer) use ($port, $stream) {
-                if ($stream) {
+
+            if ($stream) {
+                $process->start(function ($type, $buffer) use ($port) {
                     fwrite(STDERR, "[fake:{$port}] {$buffer}");
-                }
-            });
+                });
+            } else {
+                $process->disableOutput();
+                $process->start();
+            }
 
             $processes[$port] = $process;
             $this->line("fake-server up on 127.0.0.1:{$port} ({$profile['kind']})");
