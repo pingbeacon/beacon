@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import { twMerge } from "tailwind-merge"
+import { Eyebrow } from "@/components/primitives"
 
 interface HeaderProps extends Omit<React.ComponentProps<"div">, "title"> {
   title?: ReactNode
@@ -29,9 +30,7 @@ export function Header({
       {...props}
     >
       <div className="min-w-0 space-y-1.5">
-        {eyebrow ? (
-          <span className="eyebrow block text-[11px] text-primary leading-none">{eyebrow}</span>
-        ) : null}
+        {eyebrow ? <Eyebrow className="block leading-none">{eyebrow}</Eyebrow> : null}
         {title ? (
           <h1 className="font-medium text-[26px] text-foreground leading-tight tracking-[-0.02em]">
             {title}
