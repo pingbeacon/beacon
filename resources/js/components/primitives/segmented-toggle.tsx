@@ -20,7 +20,7 @@ export interface SegmentedToggleProps<T extends string>
 const segmentStyles = tv({
   base: [
     "inline-flex items-center justify-center gap-1.5 border border-border text-muted-foreground transition-colors",
-    "first:rounded-l-md last:rounded-r-md not-first:-ml-px",
+    "not-first:-ml-px first:rounded-l-md last:rounded-r-md",
     "hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
   ],
   variants: {

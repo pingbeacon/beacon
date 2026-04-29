@@ -60,7 +60,7 @@ export function HeartbeatStrip({
         data-slot="heartbeat-strip"
         data-empty=""
         className={twMerge(
-          "flex items-center justify-center text-muted-foreground text-[11px]",
+          "flex items-center justify-center text-[11px] text-muted-foreground",
           className,
         )}
         style={{ height, ...style }}
@@ -83,12 +83,7 @@ export function HeartbeatStrip({
       {...props}
     >
       {buckets.map((bucket, i) => (
-        <HeartbeatBar
-          // biome-ignore lint/suspicious/noArrayIndexKey: buckets are positional time slots
-          key={i}
-          status={bucket.status}
-          title={bucket.title}
-        />
+        <HeartbeatBar key={i} status={bucket.status} title={bucket.title} />
       ))}
     </div>
   )

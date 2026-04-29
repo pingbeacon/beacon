@@ -52,7 +52,7 @@ export function PrimitivesGallery({
 
       <section data-section="status-dot" className="space-y-2">
         <Eyebrow>Status dot</Eyebrow>
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+        <div className="flex items-center gap-4 text-muted-foreground text-xs">
           <span className="inline-flex items-center gap-2">
             <StatusDot status="up" /> up
           </span>
