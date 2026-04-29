@@ -206,16 +206,18 @@ export default function MonitorsShow({
           event.payload.heartbeat.response_time !== null &&
           (chartPeriod === "1h" || chartPeriod === "24h")
         ) {
+          const windowMs = chartPeriod === "1h" ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000
+          const newPoint = {
+            created_at: event.payload.heartbeat.created_at,
+            response_time: event.payload.heartbeat.response_time,
+            status: event.payload.heartbeat.status,
+          }
+          const newPointMs = new Date(newPoint.created_at).getTime()
           setChartData((prev) => {
             if (!prev) return prev
-            return [
-              ...prev,
-              {
-                created_at: event.payload.heartbeat.created_at,
-                response_time: event.payload.heartbeat.response_time,
-                status: event.payload.heartbeat.status,
-              },
-            ]
+            const cutoff = newPointMs - windowMs
+            const trimmed = prev.filter((p) => new Date(p.created_at).getTime() >= cutoff)
+            return [...trimmed, newPoint]
           })
         }
       } else if (event.type === "status") {
@@ -342,7 +344,7 @@ export default function MonitorsShow({
                   Avg Response · 24h
                 </p>
                 <p className="mt-1 font-medium text-2xl text-fg">
-                  {uptimeStats?.avg_response_24h
+                  {uptimeStats?.avg_response_24h != null
                     ? `${Math.round(uptimeStats.avg_response_24h)} ms`
                     : "—"}
                 </p>
@@ -352,7 +354,7 @@ export default function MonitorsShow({
                   Avg Response · 30d
                 </p>
                 <p className="mt-1 font-medium text-2xl text-fg">
-                  {uptimeStats?.avg_response_30d
+                  {uptimeStats?.avg_response_30d != null
                     ? `${Math.round(uptimeStats.avg_response_30d)} ms`
                     : "—"}
                 </p>
@@ -725,7 +727,9 @@ export default function MonitorsShow({
                             {hb.status.toUpperCase()}
                           </span>
                           <span className="truncate text-muted-fg">
-                            {hb.response_time ? `${hb.response_time}ms` : (hb.message ?? "—")}
+                            {hb.response_time != null
+                              ? `${hb.response_time}ms`
+                              : (hb.message ?? "—")}
                           </span>
                         </div>
                       ))}
@@ -772,7 +776,7 @@ export default function MonitorsShow({
                             </TableCell>
                             <TableCell>{hb.status_code ?? "—"}</TableCell>
                             <TableCell>
-                              {hb.response_time ? `${hb.response_time}ms` : "—"}
+                              {hb.response_time != null ? `${hb.response_time}ms` : "—"}
                             </TableCell>
                             <TableCell>
                               {new Date(hb.created_at).toLocaleString(undefined, {

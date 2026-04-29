@@ -649,11 +649,12 @@ export default function MonitorWizard({
                                   : [...data.notification_channel_ids, channel.id],
                               )
                             }
-                            onKeyDown={(e) =>
-                              e.key === "Enter" || e.key === " "
-                                ? e.currentTarget.click()
-                                : undefined
-                            }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault()
+                                e.currentTarget.click()
+                              }
+                            }}
                             className={[
                               "flex cursor-pointer items-center gap-4 rounded-lg border p-3.5 transition-colors",
                               on

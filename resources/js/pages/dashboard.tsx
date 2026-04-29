@@ -370,9 +370,13 @@ function MonitorCardImpl({ monitor }: { monitor: Monitor }) {
         <div>
           <div className="text-[10px] text-muted-fg uppercase tracking-wide">Uptime</div>
           <div
-            className={`mt-0.5 font-medium font-mono text-sm tabular-nums ${uptimeColor(monitor.uptime_percentage ?? 100)}`}
+            className={`mt-0.5 font-medium font-mono text-sm tabular-nums ${
+              monitor.uptime_percentage != null
+                ? uptimeColor(monitor.uptime_percentage)
+                : "text-muted-fg"
+            }`}
           >
-            {monitor.uptime_percentage !== undefined ? `${monitor.uptime_percentage}%` : "—"}
+            {monitor.uptime_percentage != null ? `${monitor.uptime_percentage}%` : "—"}
           </div>
         </div>
         <div>
@@ -702,13 +706,22 @@ export default function Dashboard({
     return monitors
       .filter((m) => m.status === "down")
       .map((m) => {
-        const lastDown = [...(m.heartbeats ?? [])].reverse().find((h) => h.status === "down")
+        const history = m.heartbeats ?? []
+        let outageStart: string | undefined
+        let latestDownMessage: string | null = null
+        for (let i = history.length - 1; i >= 0; i--) {
+          if (history[i].status !== "down") break
+          outageStart = history[i].created_at
+          if (latestDownMessage === null) {
+            latestDownMessage = history[i].message ?? null
+          }
+        }
         return {
           id: m.id,
           monitor_id: m.id,
           monitor_name: m.name,
-          started_at: lastDown?.created_at ?? m.last_checked_at ?? new Date().toISOString(),
-          cause: lastDown?.message ?? null,
+          started_at: outageStart ?? m.last_checked_at ?? new Date().toISOString(),
+          cause: latestDownMessage,
         }
       })
   }, [monitors])

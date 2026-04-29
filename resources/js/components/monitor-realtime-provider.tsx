@@ -2,6 +2,7 @@ import { usePage } from "@inertiajs/react"
 import { useEcho } from "@laravel/echo-react"
 import { useCallback, useEffect } from "react"
 import {
+  clear,
   handleChecking,
   handleHeartbeat,
   handleStatusChanged,
@@ -52,6 +53,7 @@ export function MonitorRealtimeProvider() {
 
   useEffect(() => {
     if (!sidebarMonitors || sidebarMonitors.length === 0) {
+      clear()
       return
     }
     hydrate(sidebarMonitors.map(sidebarToMonitor))

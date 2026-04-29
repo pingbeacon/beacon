@@ -25,6 +25,9 @@ export function isSlow(hb: Heartbeat, avg: number): boolean {
  *                "No data" placeholders when fewer heartbeats are supplied.
  */
 export function heartbeatsToTracker(heartbeats?: Heartbeat[], count = 90): TrackerBlockProps[] {
+  if (count <= 0) {
+    return []
+  }
   if (!heartbeats || heartbeats.length === 0) {
     return Array(count)
       .fill(null)

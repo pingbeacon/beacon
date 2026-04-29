@@ -4,7 +4,6 @@ import type {
   Heartbeat,
   HeartbeatPayload,
   Monitor,
-  MonitorStatus,
   StatusChangedPayload,
 } from "@/types/monitor"
 
@@ -91,6 +90,27 @@ export function getSnapshot(): State {
   return state
 }
 
+function hasNewHeartbeats(
+  existing: Heartbeat[] | undefined,
+  incoming: Heartbeat[] | undefined,
+): boolean {
+  if (!incoming || incoming.length === 0) return false
+  const existingIds = new Set((existing ?? []).map((h) => h.id))
+  for (const hb of incoming) {
+    if (!existingIds.has(hb.id)) return true
+  }
+  return false
+}
+
+function monitorMetaDiffers(a: Monitor, b: Monitor): boolean {
+  return (
+    a.status !== b.status ||
+    a.last_checked_at !== b.last_checked_at ||
+    a.uptime_percentage !== b.uptime_percentage ||
+    a.average_response_time !== b.average_response_time
+  )
+}
+
 export function hydrate(monitors: Monitor[] | undefined | null): void {
   if (!monitors || monitors.length === 0) {
     return
@@ -106,6 +126,11 @@ export function hydrate(monitors: Monitor[] | undefined | null): void {
     }
     const incomingNewer = timestamp(incoming.last_checked_at) > timestamp(existing.last_checked_at)
     const base = incomingNewer ? incoming : existing
+    const newHeartbeats = hasNewHeartbeats(existing.heartbeats, incoming.heartbeats)
+    const baseChanged = base !== existing && monitorMetaDiffers(base, existing)
+    if (!baseChanged && !newHeartbeats) {
+      continue
+    }
     const merged: Monitor = {
       ...base,
       heartbeats: mergeHeartbeats(existing.heartbeats, incoming.heartbeats),
@@ -125,10 +150,15 @@ export function handleHeartbeat(payload: HeartbeatPayload): void {
   if (!existing) {
     return
   }
-  const heartbeats = mergeHeartbeats(existing.heartbeats, [payload.heartbeat])
+  const heartbeat: Heartbeat = {
+    ...payload.heartbeat,
+    monitor_id: payload.monitorId,
+    message: null,
+  }
+  const heartbeats = mergeHeartbeats(existing.heartbeats, [heartbeat])
   const updated: Monitor = {
     ...existing,
-    status: payload.monitorStatus as MonitorStatus,
+    status: payload.monitorStatus,
     heartbeats,
     uptime_percentage: payload.uptimePercentage,
     average_response_time: payload.averageResponseTime,
@@ -146,7 +176,7 @@ export function handleStatusChanged(payload: StatusChangedPayload): void {
   if (existing.status === payload.newStatus) {
     return
   }
-  const updated: Monitor = { ...existing, status: payload.newStatus as MonitorStatus }
+  const updated: Monitor = { ...existing, status: payload.newStatus }
   commit({ ...state.byId, [payload.monitorId]: updated })
 }
 
@@ -161,6 +191,13 @@ export function handleChecking(payload: CheckingPayload): void {
   }
   const updated: Monitor = { ...existing, status: "pending" }
   commit({ ...state.byId, [payload.monitorId]: updated })
+}
+
+export function clear(): void {
+  if (state.monitors.length === 0 && Object.keys(state.byId).length === 0) {
+    return
+  }
+  commit({})
 }
 
 export function __resetForTests(): void {

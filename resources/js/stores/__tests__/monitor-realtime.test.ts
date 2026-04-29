@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import {
   __resetForTests,
+  clear,
   getCountsSnapshot,
   getSnapshot,
   handleChecking,
@@ -96,6 +97,29 @@ describe("monitor-realtime store", () => {
       hydrate([makeMonitor({ id: 1, last_checked_at: "2026-04-28T01:00:00Z", status: "down" })])
       expect(getSnapshot().byId[1]?.status).toBe("down")
     })
+
+    it("skips no-op hydrate — same payload yields same state ref", () => {
+      hydrate([makeMonitor({ id: 1, last_checked_at: "2026-04-28T00:00:00Z" })])
+      const before = getSnapshot()
+      hydrate([makeMonitor({ id: 1, last_checked_at: "2026-04-28T00:00:00Z" })])
+      expect(getSnapshot()).toBe(before)
+    })
+  })
+
+  describe("clear", () => {
+    it("empties the store when called with non-empty state", () => {
+      hydrate([makeMonitor({ id: 1 }), makeMonitor({ id: 2 })])
+      clear()
+      const snap = getSnapshot()
+      expect(snap.monitors).toHaveLength(0)
+      expect(snap.byId).toEqual({})
+    })
+
+    it("is a no-op when store is already empty (same state ref)", () => {
+      const before = getSnapshot()
+      clear()
+      expect(getSnapshot()).toBe(before)
+    })
   })
 
   describe("handleHeartbeat", () => {
@@ -126,8 +150,9 @@ describe("monitor-realtime store", () => {
     })
 
     it("caps heartbeat history at 90 entries", () => {
+      const baseMs = Date.parse("2026-04-28T00:00:00Z")
       const initial = Array.from({ length: 90 }, (_, i) =>
-        makeHeartbeat({ id: i + 1, created_at: `2026-04-28T00:${String(i).padStart(2, "0")}:00Z` }),
+        makeHeartbeat({ id: i + 1, created_at: new Date(baseMs + i * 60_000).toISOString() }),
       )
       hydrate([makeMonitor({ id: 1, heartbeats: initial })])
       handleHeartbeat({
