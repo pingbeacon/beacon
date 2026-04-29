@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react"
 import { tv } from "tailwind-variants"
 
 export const statusPillStyles = tv({
@@ -18,7 +19,7 @@ export const statusPillStyles = tv({
 
 export type StatusPillStatus = "up" | "degraded" | "down" | "resolved" | "paused"
 
-export interface StatusPillProps extends React.ComponentProps<"span"> {
+export interface StatusPillProps extends ComponentProps<"span"> {
   status: StatusPillStatus
 }
 

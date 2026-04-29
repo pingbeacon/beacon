@@ -1,16 +1,27 @@
-import type { ReactNode } from "react"
+import type { ComponentProps, ReactNode } from "react"
 import { twMerge } from "tailwind-merge"
 import { tv } from "tailwind-variants"
 
-export interface SegmentedToggleOption<T extends string> {
+type SegmentedToggleLabeledOption<T extends string> = {
   value: T
-  label?: ReactNode
+  label: ReactNode
   icon?: ReactNode
   ariaLabel?: string
 }
 
+type SegmentedToggleIconOnlyOption<T extends string> = {
+  value: T
+  icon: ReactNode
+  label?: never
+  ariaLabel: string
+}
+
+export type SegmentedToggleOption<T extends string> =
+  | SegmentedToggleLabeledOption<T>
+  | SegmentedToggleIconOnlyOption<T>
+
 export interface SegmentedToggleProps<T extends string>
-  extends Omit<React.ComponentProps<"div">, "onChange"> {
+  extends Omit<ComponentProps<"div">, "onChange"> {
   value: T
   onChange: (value: T) => void
   options: SegmentedToggleOption<T>[]

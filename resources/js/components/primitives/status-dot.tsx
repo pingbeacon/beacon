@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react"
 import { tv } from "tailwind-variants"
 
 export const statusDotStyles = tv({
@@ -17,7 +18,7 @@ export const statusDotStyles = tv({
 
 export type StatusDotStatus = "up" | "degraded" | "down" | "unknown"
 
-export interface StatusDotProps extends React.ComponentProps<"span"> {
+export interface StatusDotProps extends ComponentProps<"span"> {
   status: StatusDotStatus
   label?: string
 }

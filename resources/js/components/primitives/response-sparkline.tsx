@@ -1,6 +1,7 @@
+import type { ComponentProps } from "react"
 import { twMerge } from "tailwind-merge"
 
-export interface ResponseSparklineProps extends Omit<React.ComponentProps<"svg">, "points"> {
+export interface ResponseSparklineProps extends Omit<ComponentProps<"svg">, "points"> {
   points: number[]
   width?: number
   height?: number

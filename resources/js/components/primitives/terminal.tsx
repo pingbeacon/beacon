@@ -1,6 +1,7 @@
+import type { ComponentProps } from "react"
 import { twMerge } from "tailwind-merge"
 
-export interface TerminalProps extends React.ComponentProps<"pre"> {}
+export interface TerminalProps extends ComponentProps<"pre"> {}
 
 export function Terminal({ className, ...props }: TerminalProps) {
   return (

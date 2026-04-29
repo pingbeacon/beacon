@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import type { ComponentProps, ReactNode } from "react"
 import { twMerge } from "tailwind-merge"
 import { tv } from "tailwind-variants"
 
@@ -21,7 +21,7 @@ const kpiValueStyles = tv({
 
 export type KpiIntent = "neutral" | "primary" | "success" | "danger" | "warning" | "muted"
 
-export interface KpiCellProps extends Omit<React.ComponentProps<"div">, "children"> {
+export interface KpiCellProps extends Omit<ComponentProps<"div">, "children"> {
   label: ReactNode
   value: ReactNode
   sub?: ReactNode
@@ -33,7 +33,7 @@ export function KpiCell({ label, value, sub, intent, className, ...props }: KpiC
     <div data-slot="kpi-cell" className={twMerge("flex flex-col", className)} {...props}>
       <span className="kpi-label">{label}</span>
       <span className={kpiValueStyles({ intent })}>{value}</span>
-      {sub ? <span className="kpi-sub">{sub}</span> : null}
+      {sub != null ? <span className="kpi-sub">{sub}</span> : null}
     </div>
   )
 }

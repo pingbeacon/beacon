@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react"
 import { twMerge } from "tailwind-merge"
 import { tv } from "tailwind-variants"
 
@@ -19,7 +20,7 @@ export const heartbeatBarStyles = tv({
   },
 })
 
-export interface HeartbeatBarProps extends React.ComponentProps<"span"> {
+export interface HeartbeatBarProps extends ComponentProps<"span"> {
   status: HeartbeatStatus
 }
 
@@ -40,7 +41,7 @@ export interface HeartbeatBucket {
   title?: string
 }
 
-export interface HeartbeatStripProps extends Omit<React.ComponentProps<"div">, "children"> {
+export interface HeartbeatStripProps extends Omit<ComponentProps<"div">, "children"> {
   buckets: HeartbeatBucket[]
   height?: number
   emptyLabel?: string

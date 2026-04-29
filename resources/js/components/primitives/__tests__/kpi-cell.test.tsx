@@ -15,8 +15,15 @@ describe("KpiCell", () => {
   })
 
   it("omits sub when not provided", () => {
-    render(<KpiCell label="Avg" value="186 ms" />)
-    expect(screen.queryByText("kpi-sub")).not.toBeInTheDocument()
+    const { container } = render(<KpiCell label="Avg" value="186 ms" />)
+    expect(container.querySelector(".kpi-sub")).not.toBeInTheDocument()
+  })
+
+  it("renders sub when value is 0", () => {
+    const { container } = render(<KpiCell label="Avg" value="186 ms" sub={0} />)
+    const subEl = container.querySelector(".kpi-sub")
+    expect(subEl).toBeInTheDocument()
+    expect(subEl).toHaveTextContent("0")
   })
 
   it("applies an intent token to the value color", () => {
