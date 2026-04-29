@@ -79,7 +79,7 @@ const toggleGroupItemStyles = tv({
     "inline-flex flex-row items-center font-medium text-(--toggle-foreground) outline-hidden",
     "inset-ring inset-ring-transparent",
     "*:data-[slot=icon]:-mx-0.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center *:data-[slot=icon]:text-(--toggle-icon) focus-visible:*:data-[slot=icon]:text-(--toggle-icon) hover:*:data-[slot=icon]:text-(--toggle-icon)",
-    "forced-colors:[--btn-icon:ButtonText] forced-colors:hover:[--btn-icon:ButtonText]",
+    "forced-colors:[--toggle-icon:ButtonText] forced-colors:hover:[--toggle-icon:ButtonText]",
   ],
   variants: {
     orientation: {
