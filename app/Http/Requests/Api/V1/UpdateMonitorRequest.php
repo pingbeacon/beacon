@@ -31,7 +31,7 @@ class UpdateMonitorRequest extends FormRequest
             'body' => ['sometimes', 'nullable', 'string'],
             'headers' => ['sometimes', 'nullable', 'array'],
             'accepted_status_codes' => ['sometimes', 'nullable', 'array'],
-            'accepted_status_codes.*' => ['integer'],
+            'accepted_status_codes.*' => ['integer', 'between:100,599'],
             'interval' => ['sometimes', 'integer', 'min:10', 'max:3600'],
             'timeout' => ['sometimes', 'integer', 'min:1', 'max:120'],
             'retry_count' => ['sometimes', 'integer', 'min:0', 'max:10'],

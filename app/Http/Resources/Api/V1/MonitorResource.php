@@ -32,7 +32,7 @@ class MonitorResource extends ApiResource
     private function redactedHeaders(): ?array
     {
         if (! is_array($this->headers)) {
-            return $this->headers;
+            return null;
         }
 
         return collect($this->headers)

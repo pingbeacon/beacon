@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Resources\Api\V1\MonitorResource;
 use App\Models\Monitor;
 use App\Models\User;
 
@@ -197,6 +198,68 @@ test('monitor creation validates required fields', function () {
         ->postJson('/api/v1/monitors', [])
         ->assertUnprocessable()
         ->assertJsonPath('code', 'validation_error');
+});
+
+test('http-only fields are rejected for non-http monitor types', function () {
+    $user = User::factory()->create();
+
+    $this->withToken(makeToken($user))
+        ->postJson('/api/v1/monitors', [
+            'name' => 'Bad TCP Monitor',
+            'type' => 'tcp',
+            'host' => 'example.com',
+            'port' => 443,
+            'method' => 'GET',
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['method']);
+
+    $this->withToken(makeToken($user))
+        ->postJson('/api/v1/monitors', [
+            'name' => 'Bad TCP Monitor',
+            'type' => 'tcp',
+            'host' => 'example.com',
+            'port' => 443,
+            'accepted_status_codes' => [200],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['accepted_status_codes']);
+});
+
+test('accepted_status_codes must be between 100 and 599', function () {
+    $user = User::factory()->create();
+
+    $this->withToken(makeToken($user))
+        ->postJson('/api/v1/monitors', [
+            'name' => 'HTTP Monitor',
+            'type' => 'http',
+            'url' => 'https://example.com',
+            'accepted_status_codes' => [99],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['accepted_status_codes.0']);
+
+    $this->withToken(makeToken($user))
+        ->postJson('/api/v1/monitors', [
+            'name' => 'HTTP Monitor',
+            'type' => 'http',
+            'url' => 'https://example.com',
+            'accepted_status_codes' => [600],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['accepted_status_codes.0']);
+});
+
+test('redactedHeaders returns null when headers are not an array', function () {
+    $stub = new stdClass;
+    $stub->headers = 'not-an-array';
+
+    $resource = new MonitorResource($stub);
+
+    $method = new ReflectionMethod($resource, 'redactedHeaders');
+    $method->setAccessible(true);
+
+    expect($method->invoke($resource))->toBeNull();
 });
 
 // --- Update monitor ---

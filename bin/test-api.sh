@@ -48,6 +48,7 @@ RESET='\033[0m'
 
 PASS=0
 FAIL=0
+LAST_BODY=""
 
 header() {
   echo
@@ -79,7 +80,7 @@ run() {
     FAIL=$((FAIL + 1))
   fi
 
-  echo "$body"
+  LAST_BODY="$body"
 }
 
 extract() {
@@ -116,7 +117,7 @@ header "Monitors"
 run "GET /monitors" "$API/monitors"
 
 # Create
-create_response=$(run "POST /monitors" -X POST "$API/monitors" \
+run "POST /monitors" -X POST "$API/monitors" \
   -d '{
     "name": "test-api-sh HTTP Monitor",
     "type": "http",
@@ -124,7 +125,8 @@ create_response=$(run "POST /monitors" -X POST "$API/monitors" \
     "method": "GET",
     "interval": 60,
     "timeout": 30
-  }')
+  }'
+create_response="$LAST_BODY"
 
 MONITOR_ID=$(extract id "$create_response")
 
@@ -149,26 +151,28 @@ else
 fi
 
 # Create TCP monitor
-tcp_response=$(run "POST /monitors (TCP)" -X POST "$API/monitors" \
+run "POST /monitors (TCP)" -X POST "$API/monitors" \
   -d '{
     "name": "test-api-sh TCP Monitor",
     "type": "tcp",
     "host": "example.com",
     "port": 443,
     "interval": 60
-  }')
+  }'
+tcp_response="$LAST_BODY"
 
 TCP_MONITOR_ID=$(extract id "$tcp_response")
 [[ -n "$TCP_MONITOR_ID" && "$TCP_MONITOR_ID" != "null" ]] && \
   echo -e "  TCP Monitor ID: ${YELLOW}$TCP_MONITOR_ID${RESET}"
 
 # Create Push monitor
-push_response=$(run "POST /monitors (Push)" -X POST "$API/monitors" \
+run "POST /monitors (Push)" -X POST "$API/monitors" \
   -d '{
     "name": "test-api-sh Push Monitor",
     "type": "push",
     "interval": 3600
-  }')
+  }'
+push_response="$LAST_BODY"
 
 PUSH_MONITOR_ID=$(extract id "$push_response")
 [[ -n "$PUSH_MONITOR_ID" && "$PUSH_MONITOR_ID" != "null" ]] && \
@@ -232,13 +236,14 @@ header "Status Pages"
 run "GET /status-pages" "$API/status-pages"
 
 # Create
-sp_response=$(run "POST /status-pages" -X POST "$API/status-pages" \
+run "POST /status-pages" -X POST "$API/status-pages" \
   -d "{
     \"title\": \"test-api-sh Status Page\",
     \"slug\": \"$SP_SLUG\",
     \"description\": \"Created by test-api.sh\",
     \"is_published\": false
-  }")
+  }"
+sp_response="$LAST_BODY"
 
 STATUS_PAGE_ID=$(extract id "$sp_response")
 
