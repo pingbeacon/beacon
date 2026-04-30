@@ -117,9 +117,12 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarContent className="flex flex-col overflow-hidden">
         <div className="flex shrink-0 items-center justify-between px-4 pt-1 pb-1.5">
-          <span className="font-medium text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
+          <Link
+            href="/monitors"
+            className="font-medium text-[10px] text-muted-foreground uppercase tracking-[0.15em] transition-colors hover:text-foreground"
+          >
             Monitors · {monitors.length}
-          </span>
+          </Link>
           <Link
             href="/monitors/create"
             className="font-medium text-[11px] text-primary transition-colors hover:text-primary/70"

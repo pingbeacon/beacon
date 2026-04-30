@@ -30,8 +30,14 @@ class MonitorController extends Controller
             ->with(['tags', 'monitorGroup', 'heartbeats' => fn ($q) => $q->latest()->limit(90)])
             ->latest()
             ->get()
-            ->each(function (Monitor $monitor) {
+            ->map(function (Monitor $monitor) {
                 $monitor->setRelation('heartbeats', $monitor->heartbeats->reverse()->values());
+
+                return [
+                    ...$monitor->toArray(),
+                    'uptime_percentage' => $monitor->uptimePercentageFromLoaded(),
+                    'average_response_time' => $monitor->averageResponseTimeFromLoaded(),
+                ];
             });
 
         $tags = Tag::query()

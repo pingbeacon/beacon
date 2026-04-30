@@ -497,12 +497,20 @@ function MonitorGrid({ monitors }: { monitors: Monitor[] }) {
             </button>
           ))}
         </div>
-        <CreateMonitorModal>
-          <Button size="sm" intent="outline">
-            <PlusIcon data-slot="icon" />
-            Add
-          </Button>
-        </CreateMonitorModal>
+        <div className="flex items-center gap-2">
+          <Link
+            href={monitorRoutes.index.url()}
+            className="font-medium text-primary text-xs transition-colors hover:text-primary/70"
+          >
+            View all →
+          </Link>
+          <CreateMonitorModal>
+            <Button size="sm" intent="outline">
+              <PlusIcon data-slot="icon" />
+              Add
+            </Button>
+          </CreateMonitorModal>
+        </div>
       </div>
 
       {filtered.length > 0 ? (
