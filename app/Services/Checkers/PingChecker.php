@@ -5,46 +5,69 @@ namespace App\Services\Checkers;
 use App\DTOs\CheckResult;
 use App\Models\Monitor;
 
+/**
+ * TCP-based reachability check.
+ *
+ * Despite the "ping" name, this checker does not send ICMP — it opens a TCP
+ * socket against the target host. ICMP requires either the `ping` binary (not
+ * present in our Alpine prod image or the Sail dev image) or CAP_NET_RAW
+ * (rarely granted to containers). TCP reachability is what most monitoring
+ * tools actually need: it confirms DNS resolves and at least one common
+ * service port accepts connections.
+ */
 class PingChecker implements MonitorChecker
 {
+    /**
+     * Ports tried in order when the monitor has no explicit port configured.
+     *
+     * 443 first — most public hosts speak HTTPS even when HTTP/SSH are closed.
+     */
+    private const FALLBACK_PORTS = [443, 80, 53];
+
     public function check(Monitor $monitor): CheckResult
     {
         $start = microtime(true);
 
         try {
-            // Clean host in case user provided a URL
-            $host = preg_replace('/^https?:\/\//i', '', $monitor->host);
+            $host = preg_replace('/^https?:\/\//i', '', (string) $monitor->host);
             $host = explode('/', $host)[0];
             $host = explode(':', $host)[0];
 
-            $escapedHost = escapeshellarg($host);
-            $timeout = (int) $monitor->timeout;
+            $ports = $monitor->port
+                ? [(int) $monitor->port]
+                : self::FALLBACK_PORTS;
 
-            exec("ping -c 1 -W {$timeout} {$escapedHost} 2>&1", $output, $exitCode);
+            $totalTimeout = max(1, (int) $monitor->timeout);
+            $perPortTimeout = max(1, (int) floor($totalTimeout / count($ports)));
 
-            $responseTime = (int) round((microtime(true) - $start) * 1000);
-            $outputStr = implode("\n", $output);
+            $lastError = null;
 
-            if ($exitCode === 0) {
-                if (preg_match('/time[=<](\d+\.?\d*)\s*ms/i', $outputStr, $matches)) {
-                    $responseTime = (int) round((float) $matches[1]);
+            foreach ($ports as $port) {
+                $errno = 0;
+                $errstr = '';
+                $portStart = microtime(true);
+
+                $connection = @fsockopen($host, $port, $errno, $errstr, $perPortTimeout);
+
+                if ($connection !== false) {
+                    fclose($connection);
+                    $responseTime = (int) round((microtime(true) - $portStart) * 1000);
+
+                    return new CheckResult(
+                        status: 'up',
+                        responseTime: $responseTime,
+                    );
                 }
 
-                return new CheckResult(
-                    status: 'up',
-                    responseTime: $responseTime,
-                );
+                $lastError = $errstr ?: "Connection failed on port {$port}";
             }
 
-            $errorMsg = $output[0] ?? "Ping failed for host {$host}";
-            if (str_contains($errorMsg, 'unknown host')) {
-                $errorMsg = "Unknown host: {$host}";
-            }
+            $responseTime = (int) round((microtime(true) - $start) * 1000);
 
             return new CheckResult(
                 status: 'down',
                 responseTime: $responseTime,
-                message: $errorMsg,
+                message: $lastError ?? "Host {$host} unreachable",
             );
         } catch (\Throwable $e) {
             $responseTime = (int) round((microtime(true) - $start) * 1000);
