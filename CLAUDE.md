@@ -296,6 +296,13 @@ Wayfinder generates TypeScript functions for Laravel routes. Import from `@/acti
 
 </laravel-boost-guidelines>
 
+## Local Development
+
+- **Primary path: Laravel Sail.** The local dev stack lives in `docker-compose.sail.yml` (Postgres + Mailpit + the `laravel.test` PHP container). Bootstrap with `./bin/build_sail.sh` (use `--fresh` to reset the DB). Day-to-day: `sail up -d`, `sail artisan ...`, `sail npm run dev`, `sail test`. The `sail` shell alias is expected.
+- The repo's `docker-compose.yml` is the **production** stack (uses the published `ghcr.io/pingbeacon/beacon:latest` image) — do not edit it for local-dev convenience.
+- `.env` should set `COMPOSE_FILE=docker-compose.sail.yml` so `docker compose` (and Sail) target the dev file by default. `.env.example.sail` is the canonical template.
+- Tests run against SQLite in-memory (see `phpunit.xml`), but the dev DB is **Postgres**. Postgres is stricter than SQLite — avoid double-quoted string literals in raw SQL (use `?` bindings or single quotes).
+
 ## Design Context
 
 ### Users

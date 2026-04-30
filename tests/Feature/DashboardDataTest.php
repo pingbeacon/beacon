@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Models\Heartbeat;
 use App\Models\Incident;
 use App\Models\Monitor;
 use App\Models\User;
@@ -100,6 +101,26 @@ test('has_incidents_24h is false for resolved incident outside 24h window', func
         ->assertJson(fn ($json) => $json
             ->where('props.monitors.0.has_incidents_24h', false)
             ->etc()
+        );
+});
+
+test('team_uptime_30d aggregates heartbeats across active monitors', function () {
+    $user = User::factory()->create();
+    $monitor = Monitor::factory()->up()->create(['user_id' => $user->id]);
+
+    Heartbeat::factory()->up()->count(8)->create([
+        'monitor_id' => $monitor->id,
+        'created_at' => now()->subHours(1),
+    ]);
+    Heartbeat::factory()->down()->count(2)->create([
+        'monitor_id' => $monitor->id,
+        'created_at' => now()->subHours(1),
+    ]);
+
+    $this->actingAs($user)->get('/dashboard')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('team_uptime_30d', 80)
         );
 });
 
