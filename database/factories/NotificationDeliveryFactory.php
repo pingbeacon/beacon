@@ -5,7 +5,7 @@ namespace Database\Factories;
 use App\Models\Monitor;
 use App\Models\NotificationChannel;
 use App\Models\NotificationDelivery;
-use App\Models\Team;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -15,10 +15,19 @@ class NotificationDeliveryFactory extends Factory
 {
     public function definition(): array
     {
+        $user = User::factory()->create();
+        $teamId = $user->current_team_id;
+
         return [
-            'team_id' => Team::factory(),
-            'channel_id' => NotificationChannel::factory(),
-            'monitor_id' => Monitor::factory(),
+            'team_id' => $teamId,
+            'channel_id' => NotificationChannel::factory()->state([
+                'user_id' => $user->id,
+                'team_id' => $teamId,
+            ]),
+            'monitor_id' => Monitor::factory()->state([
+                'user_id' => $user->id,
+                'team_id' => $teamId,
+            ]),
             'incident_id' => null,
             'event_type' => 'status_flip',
             'status' => 'delivered',

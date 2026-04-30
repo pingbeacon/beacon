@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\FiredTodayDeliveriesController;
 use App\Models\Monitor;
 use App\Models\NotificationChannel;
 use App\Models\NotificationDelivery;
 use App\Models\User;
+use Illuminate\Http\Request;
 
 it('returns per-channel fired-today counts scoped to the current team', function () {
     $user = User::factory()->create();
@@ -41,6 +43,19 @@ it('returns per-channel fired-today counts scoped to the current team', function
 
     expect((int) $payload[$a->id]['count'])->toBe(3);
     expect((int) $payload[$b->id]['count'])->toBe(1);
+});
+
+it('returns an empty array when current_team_id is null (controller-level guard)', function () {
+    $user = User::factory()->create();
+    $user->forceFill(['current_team_id' => null])->save();
+
+    $request = Request::create('/monitors/notification-deliveries/fired-today', 'GET');
+    $request->setUserResolver(fn () => $user);
+
+    $response = (new FiredTodayDeliveriesController)($request);
+
+    expect($response->getStatusCode())->toBe(200);
+    expect($response->getData(true))->toBe([]);
 });
 
 it('does not leak deliveries from another team', function () {

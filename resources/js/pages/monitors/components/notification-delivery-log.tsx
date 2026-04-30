@@ -100,6 +100,7 @@ export function NotificationDeliveryLog({ monitorId, fetcher = defaultFetcher }:
       })
       .catch((e: Error) => {
         if (!cancelled) {
+          setPayload(null)
           setError(e.message)
         }
       })

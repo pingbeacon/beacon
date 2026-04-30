@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\MonitorNotificationDeliveryIndexRequest;
 use App\Http\Resources\NotificationDeliveryResource;
 use App\Models\Monitor;
 use App\Models\NotificationDelivery;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class MonitorNotificationDeliveryController extends Controller
 {
-    public function index(Request $request, Monitor $monitor): AnonymousResourceCollection
+    public function index(MonitorNotificationDeliveryIndexRequest $request, Monitor $monitor): AnonymousResourceCollection
     {
         $this->authorize('view', $monitor);
 
-        $status = $request->query('status', 'all');
+        $status = $request->validated('status', 'all');
 
         $query = NotificationDelivery::query()
             ->with(['channel:id,name,type', 'incident:id,started_at,resolved_at'])

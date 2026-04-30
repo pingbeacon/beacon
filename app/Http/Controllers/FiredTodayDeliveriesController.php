@@ -12,6 +12,10 @@ class FiredTodayDeliveriesController extends Controller
     {
         $teamId = $request->user()->current_team_id;
 
+        if ($teamId === null) {
+            return response()->json([]);
+        }
+
         $rows = NotificationDelivery::query()
             ->selectRaw('channel_id, count(*) as count')
             ->where('team_id', $teamId)

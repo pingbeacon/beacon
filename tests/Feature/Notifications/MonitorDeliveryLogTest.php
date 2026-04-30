@@ -78,6 +78,20 @@ it('filters the delivery log by status', function () {
     expect($all->json('meta.total'))->toBe(5);
 });
 
+it('rejects invalid status filter values with a 422', function () {
+    $user = User::factory()->create();
+    $monitor = Monitor::factory()->for($user)->create([
+        'team_id' => $user->current_team_id,
+    ]);
+
+    $response = $this->actingAs($user)->getJson(
+        route('monitors.notification-deliveries.index', [$monitor, 'status' => 'banana']),
+    );
+
+    $response->assertStatus(422);
+    $response->assertJsonValidationErrors(['status']);
+});
+
 it('does not leak deliveries from another monitor or another team', function () {
     $owner = User::factory()->create();
     $other = User::factory()->create();

@@ -62,6 +62,29 @@ describe("NotificationDeliveryLog", () => {
     )
   })
 
+  it("clears previously rendered rows when a later fetch fails", async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: [sample({ id: 1 })],
+        meta: { current_page: 1, last_page: 1, per_page: 20, total: 1 },
+      })
+      .mockRejectedValueOnce(new Error("Failed to load deliveries (500)"))
+
+    render(<NotificationDeliveryLog monitorId={5} fetcher={fetcher} />)
+
+    await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1))
+    expect(await screen.findByText("Team Email")).toBeInTheDocument()
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Failed" }))
+    })
+
+    await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(2))
+    await screen.findByRole("alert")
+    expect(screen.queryByText("Team Email")).toBeNull()
+  })
+
   it("paginates with next/previous buttons", async () => {
     const fetcher = vi
       .fn()

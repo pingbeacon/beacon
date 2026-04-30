@@ -385,8 +385,9 @@ test('send notification job dispatches to the notifications queue', function () 
 test('send notification job sends slack webhook', function () {
     Http::fake(['https://hooks.slack.com/*' => Http::response([], 200)]);
 
-    $channel = NotificationChannel::factory()->slack()->create();
-    $monitor = Monitor::factory()->http()->create();
+    $user = User::factory()->create();
+    $channel = NotificationChannel::factory()->slack()->for($user)->create(['team_id' => $user->current_team_id]);
+    $monitor = Monitor::factory()->http()->for($user)->create(['team_id' => $user->current_team_id]);
 
     $job = new SendNotificationJob($channel, $monitor, 'down');
     $job->handle();
@@ -397,8 +398,9 @@ test('send notification job sends slack webhook', function () {
 test('send notification job sends discord embed', function () {
     Http::fake(['https://discord.com/*' => Http::response([], 204)]);
 
-    $channel = NotificationChannel::factory()->discord()->create();
-    $monitor = Monitor::factory()->http()->create();
+    $user = User::factory()->create();
+    $channel = NotificationChannel::factory()->discord()->for($user)->create(['team_id' => $user->current_team_id]);
+    $monitor = Monitor::factory()->http()->for($user)->create(['team_id' => $user->current_team_id]);
 
     $job = new SendNotificationJob($channel, $monitor, 'down');
     $job->handle();
@@ -412,8 +414,9 @@ test('send notification job sends discord embed', function () {
 test('send notification job sends telegram message', function () {
     Http::fake(['https://api.telegram.org/*' => Http::response(['ok' => true], 200)]);
 
-    $channel = NotificationChannel::factory()->telegram()->create();
-    $monitor = Monitor::factory()->http()->create();
+    $user = User::factory()->create();
+    $channel = NotificationChannel::factory()->telegram()->for($user)->create(['team_id' => $user->current_team_id]);
+    $monitor = Monitor::factory()->http()->for($user)->create(['team_id' => $user->current_team_id]);
 
     $job = new SendNotificationJob($channel, $monitor, 'down');
     $job->handle();
@@ -424,8 +427,9 @@ test('send notification job sends telegram message', function () {
 test('send notification job sends email', function () {
     Mail::fake();
 
-    $channel = NotificationChannel::factory()->create();
-    $monitor = Monitor::factory()->http()->create();
+    $user = User::factory()->create();
+    $channel = NotificationChannel::factory()->for($user)->create(['team_id' => $user->current_team_id]);
+    $monitor = Monitor::factory()->http()->for($user)->create(['team_id' => $user->current_team_id]);
 
     $job = new SendNotificationJob($channel, $monitor, 'down');
     $job->handle();
@@ -436,8 +440,9 @@ test('send notification job sends email', function () {
 test('down and up notifications both fire without suppression', function () {
     Http::fake(['https://hooks.slack.com/*' => Http::response([], 200)]);
 
-    $channel = NotificationChannel::factory()->slack()->create();
-    $monitor = Monitor::factory()->http()->create();
+    $user = User::factory()->create();
+    $channel = NotificationChannel::factory()->slack()->for($user)->create(['team_id' => $user->current_team_id]);
+    $monitor = Monitor::factory()->http()->for($user)->create(['team_id' => $user->current_team_id]);
 
     (new SendNotificationJob($channel, $monitor, 'down'))->handle();
     (new SendNotificationJob($channel, $monitor, 'up'))->handle();
@@ -448,9 +453,10 @@ test('down and up notifications both fire without suppression', function () {
 test('each channel receives its own notification', function () {
     Http::fake(['https://hooks.slack.com/*' => Http::response([], 200)]);
 
-    $channel1 = NotificationChannel::factory()->slack()->create();
-    $channel2 = NotificationChannel::factory()->slack()->create();
-    $monitor = Monitor::factory()->http()->create();
+    $user = User::factory()->create();
+    $channel1 = NotificationChannel::factory()->slack()->for($user)->create(['team_id' => $user->current_team_id]);
+    $channel2 = NotificationChannel::factory()->slack()->for($user)->create(['team_id' => $user->current_team_id]);
+    $monitor = Monitor::factory()->http()->for($user)->create(['team_id' => $user->current_team_id]);
 
     (new SendNotificationJob($channel1, $monitor, 'down'))->handle();
     (new SendNotificationJob($channel2, $monitor, 'down'))->handle();

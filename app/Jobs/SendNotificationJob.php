@@ -40,6 +40,10 @@ class SendNotificationJob implements ShouldQueue
 
     public function handle(): void
     {
+        if ($this->channel->team_id !== $this->monitor->team_id) {
+            throw new \LogicException('Channel and monitor must belong to the same team.');
+        }
+
         $notifier = $this->resolveNotifier();
         $ackUrl = $this->resolveAckUrl();
 
@@ -59,12 +63,20 @@ class SendNotificationJob implements ShouldQueue
             throw $e;
         }
 
-        $this->recordDelivery(
-            status: 'delivered',
-            latencyMs: (int) round((microtime(true) - $start) * 1000),
-            error: null,
-            dispatchedAt: $dispatchedAt,
-        );
+        try {
+            $this->recordDelivery(
+                status: 'delivered',
+                latencyMs: (int) round((microtime(true) - $start) * 1000),
+                error: null,
+                dispatchedAt: $dispatchedAt,
+            );
+        } catch (Throwable $loggingException) {
+            Log::warning('Notification delivery logging failed after successful send', [
+                'channel_id' => $this->channel->id,
+                'monitor_id' => $this->monitor->id,
+                'error' => $loggingException->getMessage(),
+            ]);
+        }
 
         Log::info('Notification sent', [
             'channel_id' => $this->channel->id,
@@ -80,7 +92,7 @@ class SendNotificationJob implements ShouldQueue
     private function recordDelivery(string $status, int $latencyMs, ?string $error, Carbon $dispatchedAt): void
     {
         NotificationDelivery::create([
-            'team_id' => $this->channel->team_id ?? $this->monitor->team_id,
+            'team_id' => $this->monitor->team_id,
             'channel_id' => $this->channel->id,
             'monitor_id' => $this->monitor->id,
             'incident_id' => $this->incidentId,
