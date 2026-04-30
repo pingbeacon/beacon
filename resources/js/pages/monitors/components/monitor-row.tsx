@@ -92,6 +92,7 @@ function heartbeatBuckets(
 function rowDotStatus(status: string): StatusDotStatus {
   if (status === "up") return "up"
   if (status === "down") return "down"
+  if (status === "degraded") return "degraded"
   if (status === "paused") return "unknown"
   return "degraded"
 }
@@ -106,6 +107,7 @@ function sparklinePoints(heartbeats: Heartbeat[] | undefined, status: string): n
 
 function sparklineToneClass(status: string): string {
   if (status === "down") return "text-destructive"
+  if (status === "degraded") return "text-warning"
   if (status === "paused" || status === "pending") return "text-muted-foreground"
   return "text-success"
 }

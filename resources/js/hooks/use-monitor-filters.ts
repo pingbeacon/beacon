@@ -84,7 +84,16 @@ export function useMonitorFilters(monitors: Monitor[]) {
       )
     }
 
-    if (filters.status !== "all" && filters.status !== "degraded") {
+    if (filters.status === "all") {
+      // no status filter
+    } else if (filters.status === "degraded") {
+      result = result.filter(
+        (m) =>
+          m.status === "up" &&
+          Array.isArray(m.heartbeats) &&
+          m.heartbeats.some((hb) => hb.status !== "up"),
+      )
+    } else {
       result = result.filter((m) => m.status === filters.status)
     }
 

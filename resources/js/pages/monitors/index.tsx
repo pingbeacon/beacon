@@ -1,6 +1,6 @@
 import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/20/solid"
 import { Head, router, WhenVisible } from "@inertiajs/react"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useMonitorFilters } from "@/hooks/use-monitor-filters"
@@ -82,6 +82,9 @@ export default function MonitorsIndex({
   useHydrateMonitors(initialMonitors)
   const monitors = useMonitors()
   const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [page, setPage] = useState(1)
+
+  const PAGE_SIZE = 20
 
   const {
     filteredMonitors,
@@ -98,10 +101,22 @@ export default function MonitorsIndex({
     isFiltering,
   } = useMonitorFilters(monitors)
 
-  const visibleMonitors = useMemo(
+  const sortedMonitors = useMemo(
     () => sortMonitors(applyDegradedFilter(filteredMonitors, statusFilter), sort),
     [filteredMonitors, statusFilter, sort],
   )
+
+  const totalPages = Math.ceil(sortedMonitors.length / PAGE_SIZE)
+
+  const visibleMonitors = useMemo(
+    () => sortedMonitors.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [sortedMonitors, page, PAGE_SIZE],
+  )
+
+  useEffect(() => {
+    setSelectedIds([])
+    setPage(1)
+  }, [searchQuery, statusFilter, tagFilter, view])
 
   const toggleSelect = useCallback((id: number) => {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]))
@@ -222,10 +237,29 @@ export default function MonitorsIndex({
 
               <div className="flex items-center justify-between border-border border-t px-6 py-4 font-mono text-muted-foreground text-xs">
                 <div>
-                  showing {visibleMonitors.length} of {totalCount}
+                  showing {(page - 1) * PAGE_SIZE + 1}-
+                  {Math.min(page * PAGE_SIZE, sortedMonitors.length)} of {sortedMonitors.length}
                 </div>
                 <div className="flex items-center gap-3">
-                  <span>page 1 / 1</span>
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="disabled:opacity-30"
+                  >
+                    prev
+                  </button>
+                  <span>
+                    page {page} / {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="disabled:opacity-30"
+                  >
+                    next
+                  </button>
                 </div>
               </div>
             </>
