@@ -57,7 +57,7 @@ const monitorTypes = [
   {
     id: "ping",
     label: "PING",
-    desc: "Raw network reachability. Measures packet loss & round-trip time.",
+    desc: "TCP reachability. Tries 443/80/53 (or your chosen port) — no ICMP required.",
   },
   {
     id: "dns",

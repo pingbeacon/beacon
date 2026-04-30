@@ -107,20 +107,32 @@ test('tcp checker returns down when host is unreachable', function () {
 // --- PingChecker ---
 
 test('ping checker returns up for localhost', function () {
-    $monitor = Monitor::factory()->ping()->create([
-        'host' => '127.0.0.1',
-        'timeout' => 2,
-    ]);
+    $server = stream_socket_server('tcp://127.0.0.1:0', $errno, $errstr);
+    expect($server)->not->toBeFalse();
 
-    $result = (new PingChecker)->check($monitor);
+    $address = stream_socket_get_name($server, false);
+    $port = (int) substr($address, strrpos($address, ':') + 1);
 
-    expect($result->status)->toBe('up');
-    expect($result->responseTime)->toBeGreaterThanOrEqual(0);
+    try {
+        $monitor = Monitor::factory()->ping()->create([
+            'host' => '127.0.0.1',
+            'port' => $port,
+            'timeout' => 2,
+        ]);
+
+        $result = (new PingChecker)->check($monitor);
+
+        expect($result->status)->toBe('up');
+        expect($result->responseTime)->toBeGreaterThanOrEqual(0);
+    } finally {
+        fclose($server);
+    }
 });
 
 test('ping checker returns down for unreachable host', function () {
     $monitor = Monitor::factory()->ping()->create([
-        'host' => '192.0.2.1',
+        'host' => '127.0.0.1',
+        'port' => 1,
         'timeout' => 1,
     ]);
 
