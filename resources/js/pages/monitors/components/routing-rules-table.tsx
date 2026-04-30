@@ -306,12 +306,7 @@ function RuleModal({
           <ModalTitle>{editingRule ? "Edit routing rule" : "Add routing rule"}</ModalTitle>
         </ModalHeader>
         <ModalBody>
-          <Form
-            id={formId}
-            onSubmit={submit}
-            validationErrors={errors}
-            className="space-y-4"
-          >
+          <Form id={formId} onSubmit={submit} validationErrors={errors} className="space-y-4">
             <TextField value={data.name} onChange={(v) => setData("name", v)}>
               <Label>Name (optional)</Label>
               <Input placeholder="Critical → PagerDuty" />
