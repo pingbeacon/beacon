@@ -6,6 +6,9 @@ use App\Http\Requests\StoreMonitorRequest;
 use App\Http\Requests\UpdateMonitorRequest;
 use App\Http\Resources\HeartbeatResource;
 use App\Jobs\CheckSslCertificateJob;
+use App\Models\EscalationFire;
+use App\Models\EscalationPolicy;
+use App\Models\Incident;
 use App\Models\Monitor;
 use App\Models\MonitorGroup;
 use App\Models\NotificationChannel;
@@ -159,10 +162,15 @@ class MonitorController extends Controller
             ->orderBy('id')
             ->get();
 
+        $escalationPolicy = $this->resolveEscalationPolicy($monitor);
+        $activeEscalation = $this->resolveActiveEscalation($monitor);
+
         return inertia('monitors/show', [
             'monitor' => $monitor,
             'teamNotificationChannels' => $teamChannels,
             'notificationRoutes' => $notificationRoutes,
+            'escalationPolicy' => $escalationPolicy,
+            'activeEscalation' => $activeEscalation,
             'chartPeriod' => $period,
             'sslCertificate' => Inertia::defer(
                 fn () => $monitor->sslCertificate
@@ -215,6 +223,54 @@ class MonitorController extends Controller
         }
 
         return $heartbeats;
+    }
+
+    private function resolveEscalationPolicy(Monitor $monitor): ?EscalationPolicy
+    {
+        $policy = EscalationPolicy::query()
+            ->where('is_active', true)
+            ->where('monitor_id', $monitor->id)
+            ->with('steps')
+            ->first();
+
+        if ($policy !== null) {
+            return $policy;
+        }
+
+        return EscalationPolicy::query()
+            ->where('is_active', true)
+            ->whereNull('monitor_id')
+            ->where('team_id', $monitor->team_id)
+            ->with('steps')
+            ->first();
+    }
+
+    /**
+     * @return array{incident_id: int, fired_step_ids: array<int>}|null
+     */
+    private function resolveActiveEscalation(Monitor $monitor): ?array
+    {
+        $incident = Incident::query()
+            ->where('monitor_id', $monitor->id)
+            ->whereNull('resolved_at')
+            ->whereNull('acked_at')
+            ->latest('started_at')
+            ->first();
+
+        if ($incident === null) {
+            return null;
+        }
+
+        $firedStepIds = EscalationFire::query()
+            ->where('incident_id', $incident->id)
+            ->pluck('escalation_step_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        return [
+            'incident_id' => $incident->id,
+            'fired_step_ids' => $firedStepIds,
+        ];
     }
 
     /**

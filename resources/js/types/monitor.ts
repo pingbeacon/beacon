@@ -113,6 +113,32 @@ export interface Incident {
     updated_at: string
 }
 
+export interface EscalationStep {
+    id: number
+    escalation_policy_id: number
+    order: number
+    delay_minutes: number
+    channel_ids: number[]
+    created_at: string
+    updated_at: string
+}
+
+export interface EscalationPolicy {
+    id: number
+    team_id: number
+    monitor_id: number | null
+    name: string
+    is_active: boolean
+    created_at: string
+    updated_at: string
+    steps: EscalationStep[]
+}
+
+export interface ActiveEscalation {
+    incident_id: number
+    fired_step_ids: number[]
+}
+
 export interface SslCertificate {
     id: number
     monitor_id: number

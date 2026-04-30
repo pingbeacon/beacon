@@ -29,12 +29,15 @@ import { Tracker } from "@/components/ui/tracker"
 import AppLayout from "@/layouts/app-layout"
 import { statusBadgeIntent, uptimeColor } from "@/lib/color"
 import { formatInterval, heartbeatsToTracker } from "@/lib/heartbeats"
+import { EscalationTimeline } from "@/pages/monitors/components/escalation-timeline"
 import { NotificationDeliveryLog } from "@/pages/monitors/components/notification-delivery-log"
 import { RoutingRulesTable } from "@/pages/monitors/components/routing-rules-table"
 import monitorRoutes from "@/routes/monitors"
 import { hydrate, subscribeToEvents, useMonitor } from "@/stores/monitor-realtime"
 import type {
+  ActiveEscalation,
   ChartDataPoint,
+  EscalationPolicy,
   Heartbeat,
   Incident,
   Monitor,
@@ -70,6 +73,8 @@ interface Props {
   chartPeriod?: string
   teamNotificationChannels?: NotificationChannel[]
   notificationRoutes?: NotificationRoute[]
+  escalationPolicy?: EscalationPolicy | null
+  activeEscalation?: ActiveEscalation | null
 }
 
 function formatDuration(start: string, end: string | null): string {
@@ -135,6 +140,8 @@ export default function MonitorsShow({
   chartPeriod: initialChartPeriod,
   teamNotificationChannels,
   notificationRoutes,
+  escalationPolicy,
+  activeEscalation,
 }: Props) {
   useEffect(() => {
     const seed: Monitor = {
@@ -1014,6 +1021,11 @@ export default function MonitorsShow({
                 monitorId={monitor.id}
                 rules={notificationRoutes ?? []}
                 channels={teamNotificationChannels ?? []}
+              />
+              <EscalationTimeline
+                policy={escalationPolicy ?? null}
+                channels={teamNotificationChannels ?? []}
+                active={activeEscalation ?? null}
               />
               <NotificationDeliveryLog monitorId={monitor.id} />
             </div>
