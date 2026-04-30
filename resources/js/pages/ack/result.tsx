@@ -1,16 +1,21 @@
-import { Head } from "@inertiajs/react"
+import { Head, router } from "@inertiajs/react"
+import { useState } from "react"
 import { Eyebrow } from "@/components/primitives/eyebrow"
 import { StatusDot, type StatusDotStatus } from "@/components/primitives/status-dot"
+import { Button } from "@/components/ui/button"
 import { Link } from "@/components/ui/link"
 import GuestLayout from "@/layouts/guest-layout"
 
-type AckStatus = "acked" | "already_acked" | "resolved" | "invalid_token"
+type AckMode = "preview" | "confirmed"
+type AckStatus = "acked" | "already_acked" | "resolved" | "invalid_token" | "pending"
 
 interface AckResultProps {
+  mode: AckMode
   status: AckStatus
   monitor_name: string | null
   started_at: string | null
   acked_at: string | null
+  confirm_url?: string | null
 }
 
 const copy: Record<
@@ -22,11 +27,18 @@ const copy: Record<
     dot: StatusDotStatus
   }
 > = {
+  pending: {
+    eyebrow: "// confirm acknowledgement",
+    title: "Acknowledge incident?",
+    description:
+      "On-call paging will stop. The incident stays open until the monitor reports a recovery.",
+    dot: "down",
+  },
   acked: {
     eyebrow: "// incident acknowledged",
     title: "Acknowledged",
     description:
-      "The on-call paging will stop. The incident remains open until the monitor reports a recovery.",
+      "On-call paging stopped. The incident stays open until the monitor reports a recovery.",
     dot: "degraded",
   },
   already_acked: {
@@ -51,11 +63,28 @@ const copy: Record<
 }
 
 export default function AckResultPage({
+  mode,
   status,
   monitor_name: monitorName,
   acked_at: ackedAt,
+  confirm_url: confirmUrl,
 }: AckResultProps) {
   const c = copy[status]
+  const [submitting, setSubmitting] = useState(false)
+
+  const handleConfirm = () => {
+    if (!confirmUrl || submitting) return
+    setSubmitting(true)
+    router.post(
+      confirmUrl,
+      {},
+      {
+        onFinish: () => setSubmitting(false),
+      },
+    )
+  }
+
+  const showConfirm = mode === "preview" && status === "pending" && confirmUrl
 
   return (
     <>
@@ -85,9 +114,20 @@ export default function AckResultPage({
           </dl>
         )}
 
-        <Link href="/dashboard" className="text-primary text-sm">
-          Open dashboard
-        </Link>
+        {showConfirm ? (
+          <Button
+            intent="warning"
+            onPress={handleConfirm}
+            isPending={submitting}
+            data-testid="confirm-ack"
+          >
+            Confirm acknowledge
+          </Button>
+        ) : (
+          <Link href="/dashboard" className="text-primary text-sm">
+            Open dashboard
+          </Link>
+        )}
       </div>
     </>
   )

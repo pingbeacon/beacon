@@ -77,7 +77,7 @@ test('email notification has no ack URL when incident id is null', function () {
     Mail::assertSent(MonitorStatusMail::class, fn (MonitorStatusMail $mail) => $mail->ackUrl === null);
 });
 
-test('signed ack URL embedded in slack notification verifies through the public endpoint', function () {
+test('signed ack URL embedded in slack notification renders the preview without mutating', function () {
     $monitor = Monitor::factory()->http()->create();
     $channel = NotificationChannel::factory()->slack()->for($monitor->user)->create();
     $incident = Incident::factory()->create(['monitor_id' => $monitor->id]);
@@ -98,5 +98,5 @@ test('signed ack URL embedded in slack notification verifies through the public 
     });
 
     $this->get($sentUrl)->assertOk();
-    expect($incident->fresh()->acked_at)->not->toBeNull();
+    expect($incident->fresh()->acked_at)->toBeNull();
 });
