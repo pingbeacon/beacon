@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'fake_servers' => [
+        'host' => env('FAKE_SERVERS_HOST', '127.0.0.1'),
+        'bind_host' => env('FAKE_SERVERS_BIND_HOST', '127.0.0.1'),
+    ],
+
 ];

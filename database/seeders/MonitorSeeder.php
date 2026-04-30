@@ -236,6 +236,8 @@ class MonitorSeeder extends Seeder
             'timeout' => 'Request exceeded monitor timeout',
         ];
 
+        $fakeServerHost = config('services.fake_servers.host', '127.0.0.1');
+
         foreach (DevFakeServersCommand::profileRegistry() as $port => $profile) {
             $isPersistentDown = in_array($profile['kind'], $persistentDownKinds, true);
 
@@ -243,7 +245,7 @@ class MonitorSeeder extends Seeder
                 ...$base,
                 'name' => $profile['name'],
                 'type' => 'http',
-                'url' => "http://127.0.0.1:{$port}",
+                'url' => "http://{$fakeServerHost}:{$port}",
                 'method' => 'GET',
                 'interval' => $profile['interval'],
                 'accepted_status_codes' => [200],
