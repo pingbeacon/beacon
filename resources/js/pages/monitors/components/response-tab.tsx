@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import MonitorPhaseTimingsController from "@/actions/App/Http/Controllers/MonitorPhaseTimingsController"
 import { Eyebrow } from "@/components/primitives"
+import { subscribeToEvents } from "@/stores/monitor-realtime"
 import type { ChartDataPoint, Heartbeat } from "@/types/monitor"
 
 export type ResponseTabPeriod = "1h" | "24h" | "7d" | "30d"
@@ -64,14 +65,17 @@ export function ResponseTab({
   const [compare, setCompare] = useState(true)
   const [phasePayload, setPhasePayload] = useState<PhaseTimingsPayload | null>(null)
   const [phaseError, setPhaseError] = useState<string | null>(null)
+  const refetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => {
+  const fetchPhases = useCallback(() => {
     let cancelled = false
-    setPhaseError(null)
     const url = MonitorPhaseTimingsController.url(monitorId, { query: { period } })
     fetcher(url)
       .then((payload) => {
-        if (!cancelled) setPhasePayload(payload)
+        if (!cancelled) {
+          setPhasePayload(payload)
+          setPhaseError(null)
+        }
       })
       .catch((e: Error) => {
         if (!cancelled) {
@@ -83,6 +87,30 @@ export function ResponseTab({
       cancelled = true
     }
   }, [monitorId, period, fetcher])
+
+  useEffect(() => {
+    setPhaseError(null)
+    const cancel = fetchPhases()
+    return cancel
+  }, [fetchPhases])
+
+  // Realtime: when a fresh heartbeat lands for this monitor, debounce-refetch
+  // the phase aggregate so the waterfall stays in sync without hammering the
+  // endpoint when bursts arrive.
+  useEffect(() => {
+    const unsubscribe = subscribeToEvents((event) => {
+      if (event.type !== "heartbeat") return
+      if (event.payload.monitorId !== monitorId) return
+      if (refetchTimerRef.current) clearTimeout(refetchTimerRef.current)
+      refetchTimerRef.current = setTimeout(() => {
+        fetchPhases()
+      }, 1500)
+    })
+    return () => {
+      unsubscribe()
+      if (refetchTimerRef.current) clearTimeout(refetchTimerRef.current)
+    }
+  }, [monitorId, fetchPhases])
 
   const buckets = useMemo(() => bucketChart(chartData ?? [], 48), [chartData])
   const prevBuckets = useMemo(() => bucketChart(prevChartData ?? [], 48), [prevChartData])

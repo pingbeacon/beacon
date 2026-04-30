@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { type PhaseTimingsPayload, ResponseTab } from "@/pages/monitors/components/response-tab"
+import { handleHeartbeat } from "@/stores/monitor-realtime"
 import type { ChartDataPoint, Heartbeat } from "@/types/monitor"
 
 const samplePhases = (
@@ -281,6 +282,104 @@ describe("ResponseTab", () => {
     const rows = screen.getAllByRole("row").slice(1)
     expect(rows).toHaveLength(1)
     expect(rows[0]).toHaveAttribute("data-id", "2")
+  })
+
+  it("refetches phase data when a heartbeat event for the same monitor arrives", async () => {
+    vi.useFakeTimers()
+    try {
+      const fetcher = vi.fn().mockResolvedValue(buildPayload())
+      render(
+        <ResponseTab
+          monitorId={42}
+          period="24h"
+          onPeriodChange={() => {}}
+          chartData={sampleChart()}
+          prevChartData={sampleChart()}
+          heartbeats={[sampleHeartbeat()]}
+          fetcher={fetcher}
+        />,
+      )
+
+      await act(async () => {
+        await Promise.resolve()
+      })
+      expect(fetcher).toHaveBeenCalledTimes(1)
+
+      act(() => {
+        handleHeartbeat({
+          monitorId: 42,
+          heartbeat: {
+            id: 999,
+            status: "up",
+            status_code: 200,
+            response_time: 200,
+            created_at: new Date().toISOString(),
+          },
+          monitorStatus: "up",
+          uptimePercentage: 99,
+          averageResponseTime: 200,
+        })
+      })
+
+      act(() => {
+        vi.advanceTimersByTime(1500)
+      })
+
+      await act(async () => {
+        await Promise.resolve()
+      })
+
+      expect(fetcher).toHaveBeenCalledTimes(2)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("ignores heartbeat events for other monitors", async () => {
+    vi.useFakeTimers()
+    try {
+      const fetcher = vi.fn().mockResolvedValue(buildPayload())
+      render(
+        <ResponseTab
+          monitorId={42}
+          period="24h"
+          onPeriodChange={() => {}}
+          chartData={sampleChart()}
+          prevChartData={sampleChart()}
+          heartbeats={[sampleHeartbeat()]}
+          fetcher={fetcher}
+        />,
+      )
+      await act(async () => {
+        await Promise.resolve()
+      })
+      expect(fetcher).toHaveBeenCalledTimes(1)
+
+      act(() => {
+        handleHeartbeat({
+          monitorId: 7,
+          heartbeat: {
+            id: 1,
+            status: "up",
+            status_code: 200,
+            response_time: 100,
+            created_at: new Date().toISOString(),
+          },
+          monitorStatus: "up",
+          uptimePercentage: 100,
+          averageResponseTime: 100,
+        })
+      })
+      act(() => {
+        vi.advanceTimersByTime(2000)
+      })
+      await act(async () => {
+        await Promise.resolve()
+      })
+      expect(fetcher).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it("Latest filter sorts by created_at descending", async () => {
