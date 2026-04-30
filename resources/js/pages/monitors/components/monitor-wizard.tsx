@@ -1,6 +1,7 @@
 import { CheckIcon, PlusIcon, TrashIcon } from "@heroicons/react/20/solid"
 import { Link, router, useForm } from "@inertiajs/react"
-import { useState } from "react"
+import { useMemo, useState } from "react"
+import TestNowMonitorController from "@/actions/App/Http/Controllers/TestNowMonitorController"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { FieldError, Label } from "@/components/ui/field"
@@ -11,6 +12,29 @@ import { TextField } from "@/components/ui/text-field"
 import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import type { Monitor, MonitorGroup, NotificationChannel, Tag } from "@/types/monitor"
+
+interface TestNowResult {
+  status: "up" | "down"
+  responseTime: number
+  statusCode: number | null
+  message: string | null
+  startedAt: string
+  type: string
+}
+
+const STEP_FIELDS: Record<string, string[]> = {
+  type: ["type"],
+  target: ["name", "url", "host", "port", "dns_record_type", "method", "body", "headers"],
+  schedule: [
+    "interval",
+    "timeout",
+    "retry_count",
+    "ssl_monitoring_enabled",
+    "ssl_expiry_notification_days",
+  ],
+  assertions: ["accepted_status_codes"],
+  alerts: ["notification_channel_ids", "tag_ids"],
+}
 
 interface MonitorWizardProps {
   monitor?: Monitor
@@ -81,6 +105,21 @@ function getSearchParams(): URLSearchParams {
   return new URLSearchParams(window.location.search)
 }
 
+function pad2(n: number) {
+  return String(n).padStart(2, "0")
+}
+
+function formatTime(iso: string) {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`
+}
+
+function nowStamp() {
+  const d = new Date()
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`
+}
+
 export default function MonitorWizard({
   monitor,
   tags,
@@ -132,7 +171,25 @@ export default function MonitorWizard({
   const activeIndex = visibleKeys.indexOf(activeKey)
   const currentStep = ALL_STEPS.find((s) => s.key === activeKey)!
 
+  const stepHasErrors = (stepKey: string) => {
+    const fields = STEP_FIELDS[stepKey] ?? []
+    return fields.some((f) => Boolean((errors as Record<string, string | undefined>)[f]))
+  }
+
+  const requiredFilled = (stepKey: string): boolean => {
+    if (stepKey === "type") return Boolean(data.type)
+    if (stepKey === "target") {
+      if (!data.name) return false
+      if (data.type === "http") return Boolean(data.url)
+      if (data.type === "tcp") return Boolean(data.host) && Boolean(data.port)
+      if (data.type === "ping" || data.type === "dns") return Boolean(data.host)
+      return true
+    }
+    return true
+  }
+
   const goNext = () => {
+    if (stepHasErrors(activeKey) || !requiredFilled(activeKey)) return
     const next = visibleKeys[activeIndex + 1]
     if (next) setActiveKey(next)
   }
@@ -144,12 +201,82 @@ export default function MonitorWizard({
 
   const isFirst = activeIndex === 0
   const isLast = activeIndex === visibleKeys.length - 1
+  const continueDisabled = stepHasErrors(activeKey) || !requiredFilled(activeKey)
 
   const handleSubmit = () => {
     if (isEditing) {
       put(`/monitors/${monitor.id}`, { preserveScroll: true })
     } else {
       post("/monitors")
+    }
+  }
+
+  // — Schedule preview math (frontend-only) —
+  const schedulePreview = useMemo(() => {
+    const interval = Math.max(1, data.interval || 1)
+    const timeout = Math.max(0, data.timeout || 0)
+    const retries = Math.max(0, data.retry_count || 0)
+    const checksPerDay = Math.floor(86400 / interval)
+    const worstCaseAlertSec = (retries + 1) * timeout + interval
+    const bytesPerHeartbeat = 200
+    const storageBytesPerMonth = bytesPerHeartbeat * checksPerDay * 30
+    const storageMb = storageBytesPerMonth / 1024 / 1024
+    return {
+      checksPerDay,
+      worstCaseAlertSec,
+      storageMb,
+    }
+  }, [data.interval, data.timeout, data.retry_count])
+
+  // — Test Now state —
+  const [testRunning, setTestRunning] = useState(false)
+  const [testResult, setTestResult] = useState<TestNowResult | null>(null)
+  const [testError, setTestError] = useState<string | null>(null)
+
+  const runTestNow = async () => {
+    setTestRunning(true)
+    setTestError(null)
+    try {
+      const action = TestNowMonitorController()
+      const response = await fetch(action.url, {
+        method: action.method.toUpperCase(),
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-XSRF-TOKEN": decodeURIComponent(
+            (document.cookie.match(/XSRF-TOKEN=([^;]+)/) ?? [, ""])[1] ?? "",
+          ),
+        },
+        body: JSON.stringify({
+          type: data.type,
+          name: data.name || "Test",
+          url: data.url || null,
+          host: data.host || null,
+          port: data.type === "tcp" ? data.port : null,
+          dns_record_type: data.type === "dns" ? data.dns_record_type : null,
+          method: data.method,
+          body: data.body || null,
+          headers: data.headers,
+          accepted_status_codes: data.accepted_status_codes,
+          timeout: data.timeout,
+          retry_count: data.retry_count,
+          interval: data.interval,
+        }),
+      })
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { message?: string } | null
+        setTestError(payload?.message ?? `HTTP ${response.status}`)
+        setTestResult(null)
+      } else {
+        const payload = (await response.json()) as { result: TestNowResult }
+        setTestResult(payload.result)
+      }
+    } catch (err) {
+      setTestError(err instanceof Error ? err.message : "Request failed")
+      setTestResult(null)
+    } finally {
+      setTestRunning(false)
     }
   }
 
@@ -499,90 +626,139 @@ export default function MonitorWizard({
 
             {/* — Step: schedule — */}
             {activeKey === "schedule" && (
-              <div className="space-y-6">
-                <div>
-                  <Label>Check interval</Label>
-                  <div className="mt-2">
-                    <ToggleGroup
-                      selectionMode="single"
-                      size="sm"
-                      selectedKeys={new Set([String(data.interval)])}
-                      onSelectionChange={(keys) => {
-                        const val = Array.from(keys)[0]
-                        if (val) setData("interval", Number(val))
-                      }}
-                    >
-                      {intervalOptions.map((o) => (
-                        <ToggleGroupItem key={String(o.value)} id={String(o.value)}>
-                          {o.label}
-                        </ToggleGroupItem>
-                      ))}
-                    </ToggleGroup>
+              <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+                <div className="space-y-6">
+                  <div>
+                    <Label>Check interval</Label>
+                    <div className="mt-2">
+                      <ToggleGroup
+                        selectionMode="single"
+                        size="sm"
+                        selectedKeys={new Set([String(data.interval)])}
+                        onSelectionChange={(keys) => {
+                          const val = Array.from(keys)[0]
+                          if (val) setData("interval", Number(val))
+                        }}
+                      >
+                        {intervalOptions.map((o) => (
+                          <ToggleGroupItem key={String(o.value)} id={String(o.value)}>
+                            {o.label}
+                          </ToggleGroupItem>
+                        ))}
+                      </ToggleGroup>
+                    </div>
                   </div>
+
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                    <NumberField
+                      value={data.timeout}
+                      onChange={(v) => setData("timeout", v)}
+                      minValue={1}
+                      maxValue={120}
+                    >
+                      <Label>Timeout (s)</Label>
+                      <NumberInput />
+                      <FieldError>{errors.timeout}</FieldError>
+                    </NumberField>
+
+                    <NumberField
+                      value={data.retry_count}
+                      onChange={(v) => setData("retry_count", v)}
+                      minValue={0}
+                      maxValue={10}
+                    >
+                      <Label>Retries</Label>
+                      <NumberInput />
+                      <FieldError>{errors.retry_count}</FieldError>
+                    </NumberField>
+                  </div>
+
+                  {data.type === "http" && (
+                    <div className="space-y-4">
+                      <Checkbox
+                        isSelected={data.ssl_monitoring_enabled}
+                        onChange={(checked) => setData("ssl_monitoring_enabled", checked)}
+                      >
+                        Monitor SSL certificate
+                      </Checkbox>
+
+                      {data.ssl_monitoring_enabled && (
+                        <fieldset className="pl-6">
+                          <legend className="mb-3 font-medium text-foreground text-sm">
+                            Alert when SSL expires within
+                          </legend>
+                          <div className="flex flex-wrap gap-3">
+                            {sslExpiryDays.map((days) => (
+                              <Checkbox
+                                key={days}
+                                isSelected={data.ssl_expiry_notification_days.includes(days)}
+                                onChange={(checked) => {
+                                  setData(
+                                    "ssl_expiry_notification_days",
+                                    checked
+                                      ? [...data.ssl_expiry_notification_days, days].sort(
+                                          (a, b) => b - a,
+                                        )
+                                      : data.ssl_expiry_notification_days.filter((d) => d !== days),
+                                  )
+                                }}
+                              >
+                                {days} {days === 1 ? "day" : "days"}
+                              </Checkbox>
+                            ))}
+                          </div>
+                        </fieldset>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                  <NumberField
-                    value={data.timeout}
-                    onChange={(v) => setData("timeout", v)}
-                    minValue={1}
-                    maxValue={120}
-                  >
-                    <Label>Timeout (s)</Label>
-                    <NumberInput />
-                    <FieldError>{errors.timeout}</FieldError>
-                  </NumberField>
-
-                  <NumberField
-                    value={data.retry_count}
-                    onChange={(v) => setData("retry_count", v)}
-                    minValue={0}
-                    maxValue={10}
-                  >
-                    <Label>Retries</Label>
-                    <NumberInput />
-                    <FieldError>{errors.retry_count}</FieldError>
-                  </NumberField>
-                </div>
-
-                {data.type === "http" && (
-                  <div className="space-y-4">
-                    <Checkbox
-                      isSelected={data.ssl_monitoring_enabled}
-                      onChange={(checked) => setData("ssl_monitoring_enabled", checked)}
-                    >
-                      Monitor SSL certificate
-                    </Checkbox>
-
-                    {data.ssl_monitoring_enabled && (
-                      <fieldset className="pl-6">
-                        <legend className="mb-3 font-medium text-foreground text-sm">
-                          Alert when SSL expires within
-                        </legend>
-                        <div className="flex flex-wrap gap-3">
-                          {sslExpiryDays.map((days) => (
-                            <Checkbox
-                              key={days}
-                              isSelected={data.ssl_expiry_notification_days.includes(days)}
-                              onChange={(checked) => {
-                                setData(
-                                  "ssl_expiry_notification_days",
-                                  checked
-                                    ? [...data.ssl_expiry_notification_days, days].sort(
-                                        (a, b) => b - a,
-                                      )
-                                    : data.ssl_expiry_notification_days.filter((d) => d !== days),
-                                )
-                              }}
-                            >
-                              {days} {days === 1 ? "day" : "days"}
-                            </Checkbox>
-                          ))}
-                        </div>
-                      </fieldset>
-                    )}
-                  </div>
-                )}
+                {/* schedule preview card */}
+                <aside
+                  data-slot="schedule-preview"
+                  className="self-start rounded-lg border border-border bg-sidebar p-4"
+                >
+                  <p className="mb-3 font-medium text-foreground text-xs">Schedule preview</p>
+                  <dl className="space-y-1.5 text-[11px] text-muted-foreground leading-relaxed">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <dt>
+                        <span className="text-primary">every</span>{" "}
+                        {intervalOptions.find((o) => o.value === data.interval)?.label ??
+                          `${data.interval}s`}
+                      </dt>
+                      <dd
+                        className="font-mono text-foreground"
+                        data-testid="schedule-checks-per-day"
+                      >
+                        {schedulePreview.checksPerDay.toLocaleString()} checks/day
+                      </dd>
+                    </div>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <dt>
+                        <span className="text-primary">timeout</span> after {data.timeout}s
+                      </dt>
+                    </div>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <dt>
+                        <span className="text-primary">retry</span> {data.retry_count}× on fail
+                      </dt>
+                    </div>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <dt>
+                        <span className="text-primary">worst-case</span> alert latency
+                      </dt>
+                      <dd className="font-mono text-foreground" data-testid="schedule-worst-case">
+                        {schedulePreview.worstCaseAlertSec}s
+                      </dd>
+                    </div>
+                    <div className="flex items-baseline justify-between gap-2 border-border border-t pt-2">
+                      <dt>storage</dt>
+                      <dd className="font-mono text-foreground" data-testid="schedule-storage">
+                        ~{schedulePreview.storageMb.toFixed(1)} MB/month
+                      </dd>
+                    </div>
+                  </dl>
+                </aside>
               </div>
             )}
 
@@ -627,6 +803,73 @@ export default function MonitorWizard({
                       "// monitor is DOWN when status code is not in the accepted list, or when the request times out"
                     }
                   </p>
+                </div>
+
+                {/* test now panel */}
+                <div
+                  data-slot="test-now"
+                  className="rounded-lg border border-primary/30 bg-background p-5"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-foreground text-sm">Test run</p>
+                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        Dry-run your config. No notifications fire, nothing is saved.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      onPress={runTestNow}
+                      isDisabled={testRunning || !requiredFilled("target")}
+                      data-testid="test-now-button"
+                    >
+                      {testRunning ? "Testing…" : "./test →"}
+                    </Button>
+                  </div>
+
+                  {(testResult || testError) && (
+                    <div
+                      data-testid="test-now-output"
+                      className="mt-4 border-border border-t pt-3 font-mono text-[11px] leading-relaxed"
+                    >
+                      {testError && (
+                        <p className="text-destructive">
+                          <span className="text-muted-foreground">{nowStamp()}</span>
+                          {"  "}✗ {testError}
+                        </p>
+                      )}
+                      {testResult && (
+                        <div className="space-y-0.5">
+                          <p
+                            className={
+                              testResult.status === "up" ? "text-success" : "text-destructive"
+                            }
+                          >
+                            <span className="text-muted-foreground">
+                              {formatTime(testResult.startedAt)}
+                            </span>
+                            {"  "}
+                            {testResult.status === "up" ? "←" : "✗"}{" "}
+                            {testResult.statusCode != null ? `${testResult.statusCode} ` : ""}·{" "}
+                            {testResult.responseTime}ms
+                          </p>
+                          <p
+                            className={
+                              testResult.status === "up" ? "text-success" : "text-destructive"
+                            }
+                          >
+                            <span className="text-muted-foreground">
+                              {formatTime(testResult.startedAt)}
+                            </span>
+                            {"  "}
+                            {testResult.status === "up"
+                              ? "✓ UP · check passed"
+                              : `✗ DOWN · ${testResult.message ?? "check failed"}`}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -765,7 +1008,7 @@ export default function MonitorWizard({
                   {isEditing ? "Save changes" : "Create monitor"}
                 </Button>
               ) : (
-                <Button key="continue" type="button" onPress={goNext}>
+                <Button key="continue" type="button" onPress={goNext} isDisabled={continueDisabled}>
                   Continue →
                 </Button>
               )}
