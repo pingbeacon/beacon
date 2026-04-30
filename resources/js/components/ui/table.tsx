@@ -245,7 +245,8 @@ const TableRow = <T extends object>({
             isFocusVisible &&
               "bg-primary/5 outline-primary ring-3 ring-ring/20 hover:bg-primary/10",
             isDragging && "cursor-grabbing bg-primary/10 text-foreground outline-primary",
-            isSelected && "bg-(--table-selected-bg) text-foreground hover:bg-(--table-selected-bg)/50",
+            isSelected &&
+              "bg-(--table-selected-bg) text-foreground hover:bg-(--table-selected-bg)/50",
             striped && "even:bg-muted",
             (props.href || props.onAction || selectionMode === "multiple") &&
               "hover:bg-(--table-selected-bg) hover:text-foreground",

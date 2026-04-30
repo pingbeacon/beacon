@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Incident;
 use App\Models\Monitor;
 use App\Models\NotificationChannel;
 use App\Services\Notifiers\DiscordNotifier;
@@ -13,6 +14,7 @@ use App\Services\Notifiers\WebhookNotifier;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 use Throwable;
 
 class SendNotificationJob implements ShouldQueue
@@ -28,6 +30,7 @@ class SendNotificationJob implements ShouldQueue
         public Monitor $monitor,
         public string $status,
         public ?string $message = null,
+        public ?int $incidentId = null,
     ) {
         $this->onQueue('notifications');
     }
@@ -35,8 +38,9 @@ class SendNotificationJob implements ShouldQueue
     public function handle(): void
     {
         $notifier = $this->resolveNotifier();
+        $ackUrl = $this->resolveAckUrl();
 
-        $notifier->send($this->channel, $this->monitor, $this->status, $this->message);
+        $notifier->send($this->channel, $this->monitor, $this->status, $this->message, $ackUrl);
 
         Log::info('Notification sent', [
             'channel_id' => $this->channel->id,
@@ -44,7 +48,27 @@ class SendNotificationJob implements ShouldQueue
             'monitor_id' => $this->monitor->id,
             'monitor_name' => $this->monitor->name,
             'status' => $this->status,
+            'incident_id' => $this->incidentId,
         ]);
+    }
+
+    private function resolveAckUrl(): ?string
+    {
+        if ($this->incidentId === null) {
+            return null;
+        }
+
+        $incident = Incident::query()->find($this->incidentId);
+
+        if ($incident === null || $incident->ack_token === null) {
+            return null;
+        }
+
+        return URL::temporarySignedRoute(
+            'incidents.ack',
+            now()->addDays(7),
+            ['token' => $incident->ack_token],
+        );
     }
 
     public function failed(Throwable $exception): void

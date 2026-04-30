@@ -1,9 +1,9 @@
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
-import { TextField } from "@/components/ui/text-field"
 import { Input, InputGroup } from "@/components/ui/input"
-import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select"
-import type { Tag } from "@/types/monitor"
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
+import { TextField } from "@/components/ui/text-field"
 import type { StatusFilterValue } from "@/hooks/use-monitor-filters"
+import type { Tag } from "@/types/monitor"
 
 interface MonitorFilterBarProps {
   searchQuery: string
@@ -62,13 +62,16 @@ export default function MonitorFilterBar({
         <Select
           aria-label="Filter by tag"
           selectedKey={tagFilter?.toString() ?? "all"}
-          onSelectionChange={(key) =>
-            onTagFilterChange(key === "all" ? null : Number(key))
-          }
+          onSelectionChange={(key) => onTagFilterChange(key === "all" ? null : Number(key))}
           className="w-40"
         >
           <SelectTrigger />
-          <SelectContent items={[{ id: "all", name: "All tags" }, ...tags.map((t) => ({ id: String(t.id), name: t.name }))]}>
+          <SelectContent
+            items={[
+              { id: "all", name: "All tags" },
+              ...tags.map((t) => ({ id: String(t.id), name: t.name })),
+            ]}
+          >
             {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
           </SelectContent>
         </Select>

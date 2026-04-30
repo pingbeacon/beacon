@@ -563,3 +563,37 @@ test('monitors:check does not mark push monitors as down when heartbeat received
 
     expect($monitor->fresh()->status)->toBe('up');
 });
+
+test('handle status change forwards new incident id to SendNotificationJob on first down', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $monitor = Monitor::factory()->http()->for($user)->create(['status' => 'up']);
+
+    $channel = NotificationChannel::factory()->for($user)->create();
+    $monitor->notificationChannels()->attach($channel);
+
+    (new HandleStatusChangeAction)->execute($monitor, 'down', 'oops');
+
+    $incident = Incident::query()->where('monitor_id', $monitor->id)->firstOrFail();
+
+    Queue::assertPushed(SendNotificationJob::class, function (SendNotificationJob $job) use ($incident) {
+        return $job->incidentId === $incident->id;
+    });
+});
+
+test('handle status change passes null incident id when no new incident is created', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $monitor = Monitor::factory()->http()->for($user)->create(['status' => 'up']);
+
+    $channel = NotificationChannel::factory()->for($user)->create();
+    $monitor->notificationChannels()->attach($channel);
+
+    (new HandleStatusChangeAction)->execute($monitor, 'up', null);
+
+    Queue::assertPushed(SendNotificationJob::class, function (SendNotificationJob $job) {
+        return $job->incidentId === null;
+    });
+});

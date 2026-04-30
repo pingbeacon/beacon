@@ -8,10 +8,15 @@ use Illuminate\Support\Facades\Http;
 
 class DiscordNotifier implements Notifier
 {
-    public function send(NotificationChannel $channel, Monitor $monitor, string $status, ?string $message = null): void
+    public function send(NotificationChannel $channel, Monitor $monitor, string $status, ?string $message = null, ?string $ackUrl = null): void
     {
         $webhookUrl = $channel->configuration['webhook_url'];
         $description = $message ?? "Monitor \"{$monitor->name}\" has changed status to **{$status}**.";
+
+        if ($ackUrl !== null) {
+            $description .= "\n\n[Acknowledge]({$ackUrl})";
+        }
+
         $color = $status === 'up' ? 3066993 : 15158332;
 
         Http::post($webhookUrl, [

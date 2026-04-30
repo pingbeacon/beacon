@@ -1,9 +1,9 @@
-import AppLayout from "@/layouts/app-layout"
 import { Head } from "@inertiajs/react"
-import { Container } from "@/components/ui/container"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import MaintenanceWindowForm from "./components/maintenance-window-form"
+import { Container } from "@/components/ui/container"
+import AppLayout from "@/layouts/app-layout"
 import type { MaintenanceWindow, Monitor, MonitorGroup } from "@/types/monitor"
+import MaintenanceWindowForm from "./components/maintenance-window-form"
 
 interface Props {
   maintenanceWindow: MaintenanceWindow
@@ -17,7 +17,10 @@ export default function MaintenanceWindowsEdit({ maintenanceWindow, monitors, gr
       <Head title={`Edit ${maintenanceWindow.title}`} />
       <Container className="pt-2 pb-8">
         <Card>
-          <CardHeader title={`Edit ${maintenanceWindow.title}`} description="Update maintenance window settings." />
+          <CardHeader
+            title={`Edit ${maintenanceWindow.title}`}
+            description="Update maintenance window settings."
+          />
           <CardContent>
             <MaintenanceWindowForm
               maintenanceWindow={maintenanceWindow}

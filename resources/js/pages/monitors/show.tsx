@@ -332,7 +332,9 @@ export default function MonitorsShow({
                 ))}
             >
               <div className="border-border border-r p-4">
-                <p className="text-muted-foreground text-xs uppercase tracking-widest">30d Uptime</p>
+                <p className="text-muted-foreground text-xs uppercase tracking-widest">
+                  30d Uptime
+                </p>
                 <p
                   className={`mt-1 font-medium text-2xl ${uptimeStats ? uptimeColor(uptimeStats.uptime_30d) : "text-foreground"}`}
                 >
@@ -518,7 +520,9 @@ export default function MonitorsShow({
                                       key={label}
                                       className={i > 0 ? "border-border border-l" : ""}
                                     >
-                                      <p className="font-medium text-foreground text-xl">{value} ms</p>
+                                      <p className="font-medium text-foreground text-xl">
+                                        {value} ms
+                                      </p>
                                       <p className="mt-0.5 text-muted-foreground text-xs uppercase tracking-widest">
                                         {label}
                                       </p>
@@ -630,7 +634,9 @@ export default function MonitorsShow({
                           {sslCertificate.issuer && (
                             <div>
                               <p className="text-muted-foreground text-xs">Issuer</p>
-                              <p className="truncate text-foreground text-sm">{sslCertificate.issuer}</p>
+                              <p className="truncate text-foreground text-sm">
+                                {sslCertificate.issuer}
+                              </p>
                             </div>
                           )}
                           {sslCertificate.valid_to && (

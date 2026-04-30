@@ -1,8 +1,8 @@
+import { PauseIcon, PlayIcon, TrashIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { router } from "@inertiajs/react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { router } from "@inertiajs/react"
 import { Button } from "@/components/ui/button"
-import { PauseIcon, PlayIcon, TrashIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import {
   Modal,
   ModalBody,
@@ -75,9 +75,7 @@ export default function BulkActionToolbar({ selectedIds, onClear }: BulkActionTo
   return createPortal(
     <div
       className={`fixed inset-x-0 bottom-0 z-50 flex justify-center pb-6 transition-all duration-300 ease-out ${
-        animateIn
-          ? "translate-y-0 opacity-100"
-          : "translate-y-full opacity-0"
+        animateIn ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
       }`}
     >
       <div
@@ -85,7 +83,7 @@ export default function BulkActionToolbar({ selectedIds, onClear }: BulkActionTo
         aria-label="Bulk actions"
         className="flex items-center gap-3 rounded-xl border bg-background px-5 py-3 shadow-2xl"
       >
-        <span className="text-sm font-medium tabular-nums" aria-live="polite" aria-atomic="true">
+        <span className="font-medium text-sm tabular-nums" aria-live="polite" aria-atomic="true">
           {count} monitor{count > 1 ? "s" : ""} selected
         </span>
         <div className="h-5 w-px bg-border" />
@@ -115,10 +113,12 @@ export default function BulkActionToolbar({ selectedIds, onClear }: BulkActionTo
             </Button>
             <ModalContent role="alertdialog">
               <ModalHeader>
-                <ModalTitle>Delete {count} Monitor{count > 1 ? "s" : ""}</ModalTitle>
+                <ModalTitle>
+                  Delete {count} Monitor{count > 1 ? "s" : ""}
+                </ModalTitle>
                 <ModalDescription>
-                  Are you sure you want to delete {count} monitor{count > 1 ? "s" : ""}? They will be
-                  archived and can be restored later.
+                  Are you sure you want to delete {count} monitor{count > 1 ? "s" : ""}? They will
+                  be archived and can be restored later.
                 </ModalDescription>
               </ModalHeader>
               <ModalBody />

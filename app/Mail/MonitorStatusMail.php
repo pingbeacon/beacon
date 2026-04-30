@@ -17,6 +17,7 @@ class MonitorStatusMail extends Mailable
         public readonly string $monitorName,
         public readonly string $status,
         public readonly string $body,
+        public readonly ?string $ackUrl = null,
     ) {}
 
     public function envelope(): Envelope

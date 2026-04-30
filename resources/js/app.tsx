@@ -1,11 +1,13 @@
 import "../css/app.css"
-import { Providers } from "@/components/providers"
 import { createInertiaApp } from "@inertiajs/react"
 import { configureEcho } from "@laravel/echo-react"
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers"
 import { createRoot, hydrateRoot } from "react-dom/client"
+import { Providers } from "@/components/providers"
 
-const reverb = (window as Window & { __reverb__?: { key: string; host: string; port: number; scheme: string } }).__reverb__ ?? {}
+const reverb =
+  (window as Window & { __reverb__?: { key: string; host: string; port: number; scheme: string } })
+    .__reverb__ ?? {}
 
 configureEcho({
   broadcaster: "reverb",

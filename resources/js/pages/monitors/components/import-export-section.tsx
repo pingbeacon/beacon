@@ -1,5 +1,6 @@
-import { useRef, useState } from "react"
+import { ArrowDownTrayIcon, ArrowUpTrayIcon } from "@heroicons/react/20/solid"
 import { router } from "@inertiajs/react"
+import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
 import {
@@ -11,7 +12,6 @@ import {
   ModalHeader,
   ModalTitle,
 } from "@/components/ui/modal"
-import { ArrowDownTrayIcon, ArrowUpTrayIcon } from "@heroicons/react/20/solid"
 
 interface ImportExportSectionProps {
   selectedIds?: number[]
@@ -23,9 +23,8 @@ export default function ImportExportSection({ selectedIds = [] }: ImportExportSe
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleExport = () => {
-    const params = selectedIds.length > 0
-      ? `?${selectedIds.map((id) => `ids[]=${id}`).join("&")}`
-      : ""
+    const params =
+      selectedIds.length > 0 ? `?${selectedIds.map((id) => `ids[]=${id}`).join("&")}` : ""
     window.location.href = `/monitors/export${params}`
   }
 
@@ -65,8 +64,8 @@ export default function ImportExportSection({ selectedIds = [] }: ImportExportSe
             </ModalHeader>
             <ModalBody>
               <p className="mb-4 text-muted-foreground text-sm">
-                Upload a JSON file previously exported from this application.
-                Notification channels will not be imported.
+                Upload a JSON file previously exported from this application. Notification channels
+                will not be imported.
               </p>
               <input
                 ref={fileInputRef}

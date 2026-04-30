@@ -1,12 +1,12 @@
-import AppLayout from "@/layouts/app-layout"
-import { Head, router } from "@inertiajs/react"
-import { Container } from "@/components/ui/container"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabList, Tab, TabPanel } from "@/components/ui/tabs"
 import { PlusIcon, TrashIcon } from "@heroicons/react/20/solid"
+import { Head, router } from "@inertiajs/react"
 import ConfirmDeleteModal from "@/components/confirm-delete-modal"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Container } from "@/components/ui/container"
+import { Tab, TabList, TabPanel, Tabs } from "@/components/ui/tabs"
+import AppLayout from "@/layouts/app-layout"
 import type { MaintenanceWindow } from "@/types/monitor"
 
 interface Props {
@@ -14,7 +14,8 @@ interface Props {
 }
 
 function WindowCard({ window }: { window: MaintenanceWindow }) {
-  const isActive = new Date(window.start_time) <= new Date() && new Date(window.end_time) >= new Date()
+  const isActive =
+    new Date(window.start_time) <= new Date() && new Date(window.end_time) >= new Date()
   const isPast = new Date(window.end_time) < new Date()
 
   return (
@@ -25,15 +26,14 @@ function WindowCard({ window }: { window: MaintenanceWindow }) {
           <Badge intent={window.is_active ? (isActive ? "warning" : "success") : "secondary"}>
             {!window.is_active ? "Disabled" : isActive ? "Active" : isPast ? "Past" : "Upcoming"}
           </Badge>
-          {window.is_recurring && (
-            <Badge intent="info">{window.recurrence_type}</Badge>
-          )}
+          {window.is_recurring && <Badge intent="info">{window.recurrence_type}</Badge>}
         </div>
         {window.description && (
           <p className="mt-1 text-muted-foreground text-xs">{window.description}</p>
         )}
         <p className="mt-1 text-muted-foreground text-xs">
-          {new Date(window.start_time).toLocaleString()} — {new Date(window.end_time).toLocaleString()}
+          {new Date(window.start_time).toLocaleString()} —{" "}
+          {new Date(window.end_time).toLocaleString()}
         </p>
         <p className="text-muted-foreground text-xs">
           {window.monitors?.length ?? 0} monitors, {window.monitor_groups?.length ?? 0} groups
@@ -66,19 +66,18 @@ export default function MaintenanceWindowsIndex({ maintenanceWindows }: Props) {
   const active = maintenanceWindows.filter(
     (w) => w.is_active && new Date(w.start_time) <= now && new Date(w.end_time) >= now,
   )
-  const upcoming = maintenanceWindows.filter(
-    (w) => w.is_active && new Date(w.start_time) > now,
-  )
-  const past = maintenanceWindows.filter(
-    (w) => new Date(w.end_time) < now || !w.is_active,
-  )
+  const upcoming = maintenanceWindows.filter((w) => w.is_active && new Date(w.start_time) > now)
+  const past = maintenanceWindows.filter((w) => new Date(w.end_time) < now || !w.is_active)
 
   return (
     <>
       <Head title="Maintenance Windows" />
       <Container className="pt-2 pb-8">
         <Card>
-          <CardHeader title="Maintenance Windows" description="Schedule maintenance to suppress notifications.">
+          <CardHeader
+            title="Maintenance Windows"
+            description="Schedule maintenance to suppress notifications."
+          >
             <div data-slot="card-action">
               <Button onPress={() => router.visit("/maintenance-windows/create")}>
                 <PlusIcon data-slot="icon" />
@@ -98,21 +97,27 @@ export default function MaintenanceWindowsIndex({ maintenanceWindows }: Props) {
                   {active.length > 0 ? (
                     active.map((w) => <WindowCard key={w.id} window={w} />)
                   ) : (
-                    <p className="py-8 text-center text-muted-foreground">No active maintenance windows.</p>
+                    <p className="py-8 text-center text-muted-foreground">
+                      No active maintenance windows.
+                    </p>
                   )}
                 </TabPanel>
                 <TabPanel id="upcoming" className="space-y-2 pt-4">
                   {upcoming.length > 0 ? (
                     upcoming.map((w) => <WindowCard key={w.id} window={w} />)
                   ) : (
-                    <p className="py-8 text-center text-muted-foreground">No upcoming maintenance windows.</p>
+                    <p className="py-8 text-center text-muted-foreground">
+                      No upcoming maintenance windows.
+                    </p>
                   )}
                 </TabPanel>
                 <TabPanel id="past" className="space-y-2 pt-4">
                   {past.length > 0 ? (
                     past.map((w) => <WindowCard key={w.id} window={w} />)
                   ) : (
-                    <p className="py-8 text-center text-muted-foreground">No past maintenance windows.</p>
+                    <p className="py-8 text-center text-muted-foreground">
+                      No past maintenance windows.
+                    </p>
                   )}
                 </TabPanel>
               </Tabs>
@@ -122,7 +127,10 @@ export default function MaintenanceWindowsIndex({ maintenanceWindows }: Props) {
                 <p className="mt-1 text-sm">
                   Schedule maintenance to suppress notifications during planned downtime.
                 </p>
-                <Button className="mt-4" onPress={() => router.visit("/maintenance-windows/create")}>
+                <Button
+                  className="mt-4"
+                  onPress={() => router.visit("/maintenance-windows/create")}
+                >
                   <PlusIcon data-slot="icon" />
                   Add Window
                 </Button>
