@@ -29,6 +29,7 @@ import { Tracker } from "@/components/ui/tracker"
 import AppLayout from "@/layouts/app-layout"
 import { statusBadgeIntent, uptimeColor } from "@/lib/color"
 import { formatInterval, heartbeatsToTracker } from "@/lib/heartbeats"
+import { RoutingRulesTable } from "@/pages/monitors/components/routing-rules-table"
 import monitorRoutes from "@/routes/monitors"
 import { hydrate, subscribeToEvents, useMonitor } from "@/stores/monitor-realtime"
 import type {
@@ -36,6 +37,8 @@ import type {
   Heartbeat,
   Incident,
   Monitor,
+  NotificationChannel,
+  NotificationRoute,
   SslCertificate,
   UptimeStats,
 } from "@/types/monitor"
@@ -64,6 +67,8 @@ interface Props {
   uptimeStats?: UptimeStats
   sslCertificate?: SslCertificate | null
   chartPeriod?: string
+  teamNotificationChannels?: NotificationChannel[]
+  notificationRoutes?: NotificationRoute[]
 }
 
 function formatDuration(start: string, end: string | null): string {
@@ -127,6 +132,8 @@ export default function MonitorsShow({
   uptimeStats,
   sslCertificate,
   chartPeriod: initialChartPeriod,
+  teamNotificationChannels,
+  notificationRoutes,
 }: Props) {
   useEffect(() => {
     const seed: Monitor = {
@@ -145,7 +152,7 @@ export default function MonitorsShow({
   const [chartPeriod, setChartPeriod] = useState(initialChartPeriod ?? "24h")
   const [scanningSSL, setScanningSSL] = useState(false)
 
-  const validTabs = ["overview", "heartbeats", "incidents", "ssl"]
+  const validTabs = ["overview", "heartbeats", "incidents", "ssl", "notifications"]
   const getInitialTab = () => {
     const tab = new URLSearchParams(window.location.search).get("tab")
     return validTabs.includes(tab ?? "") ? tab! : "overview"
@@ -380,6 +387,7 @@ export default function MonitorsShow({
             {monitor.type === "http" && monitor.ssl_monitoring_enabled && (
               <Tab id="ssl">SSL Certificate</Tab>
             )}
+            <Tab id="notifications">Notifications</Tab>
           </TabList>
 
           {/* ── Overview ── */}
@@ -997,6 +1005,15 @@ export default function MonitorsShow({
               </div>
             </TabPanel>
           )}
+
+          {/* ── Notifications tab ── */}
+          <TabPanel id="notifications" className="pt-4">
+            <RoutingRulesTable
+              monitorId={monitor.id}
+              rules={notificationRoutes ?? []}
+              channels={teamNotificationChannels ?? []}
+            />
+          </TabPanel>
         </Tabs>
       </Container>
     </>

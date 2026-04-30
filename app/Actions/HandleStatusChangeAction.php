@@ -2,13 +2,17 @@
 
 namespace App\Actions;
 
+use App\DTOs\NotificationEvent;
 use App\Events\MonitorStatusChanged;
 use App\Jobs\SendNotificationJob;
 use App\Models\Incident;
 use App\Models\Monitor;
+use App\Services\NotificationRouter;
 
 class HandleStatusChangeAction
 {
+    public function __construct(public NotificationRouter $router = new NotificationRouter) {}
+
     public function execute(Monitor $monitor, string $newStatus, ?string $message = null): void
     {
         $oldStatus = $monitor->status;
@@ -40,7 +44,15 @@ class HandleStatusChangeAction
                 ->update(['resolved_at' => now()]);
         }
 
-        foreach ($monitor->notificationChannels as $channel) {
+        $event = new NotificationEvent(
+            monitor: $monitor,
+            type: 'status_flip',
+            newStatus: $newStatus,
+            previousStatus: $oldStatus,
+            incidentId: $incidentId,
+        );
+
+        foreach ($this->router->route($event) as $channel) {
             SendNotificationJob::dispatch($channel, $monitor, $newStatus, $message, $incidentId)
                 ->onQueue('notifications');
         }

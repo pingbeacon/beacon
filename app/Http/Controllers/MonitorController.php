@@ -9,6 +9,7 @@ use App\Jobs\CheckSslCertificateJob;
 use App\Models\Monitor;
 use App\Models\MonitorGroup;
 use App\Models\NotificationChannel;
+use App\Models\NotificationRoute;
 use App\Models\Tag;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -146,8 +147,22 @@ class MonitorController extends Controller
             default => now()->subHours(24),
         };
 
+        $teamChannels = NotificationChannel::query()
+            ->where('team_id', $monitor->team_id)
+            ->orderBy('name')
+            ->get();
+
+        $notificationRoutes = NotificationRoute::query()
+            ->where('team_id', $monitor->team_id)
+            ->where('monitor_id', $monitor->id)
+            ->orderBy('priority')
+            ->orderBy('id')
+            ->get();
+
         return inertia('monitors/show', [
             'monitor' => $monitor,
+            'teamNotificationChannels' => $teamChannels,
+            'notificationRoutes' => $notificationRoutes,
             'chartPeriod' => $period,
             'sslCertificate' => Inertia::defer(
                 fn () => $monitor->sslCertificate

@@ -82,6 +82,27 @@ export interface NotificationChannel {
     updated_at: string
 }
 
+export type RouteSeverity = 'critical' | 'warning' | 'info'
+export type RouteStatusFilter = 'up' | 'down' | 'paused' | 'resolved'
+
+export interface NotificationRouteConditions {
+    severity_filter: RouteSeverity[] | null
+    status_filter: RouteStatusFilter[] | null
+}
+
+export interface NotificationRoute {
+    id: number
+    monitor_id: number | null
+    team_id: number | null
+    name: string | null
+    priority: number
+    is_active: boolean
+    conditions: NotificationRouteConditions
+    channel_ids: number[]
+    created_at: string
+    updated_at: string
+}
+
 export interface Incident {
     id: number
     monitor_id: number
