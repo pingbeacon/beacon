@@ -671,7 +671,8 @@ function PhaseWaterfall({
                 <div
                   role="img"
                   aria-label={`${p.label} avg ${avg}ms p95 ${p95}ms`}
-                  className="relative h-[18px] rounded-sm bg-muted/40"
+                  className="relative h-[18px] w-full overflow-hidden rounded-sm"
+                  style={{ background: "color-mix(in oklch, var(--foreground) 8%, transparent)" }}
                 >
                   <div
                     className={`absolute inset-y-0 left-0 rounded-sm opacity-25 ${p.className}`}
