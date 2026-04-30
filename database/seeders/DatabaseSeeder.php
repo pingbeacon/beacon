@@ -21,5 +21,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(MonitorSeeder::class);
+        $this->call(NotificationSeeder::class);
     }
 }

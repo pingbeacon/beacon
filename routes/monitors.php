@@ -14,6 +14,7 @@ use App\Http\Controllers\MonitorRestoreController;
 use App\Http\Controllers\MonitorToggleController;
 use App\Http\Controllers\NotificationChannelController;
 use App\Http\Controllers\NotificationChannelTestController;
+use App\Http\Controllers\NotificationRouteController;
 use App\Http\Controllers\StatusPageController;
 use App\Http\Controllers\TagController;
 use Illuminate\Support\Facades\Route;
@@ -43,6 +44,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('notification-channels', NotificationChannelController::class)->except(['show']);
     Route::post('notification-channels/{notificationChannel}/test', NotificationChannelTestController::class)->name('notification-channels.test');
+
+    Route::post('monitors/{monitor}/notification-routes', [NotificationRouteController::class, 'store'])->name('monitors.notification-routes.store');
+    Route::patch('monitors/{monitor}/notification-routes/{notificationRoute}', [NotificationRouteController::class, 'update'])->name('monitors.notification-routes.update');
+    Route::delete('monitors/{monitor}/notification-routes/{notificationRoute}', [NotificationRouteController::class, 'destroy'])->name('monitors.notification-routes.destroy');
+    Route::post('monitors/{monitor}/notification-routes/reorder', [NotificationRouteController::class, 'reorder'])->name('monitors.notification-routes.reorder');
 
     Route::resource('status-pages', StatusPageController::class)->except(['show']);
 

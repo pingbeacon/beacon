@@ -36,9 +36,12 @@ import type {
   Heartbeat,
   Incident,
   Monitor,
+  NotificationChannel,
+  NotificationRoute,
   SslCertificate,
   UptimeStats,
 } from "@/types/monitor"
+import { RoutingRulesTable } from "@/pages/monitors/components/routing-rules-table"
 
 interface PaginationLinks {
   first: string | null
@@ -64,6 +67,8 @@ interface Props {
   uptimeStats?: UptimeStats
   sslCertificate?: SslCertificate | null
   chartPeriod?: string
+  teamNotificationChannels?: NotificationChannel[]
+  notificationRoutes?: NotificationRoute[]
 }
 
 function formatDuration(start: string, end: string | null): string {
@@ -127,6 +132,8 @@ export default function MonitorsShow({
   uptimeStats,
   sslCertificate,
   chartPeriod: initialChartPeriod,
+  teamNotificationChannels,
+  notificationRoutes,
 }: Props) {
   useEffect(() => {
     const seed: Monitor = {
@@ -145,7 +152,7 @@ export default function MonitorsShow({
   const [chartPeriod, setChartPeriod] = useState(initialChartPeriod ?? "24h")
   const [scanningSSL, setScanningSSL] = useState(false)
 
-  const validTabs = ["overview", "heartbeats", "incidents", "ssl"]
+  const validTabs = ["overview", "heartbeats", "incidents", "ssl", "notifications"]
   const getInitialTab = () => {
     const tab = new URLSearchParams(window.location.search).get("tab")
     return validTabs.includes(tab ?? "") ? tab! : "overview"
@@ -332,7 +339,9 @@ export default function MonitorsShow({
                 ))}
             >
               <div className="border-border border-r p-4">
-                <p className="text-muted-foreground text-xs uppercase tracking-widest">30d Uptime</p>
+                <p className="text-muted-foreground text-xs uppercase tracking-widest">
+                  30d Uptime
+                </p>
                 <p
                   className={`mt-1 font-medium text-2xl ${uptimeStats ? uptimeColor(uptimeStats.uptime_30d) : "text-foreground"}`}
                 >
@@ -378,6 +387,7 @@ export default function MonitorsShow({
             {monitor.type === "http" && monitor.ssl_monitoring_enabled && (
               <Tab id="ssl">SSL Certificate</Tab>
             )}
+            <Tab id="notifications">Notifications</Tab>
           </TabList>
 
           {/* ── Overview ── */}
@@ -518,7 +528,9 @@ export default function MonitorsShow({
                                       key={label}
                                       className={i > 0 ? "border-border border-l" : ""}
                                     >
-                                      <p className="font-medium text-foreground text-xl">{value} ms</p>
+                                      <p className="font-medium text-foreground text-xl">
+                                        {value} ms
+                                      </p>
                                       <p className="mt-0.5 text-muted-foreground text-xs uppercase tracking-widest">
                                         {label}
                                       </p>
@@ -630,7 +642,9 @@ export default function MonitorsShow({
                           {sslCertificate.issuer && (
                             <div>
                               <p className="text-muted-foreground text-xs">Issuer</p>
-                              <p className="truncate text-foreground text-sm">{sslCertificate.issuer}</p>
+                              <p className="truncate text-foreground text-sm">
+                                {sslCertificate.issuer}
+                              </p>
                             </div>
                           )}
                           {sslCertificate.valid_to && (
@@ -991,6 +1005,15 @@ export default function MonitorsShow({
               </div>
             </TabPanel>
           )}
+
+          {/* ── Notifications tab ── */}
+          <TabPanel id="notifications" className="pt-4">
+            <RoutingRulesTable
+              monitorId={monitor.id}
+              rules={notificationRoutes ?? []}
+              channels={teamNotificationChannels ?? []}
+            />
+          </TabPanel>
         </Tabs>
       </Container>
     </>
