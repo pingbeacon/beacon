@@ -1,8 +1,8 @@
 import { Head } from "@inertiajs/react"
-import GuestLayout from "@/layouts/guest-layout"
 import { Eyebrow } from "@/components/primitives/eyebrow"
 import { StatusDot, type StatusDotStatus } from "@/components/primitives/status-dot"
 import { Link } from "@/components/ui/link"
+import GuestLayout from "@/layouts/guest-layout"
 
 type AckStatus = "acked" | "already_acked" | "resolved" | "invalid_token"
 
