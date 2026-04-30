@@ -115,7 +115,9 @@ export default function StatusPageForm({ statusPage, monitors }: StatusPageFormP
                 }}
               >
                 <span className="font-medium">{monitor.name}</span>
-                <span className="ml-1 text-muted-foreground text-xs">({monitor.type.toUpperCase()})</span>
+                <span className="ml-1 text-muted-foreground text-xs">
+                  ({monitor.type.toUpperCase()})
+                </span>
               </Checkbox>
             ))}
           </div>
@@ -203,7 +205,7 @@ export default function StatusPageForm({ statusPage, monitors }: StatusPageFormP
           isSelected={data.show_powered_by}
           onChange={(checked) => setData("show_powered_by", checked)}
         >
-          Show "Powered by UptimeRadar"
+          Show "Powered by Beacon"
         </Checkbox>
       </fieldset>
 
