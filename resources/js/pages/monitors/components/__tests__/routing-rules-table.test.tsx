@@ -76,6 +76,7 @@ const formStub = {
   },
   setData: vi.fn(),
   post: vi.fn(),
+  patch: vi.fn(),
   errors: {},
   processing: false,
   reset: vi.fn(),
@@ -129,5 +130,34 @@ describe("RoutingRulesTable", () => {
 
     expect(del).toHaveBeenCalledTimes(1)
     expect(del.mock.calls[0][0]).toBe("/monitors/5/notification-routes/10")
+  })
+
+  it("syncs nextPriority into the form when modal opens for add", () => {
+    useFormMock.mockReturnValue(formStub)
+    render(<RoutingRulesTable monitorId={5} rules={rules} channels={channels} />)
+    formStub.setData.mockClear()
+
+    fireEvent.click(screen.getByRole("button", { name: /Add rule/i }))
+
+    expect(formStub.setData).toHaveBeenCalledWith(
+      expect.objectContaining({ priority: 30, channel_ids: [] }),
+    )
+  })
+
+  it("prefills form data when editing a rule", () => {
+    useFormMock.mockReturnValue(formStub)
+    render(<RoutingRulesTable monitorId={5} rules={rules} channels={channels} />)
+    formStub.setData.mockClear()
+
+    const firstRow = screen.getByTestId("routing-rule-10")
+    fireEvent.click(within(firstRow).getByLabelText("Edit rule"))
+
+    expect(formStub.setData).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Down → Slack + Email",
+        priority: 10,
+        channel_ids: [1, 2],
+      }),
+    )
   })
 })

@@ -96,6 +96,7 @@ final class NotificationRouter
         return $event->monitor
             ->notificationChannels()
             ->where('is_enabled', true)
+            ->where('notification_channels.team_id', $event->monitor->team_id)
             ->get();
     }
 }

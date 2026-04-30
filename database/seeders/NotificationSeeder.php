@@ -12,7 +12,11 @@ class NotificationSeeder extends Seeder
 {
     public function run(): void
     {
-        $user = User::query()->where('email', 'test@example.com')->firstOrFail();
+        $user = User::query()->where('email', 'test@example.com')->first();
+
+        if ($user === null) {
+            return;
+        }
 
         $channels = $this->seedChannels($user);
         $monitors = Monitor::query()

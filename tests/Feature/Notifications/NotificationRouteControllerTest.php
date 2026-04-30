@@ -109,6 +109,62 @@ it('reorders routing rules by priority', function () {
     expect($b->fresh()->priority)->toBe(20);
 });
 
+it('rejects reorder with missing route IDs', function () {
+    $user = User::factory()->create();
+    $monitor = Monitor::factory()->for($user)->create([
+        'team_id' => $user->current_team_id,
+    ]);
+    $a = NotificationRoute::factory()->create(['monitor_id' => $monitor->id, 'team_id' => $monitor->team_id, 'priority' => 100]);
+    NotificationRoute::factory()->create(['monitor_id' => $monitor->id, 'team_id' => $monitor->team_id, 'priority' => 200]);
+
+    $this->actingAs($user)
+        ->from(route('monitors.show', $monitor))
+        ->post(route('monitors.notification-routes.reorder', $monitor), [
+            'order' => [$a->id],
+        ])
+        ->assertSessionHasErrors('order');
+});
+
+it('rejects reorder with duplicate route IDs', function () {
+    $user = User::factory()->create();
+    $monitor = Monitor::factory()->for($user)->create([
+        'team_id' => $user->current_team_id,
+    ]);
+    $a = NotificationRoute::factory()->create(['monitor_id' => $monitor->id, 'team_id' => $monitor->team_id, 'priority' => 100]);
+    $b = NotificationRoute::factory()->create(['monitor_id' => $monitor->id, 'team_id' => $monitor->team_id, 'priority' => 200]);
+
+    $this->actingAs($user)
+        ->from(route('monitors.show', $monitor))
+        ->post(route('monitors.notification-routes.reorder', $monitor), [
+            'order' => [$a->id, $b->id, $a->id],
+        ])
+        ->assertSessionHasErrors('order');
+});
+
+it('rejects reorder containing foreign route IDs', function () {
+    $user = User::factory()->create();
+    $monitor = Monitor::factory()->for($user)->create([
+        'team_id' => $user->current_team_id,
+    ]);
+    $a = NotificationRoute::factory()->create(['monitor_id' => $monitor->id, 'team_id' => $monitor->team_id, 'priority' => 100]);
+    $b = NotificationRoute::factory()->create(['monitor_id' => $monitor->id, 'team_id' => $monitor->team_id, 'priority' => 200]);
+
+    $otherMonitor = Monitor::factory()->for($user)->create([
+        'team_id' => $user->current_team_id,
+    ]);
+    $foreign = NotificationRoute::factory()->create([
+        'monitor_id' => $otherMonitor->id,
+        'team_id' => $otherMonitor->team_id,
+    ]);
+
+    $this->actingAs($user)
+        ->from(route('monitors.show', $monitor))
+        ->post(route('monitors.notification-routes.reorder', $monitor), [
+            'order' => [$a->id, $b->id, $foreign->id],
+        ])
+        ->assertSessionHasErrors('order');
+});
+
 it('blocks access to other-team monitor routes', function () {
     $user = User::factory()->create();
     $other = User::factory()->create();

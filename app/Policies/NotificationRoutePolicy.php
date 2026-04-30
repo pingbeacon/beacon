@@ -19,6 +19,10 @@ class NotificationRoutePolicy
 
     public function create(User $user): bool
     {
+        if ($user->currentTeam === null) {
+            return false;
+        }
+
         $role = $user->teamRole($user->currentTeam);
 
         return $role->canCreate();
@@ -30,6 +34,10 @@ class NotificationRoutePolicy
             return false;
         }
 
+        if ($user->currentTeam === null) {
+            return false;
+        }
+
         $role = $user->teamRole($user->currentTeam);
 
         return $role->canUpdate();
@@ -38,6 +46,10 @@ class NotificationRoutePolicy
     public function delete(User $user, NotificationRoute $notificationRoute): bool
     {
         if ($user->current_team_id !== $notificationRoute->team_id) {
+            return false;
+        }
+
+        if ($user->currentTeam === null) {
             return false;
         }
 

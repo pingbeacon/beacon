@@ -208,3 +208,21 @@ it('rejects channels from a different team', function () {
 
     expect($channels)->toHaveCount(0);
 });
+
+it('pivot fallback excludes foreign-team channels', function () {
+    $monitor = makeMonitorWithTeam();
+    $ownChannel = makeChannelForMonitor($monitor);
+
+    $otherUser = User::factory()->create();
+    $otherTeam = Team::find($otherUser->current_team_id);
+    $foreignChannel = NotificationChannel::factory()->create([
+        'user_id' => $otherUser->id,
+        'team_id' => $otherTeam->id,
+    ]);
+
+    $monitor->notificationChannels()->attach([$ownChannel->id, $foreignChannel->id]);
+
+    $channels = (new NotificationRouter)->route(downStatusEvent($monitor));
+
+    expect($channels->pluck('id')->all())->toBe([$ownChannel->id]);
+});

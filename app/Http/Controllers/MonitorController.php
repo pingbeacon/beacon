@@ -147,6 +147,7 @@ class MonitorController extends Controller
             ->get();
 
         $notificationRoutes = NotificationRoute::query()
+            ->where('team_id', $monitor->team_id)
             ->where('monitor_id', $monitor->id)
             ->orderBy('priority')
             ->orderBy('id')

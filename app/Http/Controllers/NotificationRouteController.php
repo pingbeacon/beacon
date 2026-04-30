@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ReorderNotificationRoutesRequest;
 use App\Http\Requests\StoreNotificationRouteRequest;
 use App\Http\Requests\UpdateNotificationRouteRequest;
 use App\Models\Monitor;
 use App\Models\NotificationRoute;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 
 class NotificationRouteController extends Controller
 {
@@ -55,16 +55,13 @@ class NotificationRouteController extends Controller
         return back();
     }
 
-    public function reorder(Request $request, Monitor $monitor): RedirectResponse
+    public function reorder(ReorderNotificationRoutesRequest $request, Monitor $monitor): RedirectResponse
     {
         $this->authorize('view', $monitor);
-        $this->authorize('create', NotificationRoute::class);
+        $this->authorize('update', new NotificationRoute(['team_id' => $monitor->team_id]));
         $this->ensureSameTeam($monitor);
 
-        $data = $request->validate([
-            'order' => ['required', 'array'],
-            'order.*' => ['integer'],
-        ]);
+        $data = $request->validated();
 
         foreach ($data['order'] as $index => $id) {
             NotificationRoute::query()

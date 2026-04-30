@@ -1,6 +1,12 @@
-import { ChevronDownIcon, ChevronUpIcon, PlusIcon, TrashIcon } from "@heroicons/react/20/solid"
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@heroicons/react/20/solid"
 import { router, useForm } from "@inertiajs/react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Form } from "react-aria-components"
 import NotificationRouteController from "@/actions/App/Http/Controllers/NotificationRouteController"
 import { Button } from "@/components/ui/button"
@@ -51,6 +57,7 @@ function channelChip(channel: NotificationChannel): string {
 
 export function RoutingRulesTable({ monitorId, rules, channels }: Props) {
   const [isOpen, setIsOpen] = useState(false)
+  const [editingRule, setEditingRule] = useState<NotificationRoute | null>(null)
   const channelById = new Map(channels.map((c) => [c.id, c]))
 
   const handleDelete = (rule: NotificationRoute) => {
@@ -72,6 +79,16 @@ export function RoutingRulesTable({ monitorId, rules, channels }: Props) {
     )
   }
 
+  const openAdd = () => {
+    setEditingRule(null)
+    setIsOpen(true)
+  }
+
+  const openEdit = (rule: NotificationRoute) => {
+    setEditingRule(rule)
+    setIsOpen(true)
+  }
+
   return (
     <div data-testid="routing-rules-table" className="rounded-lg border border-border">
       <div className="flex items-center justify-between border-border border-b px-4 py-3">
@@ -81,7 +98,7 @@ export function RoutingRulesTable({ monitorId, rules, channels }: Props) {
             Evaluated top-down · first match wins per channel
           </p>
         </div>
-        <Button onPress={() => setIsOpen(true)} size="sm">
+        <Button onPress={openAdd} size="sm">
           <PlusIcon data-slot="icon" />
           Add rule
         </Button>
@@ -97,7 +114,7 @@ export function RoutingRulesTable({ monitorId, rules, channels }: Props) {
             <li
               key={rule.id}
               data-testid={`routing-rule-${rule.id}`}
-              className={`grid grid-cols-[2rem_1fr_auto_auto] items-center gap-4 px-4 py-3 ${rule.is_active ? "" : "opacity-60"}`}
+              className={`grid grid-cols-[2rem_1fr_auto_auto_auto] items-center gap-4 px-4 py-3 ${rule.is_active ? "" : "opacity-60"}`}
             >
               <span className="font-mono text-muted-foreground text-xs">#{index + 1}</span>
 
@@ -150,6 +167,15 @@ export function RoutingRulesTable({ monitorId, rules, channels }: Props) {
               <Button
                 intent="plain"
                 size="sm"
+                aria-label="Edit rule"
+                onPress={() => openEdit(rule)}
+              >
+                <PencilIcon data-slot="icon" />
+              </Button>
+
+              <Button
+                intent="plain"
+                size="sm"
                 aria-label="Delete rule"
                 onPress={() => handleDelete(rule)}
               >
@@ -160,33 +186,42 @@ export function RoutingRulesTable({ monitorId, rules, channels }: Props) {
         </ul>
       )}
 
-      <AddRuleModal
+      <RuleModal
         monitorId={monitorId}
         channels={channels}
         isOpen={isOpen}
         onOpenChange={setIsOpen}
         nextPriority={(rules.at(-1)?.priority ?? 0) + 10}
+        editingRule={editingRule}
       />
     </div>
   )
 }
 
-interface AddRuleModalProps {
+interface RuleModalProps {
   monitorId: number
   channels: NotificationChannel[]
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   nextPriority: number
+  editingRule: NotificationRoute | null
 }
 
-function AddRuleModal({
-  monitorId,
-  channels,
-  isOpen,
-  onOpenChange,
-  nextPriority,
-}: AddRuleModalProps) {
-  const { data, setData, post, errors, processing, reset } = useForm({
+function buildInitial(editingRule: NotificationRoute | null, nextPriority: number) {
+  if (editingRule) {
+    return {
+      name: editingRule.name ?? "",
+      priority: editingRule.priority,
+      is_active: editingRule.is_active,
+      conditions: {
+        severity_filter: (editingRule.conditions?.severity_filter ?? []) as RouteSeverity[],
+        status_filter: (editingRule.conditions?.status_filter ?? []) as RouteStatusFilter[],
+      },
+      channel_ids: editingRule.channel_ids ?? [],
+    }
+  }
+
+  return {
     name: "",
     priority: nextPriority,
     is_active: true,
@@ -195,17 +230,44 @@ function AddRuleModal({
       status_filter: [] as RouteStatusFilter[],
     },
     channel_ids: [] as number[],
-  })
+  }
+}
+
+function RuleModal({
+  monitorId,
+  channels,
+  isOpen,
+  onOpenChange,
+  nextPriority,
+  editingRule,
+}: RuleModalProps) {
+  const { data, setData, post, patch, errors, processing, reset } = useForm(
+    buildInitial(editingRule, nextPriority),
+  )
+
+  useEffect(() => {
+    if (!isOpen) return
+    const initial = buildInitial(editingRule, nextPriority)
+    setData(initial)
+  }, [isOpen, editingRule, nextPriority, setData])
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    post(NotificationRouteController.store.url(monitorId), {
-      preserveScroll: true,
-      onSuccess: () => {
-        onOpenChange(false)
-        reset()
-      },
-    })
+    const onSuccess = () => {
+      onOpenChange(false)
+      reset()
+    }
+    if (editingRule) {
+      patch(NotificationRouteController.update.url([monitorId, editingRule.id]), {
+        preserveScroll: true,
+        onSuccess,
+      })
+    } else {
+      post(NotificationRouteController.store.url(monitorId), {
+        preserveScroll: true,
+        onSuccess,
+      })
+    }
   }
 
   const toggleSeverity = (sev: RouteSeverity) => {
@@ -235,15 +297,17 @@ function AddRuleModal({
     )
   }
 
+  const formId = editingRule ? "edit-routing-rule-form" : "add-routing-rule-form"
+
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
       <ModalContent>
         <ModalHeader>
-          <ModalTitle>Add routing rule</ModalTitle>
+          <ModalTitle>{editingRule ? "Edit routing rule" : "Add routing rule"}</ModalTitle>
         </ModalHeader>
         <ModalBody>
           <Form
-            id="add-routing-rule-form"
+            id={formId}
             onSubmit={submit}
             validationErrors={errors}
             className="space-y-4"
@@ -318,10 +382,10 @@ function AddRuleModal({
           </Button>
           <Button
             type="submit"
-            form="add-routing-rule-form"
+            form={formId}
             isDisabled={processing || data.channel_ids.length === 0}
           >
-            Add rule
+            {editingRule ? "Save changes" : "Add rule"}
           </Button>
         </ModalFooter>
       </ModalContent>
