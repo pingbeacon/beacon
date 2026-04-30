@@ -1,5 +1,6 @@
 import { Head, router } from "@inertiajs/react"
 import { useEffect } from "react"
+import { StatusDot, type StatusDotStatus } from "@/components/primitives"
 import { TagBadge } from "@/components/tag-badge"
 import { Badge } from "@/components/ui/badge"
 import { Heading } from "@/components/ui/heading"
@@ -10,6 +11,12 @@ import type { Heartbeat, Tag } from "@/types/monitor"
 
 type OverallStatus = "operational" | "degraded" | "major_outage"
 type MonitorStatus = "up" | "down" | "pending" | "paused"
+
+const overallStatusToDot: Record<OverallStatus, StatusDotStatus> = {
+  operational: "up",
+  degraded: "degraded",
+  major_outage: "down",
+}
 
 interface PublicMonitor {
   id: number
@@ -124,16 +131,7 @@ export default function StatusShow({ statusPage, monitors, overallStatus }: Prop
           {/* Overall status banner */}
           <div className={`mb-8 rounded-xl border p-5 ${statusConfig.className}`}>
             <div className="flex items-center gap-3">
-              <div
-                aria-hidden="true"
-                className={`size-3 rounded-full ${
-                  overallStatus === "operational"
-                    ? "bg-success"
-                    : overallStatus === "degraded"
-                      ? "bg-warning"
-                      : "bg-destructive"
-                }`}
-              />
+              <StatusDot status={overallStatusToDot[overallStatus]} label={statusConfig.label} />
               <div>
                 <p className="font-semibold text-sm">{statusConfig.label}</p>
                 <p className="text-xs opacity-80">{statusConfig.description}</p>
@@ -187,7 +185,7 @@ export default function StatusShow({ statusPage, monitors, overallStatus }: Prop
           {/* Footer */}
           <div className="mt-10 text-center text-muted-foreground text-xs">
             {statusPage.footer_text && <p className="mb-2">{statusPage.footer_text}</p>}
-            {statusPage.show_powered_by && <p>Powered by UptimeRadar</p>}
+            {statusPage.show_powered_by && <p>Powered by Beacon</p>}
           </div>
         </div>
       </div>
