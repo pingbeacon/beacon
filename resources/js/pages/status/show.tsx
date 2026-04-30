@@ -3,6 +3,7 @@ import { useEffect } from "react"
 import { Tracker } from "@/components/ui/tracker"
 import { Badge } from "@/components/ui/badge"
 import { Heading } from "@/components/ui/heading"
+import { StatusDot, type StatusDotStatus } from "@/components/primitives"
 import type { Heartbeat, Tag } from "@/types/monitor"
 import { TagBadge } from "@/components/tag-badge"
 import { uptimeColor, statusBadgeIntent } from "@/lib/color"
@@ -10,6 +11,12 @@ import { heartbeatsToTracker } from "@/lib/heartbeats"
 
 type OverallStatus = "operational" | "degraded" | "major_outage"
 type MonitorStatus = "up" | "down" | "pending" | "paused"
+
+const overallStatusToDot: Record<OverallStatus, StatusDotStatus> = {
+  operational: "up",
+  degraded: "degraded",
+  major_outage: "down",
+}
 
 interface PublicMonitor {
   id: number
@@ -83,7 +90,9 @@ export default function StatusShow({ statusPage, monitors, overallStatus }: Prop
   const customStyles: React.CSSProperties = {
     ...(statusPage.background_color ? { backgroundColor: statusPage.background_color } : {}),
     ...(statusPage.text_color ? { color: statusPage.text_color } : {}),
-    ...(statusPage.primary_color ? { "--sp-primary": statusPage.primary_color } as React.CSSProperties : {}),
+    ...(statusPage.primary_color
+      ? ({ "--sp-primary": statusPage.primary_color } as React.CSSProperties)
+      : {}),
   }
 
   return (
@@ -94,10 +103,7 @@ export default function StatusShow({ statusPage, monitors, overallStatus }: Prop
         )}
       </Head>
       {statusPage.custom_css && <style>{statusPage.custom_css}</style>}
-      <div
-        className="status-page min-h-screen bg-background"
-        style={customStyles}
-      >
+      <div className="status-page min-h-screen bg-background" style={customStyles}>
         <div className="mx-auto max-w-3xl px-4 py-12">
           {/* Header */}
           <div className="mb-8 text-center">
@@ -125,16 +131,7 @@ export default function StatusShow({ statusPage, monitors, overallStatus }: Prop
           {/* Overall status banner */}
           <div className={`mb-8 rounded-xl border p-5 ${statusConfig.className}`}>
             <div className="flex items-center gap-3">
-              <div
-                aria-hidden="true"
-                className={`size-3 rounded-full ${
-                  overallStatus === "operational"
-                    ? "bg-success"
-                    : overallStatus === "degraded"
-                      ? "bg-warning"
-                      : "bg-destructive"
-                }`}
-              />
+              <StatusDot status={overallStatusToDot[overallStatus]} label={statusConfig.label} />
               <div>
                 <p className="font-semibold text-sm">{statusConfig.label}</p>
                 <p className="text-xs opacity-80">{statusConfig.description}</p>
@@ -150,7 +147,9 @@ export default function StatusShow({ statusPage, monitors, overallStatus }: Prop
                 <div key={monitor.id} className="rounded-xl border bg-popover p-5">
                   <div className="mb-3 flex items-center justify-between gap-4">
                     <div className="flex min-w-0 items-center gap-2">
-                      <span className="truncate font-medium text-foreground text-sm">{monitor.name}</span>
+                      <span className="truncate font-medium text-foreground text-sm">
+                        {monitor.name}
+                      </span>
                       {monitor.tags.map((tag) => (
                         <TagBadge key={tag.id} tag={tag} />
                       ))}
@@ -168,7 +167,9 @@ export default function StatusShow({ statusPage, monitors, overallStatus }: Prop
 
                   <div className="mt-2 flex items-center justify-between">
                     <span className="text-muted-foreground text-xs">Last 90 checks</span>
-                    <span className={`font-medium text-xs tabular-nums ${uptimeColor(monitor.uptime_percentage)}`}>
+                    <span
+                      className={`font-medium text-xs tabular-nums ${uptimeColor(monitor.uptime_percentage)}`}
+                    >
                       {monitor.uptime_percentage}% uptime
                     </span>
                   </div>
@@ -183,10 +184,8 @@ export default function StatusShow({ statusPage, monitors, overallStatus }: Prop
 
           {/* Footer */}
           <div className="mt-10 text-center text-muted-foreground text-xs">
-            {statusPage.footer_text && (
-              <p className="mb-2">{statusPage.footer_text}</p>
-            )}
-            {statusPage.show_powered_by && <p>Powered by UptimeRadar</p>}
+            {statusPage.footer_text && <p className="mb-2">{statusPage.footer_text}</p>}
+            {statusPage.show_powered_by && <p>Powered by Beacon</p>}
           </div>
         </div>
       </div>
