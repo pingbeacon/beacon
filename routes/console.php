@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\RunEscalationsJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -10,3 +11,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('monitors:check')->everyMinute();
 Schedule::command('monitors:check-ssl')->hourly();
+Schedule::job(new RunEscalationsJob)->everyMinute()->withoutOverlapping();
