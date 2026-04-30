@@ -91,6 +91,7 @@ export function ResponseTab({
     [chartData, prevChartData, sloMs],
   )
   const distribution = useMemo(() => computeDistribution(chartData ?? []), [chartData])
+  const distributionStats = useMemo(() => computeMedianMean(chartData ?? []), [chartData])
   const statusCodes = useMemo(() => computeStatusCodes(heartbeats), [heartbeats])
 
   return (
@@ -110,7 +111,11 @@ export function ResponseTab({
       />
 
       <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
-        <DistributionHistogram distribution={distribution} />
+        <DistributionHistogram
+          distribution={distribution}
+          median={distributionStats.median}
+          mean={distributionStats.mean}
+        />
         <PhaseWaterfall payload={phasePayload} error={phaseError} />
       </div>
 
@@ -284,9 +289,10 @@ function ResponseChart({
   const W = 1000
   const H = 240
   const PAD = 12
+  const LEFT_GUTTER = 36
   const maxY = useMaxY(buckets, prevBuckets, sloMs)
   const xFor = (i: number) =>
-    PAD + (buckets.length <= 1 ? 0 : (i / (buckets.length - 1)) * (W - PAD * 2))
+    LEFT_GUTTER + (buckets.length <= 1 ? 0 : (i / (buckets.length - 1)) * (W - LEFT_GUTTER - PAD))
   const yFor = (v: number) => H - PAD - (Math.min(v, maxY) / maxY) * (H - PAD * 2)
 
   const path = (key: "p50" | "p95" | "p99") =>
@@ -313,7 +319,9 @@ function ResponseChart({
         <div>
           <Eyebrow>response time</Eyebrow>
           <p className="mt-0.5 font-semibold text-foreground text-sm">
-            {buckets.length > 0 ? `${stats.count} checks · bucketed` : "No data in window"}
+            {buckets.length > 0
+              ? `${stats.count} checks · ${buckets.length}-bucket rollup · p50/p95/p99`
+              : "No data in window"}
           </p>
         </div>
         <ChartLegend />
@@ -331,7 +339,7 @@ function ResponseChart({
           return (
             <g key={g}>
               <line
-                x1={PAD}
+                x1={LEFT_GUTTER}
                 x2={W - PAD}
                 y1={yFor(v)}
                 y2={yFor(v)}
@@ -339,7 +347,7 @@ function ResponseChart({
                 strokeDasharray="2 4"
               />
               <text
-                x={PAD - 4}
+                x={LEFT_GUTTER - 6}
                 y={yFor(v) + 3}
                 fontSize="9"
                 fill="var(--muted-foreground)"
@@ -352,7 +360,7 @@ function ResponseChart({
         })}
 
         <line
-          x1={PAD}
+          x1={LEFT_GUTTER}
           x2={W - PAD}
           y1={yFor(sloMs)}
           y2={yFor(sloMs)}
@@ -525,6 +533,18 @@ interface DistributionBucket {
   intent: "success" | "primary" | "warning" | "danger"
 }
 
+function computeMedianMean(points: ChartDataPoint[]): {
+  median: number | null
+  mean: number | null
+} {
+  const values = points.map((p) => p.response_time).filter((v): v is number => v != null)
+  if (values.length === 0) return { median: null, mean: null }
+  const sorted = [...values].sort((a, b) => a - b)
+  const median = sorted[Math.floor(sorted.length / 2)]
+  const mean = values.reduce((a, b) => a + b, 0) / values.length
+  return { median, mean: Math.round(mean) }
+}
+
 function computeDistribution(points: ChartDataPoint[]): DistributionBucket[] {
   const ranges: Array<{
     label: string
@@ -549,7 +569,15 @@ function computeDistribution(points: ChartDataPoint[]): DistributionBucket[] {
   })
 }
 
-function DistributionHistogram({ distribution }: { distribution: DistributionBucket[] }) {
+function DistributionHistogram({
+  distribution,
+  median,
+  mean,
+}: {
+  distribution: DistributionBucket[]
+  median: number | null
+  mean: number | null
+}) {
   const max = Math.max(1, ...distribution.map((d) => d.count))
   const total = distribution.reduce((acc, d) => acc + d.count, 0)
   return (
@@ -557,13 +585,16 @@ function DistributionHistogram({ distribution }: { distribution: DistributionBuc
       data-slot="distribution-histogram"
       className="rounded-lg border border-border bg-card px-5 py-4"
     >
-      <header className="mb-3 flex items-baseline justify-between">
+      <header className="mb-3 flex items-baseline justify-between gap-3">
         <div>
           <Eyebrow>distribution</Eyebrow>
           <p className="mt-0.5 font-semibold text-foreground text-sm">
             {total} checks · bucketed by response time
           </p>
         </div>
+        <p className="text-[10px] text-muted-foreground">
+          median {formatMs(median)} · mean {formatMs(mean)}
+        </p>
       </header>
       <div className="flex h-[120px] items-stretch gap-1 border-border border-b pb-2">
         {distribution.map((b) => {
@@ -612,6 +643,14 @@ const PHASE_KEYS: Array<{
   { key: "transfer", label: "Content transfer", className: "bg-destructive" },
 ]
 
+const PHASE_DOMINANT_LABEL: Record<keyof PhaseTimingsPayload["phases"], string> = {
+  dns: "DNS lookup dominates",
+  tcp: "TCP connect dominates",
+  tls: "TLS handshake dominates fixed cost",
+  ttfb: "TTFB is where the spike lives",
+  transfer: "Content transfer dominates",
+}
+
 function PhaseWaterfall({
   payload,
   error,
@@ -626,6 +665,20 @@ function PhaseWaterfall({
     ? PHASE_KEYS.reduce((acc, p) => acc + (payload.phases[p.key].avg ?? 0), 0)
     : 0
 
+  const dominantPhase = useMemo(() => {
+    if (!payload) return null
+    let best: keyof PhaseTimingsPayload["phases"] | null = null
+    let bestVal = -1
+    for (const p of PHASE_KEYS) {
+      const v = payload.phases[p.key].p95 ?? 0
+      if (v > bestVal) {
+        bestVal = v
+        best = p.key
+      }
+    }
+    return best
+  }, [payload])
+
   return (
     <article
       data-slot="phase-waterfall"
@@ -634,7 +687,9 @@ function PhaseWaterfall({
       <header className="mb-3 flex items-baseline justify-between">
         <div>
           <Eyebrow>phase breakdown</Eyebrow>
-          <p className="mt-0.5 font-semibold text-foreground text-sm">where time is spent</p>
+          <p className="mt-0.5 font-semibold text-foreground text-sm">
+            where time is spent · avg vs p95
+          </p>
         </div>
         <p className="text-[10px] text-muted-foreground">
           avg <span className="text-foreground">{totalAvg}ms</span> · p95{" "}
@@ -694,6 +749,16 @@ function PhaseWaterfall({
       ) : null}
       {!payload && !error ? (
         <p className="text-muted-foreground text-sm">Loading phase data…</p>
+      ) : null}
+      {payload && payload.count > 0 ? (
+        <p
+          data-slot="phase-footnote"
+          className="mt-3 border-border border-t pt-3 text-[10px] text-muted-foreground"
+        >
+          {`// solid bars = avg · faded bars = p95${
+            dominantPhase ? ` · ${PHASE_DOMINANT_LABEL[dominantPhase]}` : ""
+          }`}
+        </p>
       ) : null}
     </article>
   )
@@ -825,6 +890,15 @@ function StatusCodesBars({ buckets }: { buckets: StatusBucket[] }) {
           })
         )}
       </div>
+      {buckets.length > 0 ? (
+        <div className="mt-2 flex justify-between border-border border-t pt-2 text-[9px] text-muted-foreground">
+          <span>−24h</span>
+          <span>−18h</span>
+          <span>−12h</span>
+          <span>−6h</span>
+          <span>now</span>
+        </div>
+      ) : null}
     </article>
   )
 }
@@ -833,10 +907,24 @@ function AssertionTimelinePlaceholder() {
   return (
     <article
       data-slot="assertion-timeline"
-      className="rounded-lg border border-border border-dashed bg-card px-5 py-4 text-muted-foreground text-sm"
+      className="rounded-lg border border-border border-dashed bg-card px-5 py-4"
     >
-      <Eyebrow>assertions</Eyebrow>
-      <p className="mt-1.5">Assertion pass/fail timeline lands once the assertions module ships.</p>
+      <header className="flex items-baseline justify-between">
+        <div>
+          <Eyebrow>assertions</Eyebrow>
+          <p className="mt-0.5 font-semibold text-foreground text-sm">
+            per-check pass/fail · last 24h
+          </p>
+        </div>
+      </header>
+      <p className="mt-3 text-muted-foreground text-sm">
+        Assertion pass/fail timeline lands once the assertions module ships.
+      </p>
+      <div className="mt-3 flex justify-between border-border border-t pt-2 text-[9px] text-muted-foreground">
+        <span>−24h</span>
+        <span className="text-foreground">last failure window</span>
+        <span>now</span>
+      </div>
     </article>
   )
 }
