@@ -18,7 +18,10 @@ const tooltipStyles = tv({
   ],
   variants: {
     inverse: {
-      true: ["border-transparent bg-foreground text-background", "**:[.text-muted-foreground]:text-background/60"],
+      true: [
+        "border-transparent bg-foreground text-background",
+        "**:[.text-muted-foreground]:text-background/60",
+      ],
       false: "bg-popover text-popover-foreground",
     },
     isEntering: {
@@ -77,7 +80,9 @@ const TooltipContent = ({
             // inverse
             className={twJoin(
               "block group-placement-bottom:rotate-180 group-placement-left:-rotate-90 group-placement-right:rotate-90 forced-colors:fill-[Canvas] forced-colors:stroke-[ButtonBorder]",
-              inverse ? "fill-foreground stroke-transparent" : "fill-popover stroke-(--tooltip-border)",
+              inverse
+                ? "fill-foreground stroke-transparent"
+                : "fill-popover stroke-(--tooltip-border)",
             )}
           >
             <path d="M0 0 L6 6 L12 0" />

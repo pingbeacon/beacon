@@ -326,7 +326,10 @@ const XAxis = ({
   const tick = layout === "horizontal" ? tickHorizontal : undefined
   return (
     <XAxisPrimitive
-      className={twMerge("text-muted-foreground text-xs **:[text]:fill-muted-foreground", className)}
+      className={twMerge(
+        "text-muted-foreground text-xs **:[text]:fill-muted-foreground",
+        className,
+      )}
       interval={displayEdgeLabelsOnly ? "preserveStartEnd" : intervalType}
       tick={tick}
       ticks={ticks}
@@ -360,7 +363,10 @@ const YAxis = ({
 
   return (
     <YAxisPrimitive
-      className={twMerge("text-muted-foreground text-xs **:[text]:fill-muted-foreground", className)}
+      className={twMerge(
+        "text-muted-foreground text-xs **:[text]:fill-muted-foreground",
+        className,
+      )}
       width={width ?? (layout === "horizontal" ? 40 : 80)}
       domain={domain}
       tick={tick}
@@ -458,7 +464,9 @@ const ChartTooltipContent = <TValue extends ValueType, TName extends NameType>({
       {!hideLabel && (
         <>
           {!nestLabel ? <span className="font-medium">{tooltipLabel}</span> : null}
-          {labelSeparator && <span aria-hidden className="mt-2 mb-3 block h-px w-full bg-background/10" />}
+          {labelSeparator && (
+            <span aria-hidden className="mt-2 mb-3 block h-px w-full bg-background/10" />
+          )}
         </>
       )}
       <div className="grid gap-3">
@@ -510,7 +518,9 @@ const ChartTooltipContent = <TValue extends ValueType, TName extends NameType>({
                   >
                     <div className="grid gap-1.5">
                       {nestLabel ? tooltipLabel : null}
-                      <span className="text-muted-foreground">{itemConfig?.label || item.name}</span>
+                      <span className="text-muted-foreground">
+                        {itemConfig?.label || item.name}
+                      </span>
                     </div>
 
                     {item.value && (

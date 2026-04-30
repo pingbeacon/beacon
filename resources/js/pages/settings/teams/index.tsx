@@ -28,9 +28,7 @@ export default function TeamsIndex({ teams }: Props) {
             <CardContent className="flex items-center justify-between py-4">
               <div className="flex items-center gap-3">
                 <span className="font-medium">{team.name}</span>
-                {team.personal_team && (
-                  <Badge intent="secondary">Personal</Badge>
-                )}
+                {team.personal_team && <Badge intent="secondary">Personal</Badge>}
                 <Badge>{team.pivot.role}</Badge>
               </div>
               <div className="flex items-center gap-2">
@@ -38,7 +36,9 @@ export default function TeamsIndex({ teams }: Props) {
                   {team.users_count ?? 0} members
                 </span>
                 <Link href={`/settings/teams/${team.id}/edit`}>
-                  <Button intent="secondary" size="sm">Manage</Button>
+                  <Button intent="secondary" size="sm">
+                    Manage
+                  </Button>
                 </Link>
               </div>
             </CardContent>

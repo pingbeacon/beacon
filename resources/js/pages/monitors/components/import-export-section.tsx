@@ -23,9 +23,8 @@ export default function ImportExportSection({ selectedIds = [] }: ImportExportSe
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleExport = () => {
-    const params = selectedIds.length > 0
-      ? `?${selectedIds.map((id) => `ids[]=${id}`).join("&")}`
-      : ""
+    const params =
+      selectedIds.length > 0 ? `?${selectedIds.map((id) => `ids[]=${id}`).join("&")}` : ""
     window.location.href = `/monitors/export${params}`
   }
 
@@ -65,8 +64,8 @@ export default function ImportExportSection({ selectedIds = [] }: ImportExportSe
             </ModalHeader>
             <ModalBody>
               <p className="mb-4 text-muted-foreground text-sm">
-                Upload a JSON file previously exported from this application.
-                Notification channels will not be imported.
+                Upload a JSON file previously exported from this application. Notification channels
+                will not be imported.
               </p>
               <input
                 ref={fileInputRef}

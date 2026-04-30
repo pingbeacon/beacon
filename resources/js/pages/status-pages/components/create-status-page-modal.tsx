@@ -72,7 +72,12 @@ export default function CreateStatusPageModal({ children }: CreateStatusPageModa
           <ModalTitle>New Status Page</ModalTitle>
         </ModalHeader>
         <ModalBody>
-          <Form validationErrors={errors} onSubmit={submit} className="space-y-4" id="create-status-page-form">
+          <Form
+            validationErrors={errors}
+            onSubmit={submit}
+            className="space-y-4"
+            id="create-status-page-form"
+          >
             <TextField value={data.title} onChange={handleTitleChange} autoFocus>
               <Label>Title</Label>
               <Input placeholder="My Service Status" />

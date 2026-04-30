@@ -118,7 +118,9 @@ export default function MaintenanceWindowForm({ maintenanceWindow, monitors, gro
       >
         <Label>Timezone</Label>
         <SelectTrigger />
-        <SelectContent items={Intl.supportedValuesOf("timeZone").map((tz) => ({ id: tz, name: tz }))}>
+        <SelectContent
+          items={Intl.supportedValuesOf("timeZone").map((tz) => ({ id: tz, name: tz }))}
+        >
           {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
         </SelectContent>
       </Select>
@@ -137,11 +139,13 @@ export default function MaintenanceWindowForm({ maintenanceWindow, monitors, gro
         >
           <Label>Recurrence</Label>
           <SelectTrigger />
-          <SelectContent items={[
-            { id: "daily", name: "Daily" },
-            { id: "weekly", name: "Weekly" },
-            { id: "monthly", name: "Monthly" },
-          ]}>
+          <SelectContent
+            items={[
+              { id: "daily", name: "Daily" },
+              { id: "weekly", name: "Weekly" },
+              { id: "monthly", name: "Monthly" },
+            ]}
+          >
             {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
           </SelectContent>
         </Select>

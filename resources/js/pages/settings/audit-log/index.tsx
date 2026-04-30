@@ -41,16 +41,22 @@ function formatType(type: string): string {
 
 export default function AuditLogIndex({ logs, filters }: Props) {
   const handleFilter = (key: string, value: string | null) => {
-    router.get("/settings/audit-log", {
-      ...filters,
-      [key]: value || undefined,
-    }, { preserveState: true })
+    router.get(
+      "/settings/audit-log",
+      {
+        ...filters,
+        [key]: value || undefined,
+      },
+      { preserveState: true },
+    )
   }
 
   return (
     <>
       <Head title="Audit Log" />
-      <Heading level={2} className="mb-6">Audit Log</Heading>
+      <Heading level={2} className="mb-6">
+        Audit Log
+      </Heading>
 
       <div className="mb-4 flex gap-3">
         <Select
@@ -84,15 +90,15 @@ export default function AuditLogIndex({ logs, filters }: Props) {
               {logs.data.map((log) => (
                 <div key={log.id} className="flex items-center justify-between px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <Badge intent={actionColors[log.action] ?? "secondary"}>
-                      {log.action}
-                    </Badge>
+                    <Badge intent={actionColors[log.action] ?? "secondary"}>{log.action}</Badge>
                     <div>
                       <p className="text-sm">
-                        <span className="font-medium">{log.user?.name ?? "System"}</span>
-                        {" "}{log.action}{" "}
-                        <span className="text-muted-foreground">{formatType(log.auditable_type)}</span>
-                        {" "}#{log.auditable_id}
+                        <span className="font-medium">{log.user?.name ?? "System"}</span>{" "}
+                        {log.action}{" "}
+                        <span className="text-muted-foreground">
+                          {formatType(log.auditable_type)}
+                        </span>{" "}
+                        #{log.auditable_id}
                       </p>
                     </div>
                   </div>
@@ -110,7 +116,9 @@ export default function AuditLogIndex({ logs, filters }: Props) {
         <div className="mt-4 flex justify-center gap-2">
           {logs.prev_page_url && (
             <Link href={logs.prev_page_url}>
-              <Button intent="outline" size="sm">Previous</Button>
+              <Button intent="outline" size="sm">
+                Previous
+              </Button>
             </Link>
           )}
           <span className="flex items-center px-3 text-muted-foreground text-sm">
@@ -118,7 +126,9 @@ export default function AuditLogIndex({ logs, filters }: Props) {
           </span>
           {logs.next_page_url && (
             <Link href={logs.next_page_url}>
-              <Button intent="outline" size="sm">Next</Button>
+              <Button intent="outline" size="sm">
+                Next
+              </Button>
             </Link>
           )}
         </div>

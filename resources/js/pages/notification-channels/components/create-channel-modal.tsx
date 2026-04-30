@@ -81,7 +81,12 @@ export default function CreateChannelModal({ children }: CreateChannelModalProps
           <ModalTitle>Add Channel</ModalTitle>
         </ModalHeader>
         <ModalBody>
-          <Form validationErrors={errors} onSubmit={submit} className="space-y-4" id="create-channel-form">
+          <Form
+            validationErrors={errors}
+            onSubmit={submit}
+            className="space-y-4"
+            id="create-channel-form"
+          >
             <TextField value={data.name} onChange={(v) => setData("name", v)} autoFocus>
               <Label>Name</Label>
               <Input placeholder="My Email Alert" />
@@ -117,7 +122,9 @@ export default function CreateChannelModal({ children }: CreateChannelModalProps
             {(data.type === "slack" || data.type === "discord") && (
               <TextField
                 value={data.configuration.webhook_url ?? ""}
-                onChange={(v) => setData("configuration", { ...data.configuration, webhook_url: v })}
+                onChange={(v) =>
+                  setData("configuration", { ...data.configuration, webhook_url: v })
+                }
               >
                 <Label>Webhook URL</Label>
                 <Input type="url" placeholder="https://hooks.slack.com/services/..." />
@@ -129,7 +136,9 @@ export default function CreateChannelModal({ children }: CreateChannelModalProps
               <>
                 <TextField
                   value={data.configuration.bot_token ?? ""}
-                  onChange={(v) => setData("configuration", { ...data.configuration, bot_token: v })}
+                  onChange={(v) =>
+                    setData("configuration", { ...data.configuration, bot_token: v })
+                  }
                 >
                   <Label>Bot Token</Label>
                   <Input placeholder="123456:ABC-DEF..." />

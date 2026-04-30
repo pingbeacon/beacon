@@ -14,7 +14,12 @@ export default function MonitorsEdit({ monitor, tags, notificationChannels, grou
   return (
     <>
       <Head title={`Edit ${monitor.name}`} />
-      <MonitorWizard monitor={monitor} tags={tags} notificationChannels={notificationChannels} groups={groups} />
+      <MonitorWizard
+        monitor={monitor}
+        tags={tags}
+        notificationChannels={notificationChannels}
+        groups={groups}
+      />
     </>
   )
 }

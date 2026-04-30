@@ -28,7 +28,10 @@ function getSearchParams(): URLSearchParams {
   return new URLSearchParams(window.location.search)
 }
 
-function getInitialConfig(params: URLSearchParams | null, type: ChannelType): Record<string, string> {
+function getInitialConfig(
+  params: URLSearchParams | null,
+  type: ChannelType,
+): Record<string, string> {
   const base = defaultConfigs[type]
   if (!params) return base
   const config = { ...base }

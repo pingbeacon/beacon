@@ -23,10 +23,7 @@ export default function MonitorsTrashed({ monitors }: Props) {
       <Head title="Trashed Monitors" />
       <Container className="pt-2 pb-8">
         <Card>
-          <CardHeader
-            title="Trashed Monitors"
-            description="Deleted monitors that can be restored."
-          >
+          <CardHeader title="Trashed Monitors" description="Deleted monitors that can be restored.">
             <div data-slot="card-action">
               <Button intent="outline" onPress={() => router.visit("/monitors")}>
                 Back to Monitors
@@ -37,10 +34,7 @@ export default function MonitorsTrashed({ monitors }: Props) {
             {monitors.length > 0 ? (
               <div className="space-y-2">
                 {monitors.map((monitor) => (
-                  <div
-                    key={monitor.id}
-                    className="flex items-center gap-4 rounded-lg border p-4"
-                  >
+                  <div key={monitor.id} className="flex items-center gap-4 rounded-lg border p-4">
                     <Badge intent="secondary">Deleted</Badge>
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-sm">{monitor.name}</p>
@@ -56,7 +50,11 @@ export default function MonitorsTrashed({ monitors }: Props) {
                         intent="outline"
                         size="sm"
                         onPress={() =>
-                          router.post(`/monitors/${monitor.id}/restore`, {}, { preserveScroll: true })
+                          router.post(
+                            `/monitors/${monitor.id}/restore`,
+                            {},
+                            { preserveScroll: true },
+                          )
                         }
                       >
                         Restore

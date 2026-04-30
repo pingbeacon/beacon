@@ -12,7 +12,11 @@ interface MonitorGroupSectionProps {
   monitorCount: number
 }
 
-export default function MonitorGroupSection({ group, children, monitorCount }: MonitorGroupSectionProps) {
+export default function MonitorGroupSection({
+  group,
+  children,
+  monitorCount,
+}: MonitorGroupSectionProps) {
   const [collapsed, setCollapsed] = useState(group.is_collapsed)
 
   return (

@@ -58,11 +58,11 @@ export function MonitorCommandPalette({ isOpen, onOpenChange, monitors }: Props)
                 textValue={monitor.name}
                 onAction={() => navigate(`/monitors/${monitor.id}`)}
               >
-                <span className={`size-2 shrink-0 rounded-full ${statusDot[monitor.status] ?? "bg-muted-foreground"}`} />
+                <span
+                  className={`size-2 shrink-0 rounded-full ${statusDot[monitor.status] ?? "bg-muted-foreground"}`}
+                />
                 <CommandMenuLabel>{monitor.name}</CommandMenuLabel>
-                <span className="ml-auto text-[10px] text-muted-foreground">
-                  {monitor.type}
-                </span>
+                <span className="ml-auto text-[10px] text-muted-foreground">{monitor.type}</span>
               </CommandMenuItem>
             ))}
           </CommandMenuSection>
@@ -82,10 +82,7 @@ export function MonitorCommandPalette({ isOpen, onOpenChange, monitors }: Props)
         </CommandMenuSection>
 
         <CommandMenuSection label="Actions">
-          <CommandMenuItem
-            textValue="New monitor"
-            onAction={() => navigate("/monitors/create")}
-          >
+          <CommandMenuItem textValue="New monitor" onAction={() => navigate("/monitors/create")}>
             <PlusCircleIcon className="size-4 shrink-0 text-muted-foreground" />
             <CommandMenuLabel>New monitor</CommandMenuLabel>
           </CommandMenuItem>

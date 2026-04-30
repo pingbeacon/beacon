@@ -17,7 +17,10 @@ export default function MaintenanceWindowsEdit({ maintenanceWindow, monitors, gr
       <Head title={`Edit ${maintenanceWindow.title}`} />
       <Container className="pt-2 pb-8">
         <Card>
-          <CardHeader title={`Edit ${maintenanceWindow.title}`} description="Update maintenance window settings." />
+          <CardHeader
+            title={`Edit ${maintenanceWindow.title}`}
+            description="Update maintenance window settings."
+          />
           <CardContent>
             <MaintenanceWindowForm
               maintenanceWindow={maintenanceWindow}

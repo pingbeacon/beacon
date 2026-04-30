@@ -34,7 +34,12 @@ function getSearchParams(): URLSearchParams {
   return new URLSearchParams(window.location.search)
 }
 
-export default function MonitorForm({ monitor, tags, notificationChannels, groups = [] }: MonitorFormProps) {
+export default function MonitorForm({
+  monitor,
+  tags,
+  notificationChannels,
+  groups = [],
+}: MonitorFormProps) {
   const isEditing = !!monitor
   const params = !isEditing ? getSearchParams() : null
 
@@ -113,7 +118,9 @@ export default function MonitorForm({ monitor, tags, notificationChannels, group
 
           {data.ssl_monitoring_enabled && (
             <fieldset>
-              <legend className="mb-2 font-medium text-sm">Notify when SSL expires within (days)</legend>
+              <legend className="mb-2 font-medium text-sm">
+                Notify when SSL expires within (days)
+              </legend>
               <div className="flex flex-wrap gap-3">
                 {[30, 14, 7, 3, 1].map((days) => (
                   <Checkbox
@@ -221,7 +228,12 @@ export default function MonitorForm({ monitor, tags, notificationChannels, group
         >
           <Label>Group (optional)</Label>
           <SelectTrigger />
-          <SelectContent items={[{ id: "", name: "No Group" }, ...groups.map((g) => ({ id: String(g.id), name: g.name }))]}>
+          <SelectContent
+            items={[
+              { id: "", name: "No Group" },
+              ...groups.map((g) => ({ id: String(g.id), name: g.name })),
+            ]}
+          >
             {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
           </SelectContent>
         </Select>

@@ -22,7 +22,9 @@ export default function TeamsCreate() {
   return (
     <>
       <Head title="Create Team" />
-      <Heading level={2} className="mb-6">Create Team</Heading>
+      <Heading level={2} className="mb-6">
+        Create Team
+      </Heading>
       <Card>
         <CardContent className="pt-6">
           <Form validationErrors={errors} onSubmit={submit} className="max-w-lg space-y-6">

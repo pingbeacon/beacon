@@ -50,10 +50,7 @@ export default function Register() {
               Register
             </Button>
             <div className="text-center">
-              <Link
-                href="/login"
-                className="text-base/6 text-primary hover:underline sm:text-sm/6"
-              >
+              <Link href="/login" className="text-base/6 text-primary hover:underline sm:text-sm/6">
                 Already registered?
               </Link>
             </div>

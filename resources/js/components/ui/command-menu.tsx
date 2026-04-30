@@ -222,7 +222,9 @@ const renderer: CollectionRenderer = {
   CollectionRoot(props) {
     if (props.collection.size === 0) {
       return (
-        <div className="col-span-full p-4 text-center text-muted-foreground text-sm">No results found.</div>
+        <div className="col-span-full p-4 text-center text-muted-foreground text-sm">
+          No results found.
+        </div>
       )
     }
     return <DefaultCollectionRenderer.CollectionRoot {...props} />

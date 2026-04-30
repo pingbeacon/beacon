@@ -5,7 +5,9 @@ import { configureEcho } from "@laravel/echo-react"
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers"
 import { createRoot, hydrateRoot } from "react-dom/client"
 
-const reverb = (window as Window & { __reverb__?: { key: string; host: string; port: number; scheme: string } }).__reverb__ ?? {}
+const reverb =
+  (window as Window & { __reverb__?: { key: string; host: string; port: number; scheme: string } })
+    .__reverb__ ?? {}
 
 configureEcho({
   broadcaster: "reverb",

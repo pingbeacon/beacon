@@ -62,13 +62,16 @@ export default function MonitorFilterBar({
         <Select
           aria-label="Filter by tag"
           selectedKey={tagFilter?.toString() ?? "all"}
-          onSelectionChange={(key) =>
-            onTagFilterChange(key === "all" ? null : Number(key))
-          }
+          onSelectionChange={(key) => onTagFilterChange(key === "all" ? null : Number(key))}
           className="w-40"
         >
           <SelectTrigger />
-          <SelectContent items={[{ id: "all", name: "All tags" }, ...tags.map((t) => ({ id: String(t.id), name: t.name }))]}>
+          <SelectContent
+            items={[
+              { id: "all", name: "All tags" },
+              ...tags.map((t) => ({ id: String(t.id), name: t.name })),
+            ]}
+          >
             {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
           </SelectContent>
         </Select>

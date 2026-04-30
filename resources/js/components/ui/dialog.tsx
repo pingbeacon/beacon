@@ -65,7 +65,10 @@ const DialogTitle = ({ className, ref, ...props }: DialogTitleProps) => (
   <Heading
     slot="title"
     ref={ref}
-    className={twMerge("text-balance font-semibold text-foreground text-lg/6 sm:text-base/6", className)}
+    className={twMerge(
+      "text-balance font-semibold text-foreground text-lg/6 sm:text-base/6",
+      className,
+    )}
     {...props}
   />
 )

@@ -75,9 +75,7 @@ export default function BulkActionToolbar({ selectedIds, onClear }: BulkActionTo
   return createPortal(
     <div
       className={`fixed inset-x-0 bottom-0 z-50 flex justify-center pb-6 transition-all duration-300 ease-out ${
-        animateIn
-          ? "translate-y-0 opacity-100"
-          : "translate-y-full opacity-0"
+        animateIn ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
       }`}
     >
       <div
@@ -115,10 +113,12 @@ export default function BulkActionToolbar({ selectedIds, onClear }: BulkActionTo
             </Button>
             <ModalContent role="alertdialog">
               <ModalHeader>
-                <ModalTitle>Delete {count} Monitor{count > 1 ? "s" : ""}</ModalTitle>
+                <ModalTitle>
+                  Delete {count} Monitor{count > 1 ? "s" : ""}
+                </ModalTitle>
                 <ModalDescription>
-                  Are you sure you want to delete {count} monitor{count > 1 ? "s" : ""}? They will be
-                  archived and can be restored later.
+                  Are you sure you want to delete {count} monitor{count > 1 ? "s" : ""}? They will
+                  be archived and can be restored later.
                 </ModalDescription>
               </ModalHeader>
               <ModalBody />

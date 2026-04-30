@@ -16,7 +16,10 @@ export default function MaintenanceWindowsCreate({ monitors, groups }: Props) {
       <Head title="Create Maintenance Window" />
       <Container className="pt-2 pb-8">
         <Card>
-          <CardHeader title="Create Maintenance Window" description="Schedule maintenance to suppress notifications." />
+          <CardHeader
+            title="Create Maintenance Window"
+            description="Schedule maintenance to suppress notifications."
+          />
           <CardContent>
             <MaintenanceWindowForm monitors={monitors} groups={groups} />
           </CardContent>
