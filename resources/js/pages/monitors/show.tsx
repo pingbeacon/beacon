@@ -29,6 +29,7 @@ import { Tracker } from "@/components/ui/tracker"
 import AppLayout from "@/layouts/app-layout"
 import { statusBadgeIntent, uptimeColor } from "@/lib/color"
 import { formatInterval, heartbeatsToTracker } from "@/lib/heartbeats"
+import { RoutingRulesTable } from "@/pages/monitors/components/routing-rules-table"
 import monitorRoutes from "@/routes/monitors"
 import { hydrate, subscribeToEvents, useMonitor } from "@/stores/monitor-realtime"
 import type {
@@ -41,7 +42,6 @@ import type {
   SslCertificate,
   UptimeStats,
 } from "@/types/monitor"
-import { RoutingRulesTable } from "@/pages/monitors/components/routing-rules-table"
 
 interface PaginationLinks {
   first: string | null
