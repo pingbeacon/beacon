@@ -75,6 +75,28 @@ services:
             pgsql:
                 condition: service_healthy
         restart: unless-stopped
+    scheduler:
+        image: sail-8.4/app
+        command:
+            - php
+            - artisan
+            - 'schedule:work'
+        environment:
+            WWWUSER: '${WWWUSER}'
+            LARAVEL_SAIL: 1
+            REVERB_HOST: reverb
+            REVERB_PORT: '8080'
+            REVERB_SCHEME: http
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - sail
+        depends_on:
+            laravel.test:
+                condition: service_started
+            pgsql:
+                condition: service_healthy
+        restart: unless-stopped
     pgsql:
         image: 'postgres:18-alpine'
         ports:
