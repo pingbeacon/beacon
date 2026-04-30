@@ -3,10 +3,12 @@
 namespace App\Jobs;
 
 use App\Actions\HandleStatusChangeAction;
+use App\DTOs\AssertionPayload;
 use App\DTOs\CheckResult;
 use App\Events\HeartbeatRecorded;
 use App\Events\MonitorChecking;
 use App\Models\Monitor;
+use App\Services\Assertions\PersistAssertionResults;
 use App\Services\PhaseTimingCapture;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -27,7 +29,7 @@ class CheckHttpMonitorsBatchJob implements ShouldQueue
         $this->onQueue('monitors');
     }
 
-    public function handle(HandleStatusChangeAction $handleStatusChange): void
+    public function handle(HandleStatusChangeAction $handleStatusChange, PersistAssertionResults $persistAssertionResults): void
     {
         $monitors = Monitor::query()
             ->whereIn('id', $this->monitorIds)
@@ -67,6 +69,14 @@ class CheckHttpMonitorsBatchJob implements ShouldQueue
                 'phase_transfer_ms' => $result->phaseTransferMs,
                 'message' => $result->message,
             ]);
+
+            $persistAssertionResults->run($monitor, $heartbeat, new AssertionPayload(
+                statusCode: $result->statusCode,
+                latencyMs: $result->responseTime,
+                body: $result->responseBody,
+                headers: $result->responseHeaders,
+                contentType: $result->contentType,
+            ));
 
             $previousStatus = $monitor->status;
             $monitor->update(['last_checked_at' => now()]);
@@ -108,6 +118,13 @@ class CheckHttpMonitorsBatchJob implements ShouldQueue
             responseTime: $responseTime,
             statusCode: $statusCode,
             message: $message,
-        ))->withTiming($timing);
+        ))
+            ->withTiming($timing)
+            ->withResponse(self::truncateBody((string) $response->body()), $response->headers());
+    }
+
+    private static function truncateBody(string $body): string
+    {
+        return strlen($body) > 65_536 ? substr($body, 0, 65_536) : $body;
     }
 }

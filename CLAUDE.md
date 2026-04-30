@@ -47,6 +47,17 @@ This project has domain-specific skills available. You MUST activate the relevan
 - Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
 - Check for existing components to reuse before writing a new one.
 
+### Frontend component priority
+
+When you need a UI element, walk this list top-to-bottom and stop at the first match. Do **not** drop down a level just because one looks easier — each tier loses design-system fidelity, accessibility, and theme correctness.
+
+1. **`resources/js/components/primitives/`** — domain primitives (`StatusPill`, `StatusDot`, `Eyebrow`, `Tag`, `KpiCell`, `HeartbeatBar`, `HeartbeatStrip`, `ResponseSparkline`, `Terminal`, `SegmentedToggle`). Re-export through `@/components/primitives`. Visual gallery at `/dev/primitives`.
+2. **`resources/js/components/ui/`** — Intent UI components (React Aria + `tailwind-variants`): `Button`, `Modal`, `Select`/`SelectTrigger`/`SelectContent`/`SelectItem`, `TextField`/`Input`, `Checkbox`, `Tabs`, `Table`, `Badge`, `Field`/`Label`/`FieldError`, `Dialog`, `Popover`, `Tooltip`, `Tracker`, `Sheet`, `Sidebar`, etc. Compose these — e.g. `<Select>` always pairs with `<SelectTrigger />` + `<SelectContent items={…}>{(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}</SelectContent>`.
+3. **shadcn/ui via the `shadcn` skill** — only when an Intent UI primitive does not exist. Vet the shadcn component, then port it into `resources/js/components/ui/` with project tokens (no shadcn defaults).
+4. **Bare HTML / hand-rolled JSX** — last resort. Requires explicit reason ("no Intent UI equivalent and shadcn doesn't ship one either"). Never use bare `<select>`, `<input>`, `<button>` when a project component exists — they bypass tokens, focus rings, and accessibility wiring.
+
+If a vitest fails because a primitive needs a wrapper (`ListBoxItem cannot be rendered outside a collection`), that means you used the right component but skipped its required parent — fix the composition, do not downgrade to bare HTML.
+
 ## Verification Scripts
 
 - Do not create verification scripts or tinker when tests cover that functionality and prove they work. Unit and feature tests are more important.

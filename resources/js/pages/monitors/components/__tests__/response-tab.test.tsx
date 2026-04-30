@@ -72,7 +72,7 @@ describe("ResponseTab", () => {
     expect(screen.getByLabelText("Phase breakdown")).toBeInTheDocument()
     expect(screen.getByText(/where time is spent/i)).toBeInTheDocument()
     expect(screen.getByText(/responses bucketed/i)).toBeInTheDocument()
-    expect(screen.getByText(/assertion pass\/fail timeline/i)).toBeInTheDocument()
+    expect(screen.getByText(/per-check pass\/fail/i)).toBeInTheDocument()
     expect(screen.getByLabelText("Slowest checks")).toBeInTheDocument()
 
     const active = screen.getByRole("button", { name: "24h" })

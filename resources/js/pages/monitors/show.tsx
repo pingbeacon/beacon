@@ -6,7 +6,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/20/solid"
 import { Head, router, WhenVisible } from "@inertiajs/react"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Area, AreaChart } from "recharts"
 import CheckSslCertificateController from "@/actions/App/Http/Controllers/CheckSslCertificateController"
 import ConfirmDeleteModal from "@/components/confirm-delete-modal"
@@ -29,6 +29,7 @@ import { Tracker } from "@/components/ui/tracker"
 import AppLayout from "@/layouts/app-layout"
 import { statusBadgeIntent, uptimeColor } from "@/lib/color"
 import { formatInterval, heartbeatsToTracker } from "@/lib/heartbeats"
+import { AssertionsTab, type AssertionRowPayload } from "@/pages/monitors/components/assertions-tab"
 import { EscalationTimeline } from "@/pages/monitors/components/escalation-timeline"
 import { NotificationDeliveryLog } from "@/pages/monitors/components/notification-delivery-log"
 import { ResponseTab, type ResponseTabPeriod } from "@/pages/monitors/components/response-tab"
@@ -77,6 +78,7 @@ interface Props {
   notificationRoutes?: NotificationRoute[]
   escalationPolicy?: EscalationPolicy | null
   activeEscalation?: ActiveEscalation | null
+  assertions?: AssertionRowPayload[]
 }
 
 function formatDuration(start: string, end: string | null): string {
@@ -145,6 +147,7 @@ export default function MonitorsShow({
   notificationRoutes,
   escalationPolicy,
   activeEscalation,
+  assertions,
 }: Props) {
   useEffect(() => {
     const seed: Monitor = {
@@ -164,7 +167,15 @@ export default function MonitorsShow({
   const [chartPeriod, setChartPeriod] = useState(initialChartPeriod ?? "24h")
   const [scanningSSL, setScanningSSL] = useState(false)
 
-  const validTabs = ["overview", "heartbeats", "incidents", "response", "ssl", "notifications"]
+  const validTabs = [
+    "overview",
+    "heartbeats",
+    "incidents",
+    "response",
+    "assertions",
+    "ssl",
+    "notifications",
+  ]
   const getInitialTab = () => {
     const tab = new URLSearchParams(window.location.search).get("tab")
     return validTabs.includes(tab ?? "") ? tab! : "overview"
@@ -220,11 +231,26 @@ export default function MonitorsShow({
   }
 
   const monitorId = monitor.id
+  const assertionRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (assertionRefreshTimerRef.current) clearTimeout(assertionRefreshTimerRef.current)
+    }
+  }, [])
 
   useEffect(() => {
     return subscribeToEvents((event) => {
       if (event.payload.monitorId !== monitorId) return
       if (event.type === "heartbeat") {
+        // Debounce-refetch the assertions deferred prop so the per-rule
+        // pass/fail strip on the Response + Assertions tabs reflects the
+        // assertion_results emitted by the just-landed heartbeat.
+        if (assertionRefreshTimerRef.current) clearTimeout(assertionRefreshTimerRef.current)
+        assertionRefreshTimerRef.current = setTimeout(() => {
+          router.reload({ only: ["assertions"], preserveScroll: true })
+        }, 1500)
+
         if (
           event.payload.heartbeat.response_time !== null &&
           (chartPeriod === "1h" || chartPeriod === "24h")
@@ -401,6 +427,7 @@ export default function MonitorsShow({
             <Tab id="heartbeats">Heartbeats</Tab>
             <Tab id="incidents">Incidents</Tab>
             <Tab id="response">Response</Tab>
+            <Tab id="assertions">Assertions</Tab>
             {monitor.type === "http" && monitor.ssl_monitoring_enabled && (
               <Tab id="ssl">SSL Certificate</Tab>
             )}
@@ -923,7 +950,18 @@ export default function MonitorsShow({
               chartData={chartData ?? []}
               prevChartData={prevChartData ?? []}
               heartbeats={liveHeartbeats}
+              assertions={assertions ?? []}
             />
+          </TabPanel>
+
+          {/* ── Assertions tab ── */}
+          <TabPanel id="assertions" className="pt-4">
+            <WhenVisible
+              fallback={<div className="h-64 animate-pulse rounded-sm bg-muted" />}
+              data="assertions"
+            >
+              <AssertionsTab monitorId={monitor.id} assertions={assertions} />
+            </WhenVisible>
           </TabPanel>
 
           {/* ── SSL tab ── */}

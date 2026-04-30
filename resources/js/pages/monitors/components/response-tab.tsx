@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import MonitorPhaseTimingsController from "@/actions/App/Http/Controllers/MonitorPhaseTimingsController"
-import { Eyebrow } from "@/components/primitives"
+import { Eyebrow, SegmentedToggle } from "@/components/primitives"
+import { Checkbox } from "@/components/ui/checkbox"
+import type { AssertionRowPayload } from "@/pages/monitors/components/assertions-tab"
 import { subscribeToEvents } from "@/stores/monitor-realtime"
 import type { ChartDataPoint, Heartbeat } from "@/types/monitor"
 
@@ -40,6 +42,7 @@ interface Props {
   chartData: ChartDataPoint[] | null | undefined
   prevChartData: ChartDataPoint[] | null | undefined
   heartbeats: Heartbeat[]
+  assertions?: AssertionRowPayload[] | null
   sloMs?: number
   fetcher?: (url: string) => Promise<PhaseTimingsPayload>
 }
@@ -59,6 +62,7 @@ export function ResponseTab({
   chartData,
   prevChartData,
   heartbeats,
+  assertions,
   sloMs = 2000,
   fetcher = defaultFetcher,
 }: Props) {
@@ -148,7 +152,7 @@ export function ResponseTab({
       </div>
 
       <StatusCodesBars buckets={statusCodes} />
-      <AssertionTimelinePlaceholder />
+      <AssertionTimeline assertions={assertions ?? []} />
       <SlowestChecks heartbeats={heartbeats} />
     </section>
   )
@@ -167,40 +171,23 @@ function RangeSelector({
 }) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-3">
-      <div
-        className="flex flex-wrap items-center gap-1.5"
-        role="group"
-        aria-label="Response time period"
-      >
-        {PERIOD_ORDER.map((p) => (
-          <button
-            key={p}
-            type="button"
-            data-slot="response-range"
-            data-value={p}
-            data-selected={p === period ? "" : undefined}
-            aria-pressed={p === period}
-            onClick={() => onChange(p)}
-            className={
-              p === period
-                ? "rounded-full bg-primary px-3.5 py-1 font-semibold text-[11px] text-primary-foreground"
-                : "rounded-full border border-border px-3.5 py-1 text-[11px] text-muted-foreground hover:text-foreground"
-            }
-          >
-            {PERIOD_LABELS[p]}
-          </button>
-        ))}
-        <span aria-hidden className="mx-2 h-4 w-px bg-border" />
-        <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
-          <input
-            type="checkbox"
-            checked={compare}
-            onChange={(e) => onCompareChange(e.target.checked)}
-            className="size-3.5 accent-primary"
-            aria-label="Compare to previous period"
-          />
-          <span className="text-foreground">Compare to prev period</span>
-        </label>
+      <div className="flex flex-wrap items-center gap-3" data-slot="response-range-group">
+        <SegmentedToggle
+          aria-label="Response time period"
+          size="sm"
+          value={period}
+          onChange={(next) => onChange(next as ResponseTabPeriod)}
+          options={PERIOD_ORDER.map((p) => ({ value: p, label: PERIOD_LABELS[p] }))}
+        />
+        <span aria-hidden className="h-4 w-px bg-border" />
+        <Checkbox
+          isSelected={compare}
+          onChange={onCompareChange}
+          aria-label="Compare to previous period"
+          data-slot="response-compare-toggle"
+        >
+          Compare to prev period
+        </Checkbox>
       </div>
     </header>
   )
@@ -931,26 +918,76 @@ function StatusCodesBars({ buckets }: { buckets: StatusBucket[] }) {
   )
 }
 
-function AssertionTimelinePlaceholder() {
+function AssertionTimeline({ assertions }: { assertions: AssertionRowPayload[] }) {
+  const totalChecks = assertions.reduce((acc, a) => acc + a.total_24h, 0)
+  const totalFails = assertions.reduce((acc, a) => acc + a.fail_count_24h, 0)
+
   return (
     <article
       data-slot="assertion-timeline"
-      className="rounded-lg border border-border border-dashed bg-card px-5 py-4"
+      className="rounded-lg border border-border bg-card px-5 py-4"
     >
-      <header className="flex items-baseline justify-between">
+      <header className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
           <Eyebrow>assertions</Eyebrow>
           <p className="mt-0.5 font-semibold text-foreground text-sm">
             per-check pass/fail · last 24h
           </p>
         </div>
+        {assertions.length > 0 && (
+          <p className="text-[10px] text-muted-foreground">
+            {assertions.length} rule{assertions.length === 1 ? "" : "s"} · {totalFails} fail
+            {totalFails === 1 ? "" : "s"} of {totalChecks.toLocaleString()} checks
+          </p>
+        )}
       </header>
-      <p className="mt-3 text-muted-foreground text-sm">
-        Assertion pass/fail timeline lands once the assertions module ships.
-      </p>
+      {assertions.length === 0 ? (
+        <p className="mt-3 text-muted-foreground text-sm">
+          No assertions defined for this monitor — open the Assertions tab to add one.
+        </p>
+      ) : (
+        <div className="mt-3 flex flex-col gap-1.5">
+          {assertions.map((a) => (
+            <div
+              key={a.id}
+              data-slot="assertion-timeline-row"
+              data-assertion-id={a.id}
+              className={`grid items-center gap-3 ${a.muted ? "opacity-50" : ""}`}
+              style={{ gridTemplateColumns: "minmax(0, 180px) 1fr 60px" }}
+            >
+              <span className="truncate font-mono text-[11px] text-muted-foreground">
+                {a.expression}
+              </span>
+              <div className="flex h-4 items-stretch gap-px">
+                {a.buckets.map((b, i) => (
+                  <div
+                    key={i}
+                    className={`flex-1 rounded-[1px] ${
+                      b === 2
+                        ? "bg-destructive"
+                        : b === 1
+                          ? "bg-warning"
+                          : b === 0
+                            ? "bg-success/45"
+                            : "bg-muted/30"
+                    }`}
+                  />
+                ))}
+              </div>
+              <span
+                className={`text-right font-mono text-[10px] ${
+                  a.state === "fail" ? "text-destructive" : "text-muted-foreground"
+                }`}
+              >
+                {a.pass_rate !== null ? `${a.pass_rate}%` : "—"}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="mt-3 flex justify-between border-border border-t pt-2 text-[9px] text-muted-foreground">
         <span>−24h</span>
-        <span className="text-foreground">last failure window</span>
+        <span className="text-foreground">last 24h window</span>
         <span>now</span>
       </div>
     </article>
@@ -1006,26 +1043,13 @@ function SlowestChecks({ heartbeats }: { heartbeats: Heartbeat[] }) {
             top {visible.length} sorted by {mode === "latest" ? "time" : "duration"}
           </p>
         </div>
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Slowest checks filter">
-          {modes.map((m) => (
-            <button
-              key={m.value}
-              type="button"
-              data-slot="slowest-filter"
-              data-value={m.value}
-              data-selected={mode === m.value ? "" : undefined}
-              aria-pressed={mode === m.value}
-              onClick={() => setMode(m.value)}
-              className={
-                mode === m.value
-                  ? "rounded-full bg-primary px-3 py-1 font-semibold text-[10px] text-primary-foreground"
-                  : "rounded-full border border-border px-3 py-1 text-[10px] text-muted-foreground hover:text-foreground"
-              }
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
+        <SegmentedToggle
+          aria-label="Slowest checks filter"
+          size="sm"
+          value={mode}
+          onChange={(next) => setMode(next as SlowestMode)}
+          options={modes.map((m) => ({ value: m.value, label: m.label }))}
+        />
       </header>
       {visible.length === 0 ? (
         <p className="px-5 py-6 text-center text-muted-foreground text-sm">
