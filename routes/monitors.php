@@ -16,6 +16,7 @@ use App\Http\Controllers\NotificationChannelController;
 use App\Http\Controllers\NotificationChannelTestController;
 use App\Http\Controllers\StatusPageController;
 use App\Http\Controllers\TagController;
+use App\Http\Controllers\TestNowMonitorController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -29,6 +30,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('monitors/bulk/delete', BulkDeleteMonitorsController::class)->name('monitors.bulk.delete');
     Route::get('monitors/export', ExportMonitorsController::class)->name('monitors.export');
     Route::post('monitors/import', ImportMonitorsController::class)->name('monitors.import');
+    Route::post('monitors/test-now', TestNowMonitorController::class)->name('monitors.test-now');
 
     Route::resource('monitors', MonitorController::class);
     Route::post('monitors/{monitor}/toggle', MonitorToggleController::class)->name('monitors.toggle');
