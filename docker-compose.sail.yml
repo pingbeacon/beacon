@@ -97,6 +97,27 @@ services:
             pgsql:
                 condition: service_healthy
         restart: unless-stopped
+    fake-servers:
+        image: sail-8.4/app
+        command:
+            - php
+            - artisan
+            - 'dev:fake-servers'
+        environment:
+            WWWUSER: '${WWWUSER}'
+            LARAVEL_SAIL: 1
+            APP_ENV: local
+            FAKE_SERVERS_BIND_HOST: 0.0.0.0
+        ports:
+            - '9001-9020:9001-9020'
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - sail
+        depends_on:
+            laravel.test:
+                condition: service_started
+        restart: unless-stopped
     pgsql:
         image: 'postgres:18-alpine'
         ports:

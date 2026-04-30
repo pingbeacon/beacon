@@ -16,8 +16,10 @@ beforeEach(function () {
 test('seeder registers one local monitor per registry port', function () {
     (new MonitorSeeder)->run();
 
+    $host = config('services.fake_servers.host');
+
     foreach (DevFakeServersCommand::profileRegistry() as $port => $profile) {
-        $monitor = Monitor::where('url', "http://127.0.0.1:{$port}")->first();
+        $monitor = Monitor::where('url', "http://{$host}:{$port}")->first();
 
         expect($monitor)->not->toBeNull();
         expect($monitor->name)->toBe($profile['name']);
@@ -30,10 +32,11 @@ test('seeder registers one local monitor per registry port', function () {
 test('persistent-down profiles get one open incident; flap profiles get none', function () {
     (new MonitorSeeder)->run();
 
+    $host = config('services.fake_servers.host');
     $persistentDownKinds = ['down_500', 'unbound', 'timeout'];
 
     foreach (DevFakeServersCommand::profileRegistry() as $port => $profile) {
-        $monitor = Monitor::where('url', "http://127.0.0.1:{$port}")->firstOrFail();
+        $monitor = Monitor::where('url', "http://{$host}:{$port}")->firstOrFail();
         $openIncidents = Incident::where('monitor_id', $monitor->id)->whereNull('resolved_at')->count();
 
         if (in_array($profile['kind'], $persistentDownKinds, true)) {
@@ -56,8 +59,36 @@ test('seeder retains the two HTTPS demo monitors for SSL coverage', function () 
 test('seeder produces 20 local fake-server monitors and 35 total', function () {
     (new MonitorSeeder)->run();
 
-    $local = Monitor::where('url', 'like', 'http://127.0.0.1:%')->count();
+    $host = config('services.fake_servers.host');
+    $local = Monitor::where('url', 'like', "http://{$host}:%")->count();
 
     expect($local)->toBe(20);
     expect(Monitor::count())->toBe(35);
+});
+
+test('seeder uses configured services.fake_servers.host for local monitor URLs', function () {
+    config(['services.fake_servers.host' => 'fake-servers']);
+
+    (new MonitorSeeder)->run();
+
+    expect(Monitor::where('url', 'http://fake-servers:9001')->exists())->toBeTrue();
+    expect(Monitor::where('url', 'like', 'http://127.0.0.1:%')->exists())->toBeFalse();
+});
+
+test('default fake-servers host is 127.0.0.1 so composer run dev path is preserved', function () {
+    expect(config('services.fake_servers.host'))->toBe('127.0.0.1');
+});
+
+test('default fake-servers bind host is 127.0.0.1', function () {
+    expect(config('services.fake_servers.bind_host'))->toBe('127.0.0.1');
+});
+
+test('DevFakeServersCommand bind host reflects services.fake_servers.bind_host config', function () {
+    config(['services.fake_servers.bind_host' => '0.0.0.0']);
+
+    expect(DevFakeServersCommand::bindHost())->toBe('0.0.0.0');
+
+    config(['services.fake_servers.bind_host' => '127.0.0.1']);
+
+    expect(DevFakeServersCommand::bindHost())->toBe('127.0.0.1');
 });
