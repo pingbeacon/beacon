@@ -185,20 +185,40 @@ class MonitorController extends Controller
                 fn () => $monitor->incidents()->latest('started_at')->get()
             ),
             'chartData' => Inertia::defer(fn () => $this->getChartData($monitor, $period, $cutoff)),
+            'prevChartData' => Inertia::defer(function () use ($monitor, $period, $cutoff) {
+                $previousCutoff = $this->previousCutoffFor($period, $cutoff);
+
+                return $this->getChartData($monitor, $period, $previousCutoff, $cutoff);
+            }),
             'uptimeStats' => Inertia::defer(fn () => $monitor->uptimeStats()),
         ]);
+    }
+
+    private function previousCutoffFor(string $period, Carbon $cutoff): Carbon
+    {
+        return match ($period) {
+            '1h' => $cutoff->copy()->subHour(),
+            '7d' => $cutoff->copy()->subDays(7),
+            '30d' => $cutoff->copy()->subDays(30),
+            default => $cutoff->copy()->subHours(24),
+        };
     }
 
     /**
      * Get chart data for a monitor, aggregated by period.
      */
-    private function getChartData(Monitor $monitor, string $period, Carbon $cutoff): Collection
+    private function getChartData(Monitor $monitor, string $period, Carbon $cutoff, ?Carbon $until = null): Collection
     {
-        $heartbeats = $monitor->heartbeats()
+        $query = $monitor->heartbeats()
             ->where('created_at', '>=', $cutoff)
             ->whereNotNull('response_time')
-            ->oldest('created_at')
-            ->get(['created_at', 'response_time', 'status']);
+            ->oldest('created_at');
+
+        if ($until !== null) {
+            $query->where('created_at', '<', $until);
+        }
+
+        $heartbeats = $query->get(['created_at', 'response_time', 'status']);
 
         if ($period === '7d') {
             return $heartbeats

@@ -30,16 +30,30 @@ class MonitorSeeder extends Seeder
             $monitor = Monitor::create($definition);
 
             if (! empty($heartbeats)) {
-                $rows = array_map(fn (array $hb) => [
-                    'monitor_id' => $monitor->id,
-                    'status' => $hb['status'],
-                    'status_code' => $hb['status_code'] ?? null,
-                    'response_time' => $hb['response_time'] ?? null,
-                    'message' => $hb['message'] ?? null,
-                    'created_at' => $hb['created_at'] instanceof Carbon
-                        ? $hb['created_at']->toDateTimeString()
-                        : $hb['created_at'],
-                ], $heartbeats);
+                $isHttp = ($definition['type'] ?? null) === 'http';
+                $isHttps = $isHttp && str_starts_with((string) ($definition['url'] ?? ''), 'https://');
+
+                $rows = array_map(function (array $hb) use ($monitor, $isHttp, $isHttps) {
+                    $phases = $isHttp && ($hb['response_time'] ?? null) !== null
+                        ? self::syntheticPhases((int) $hb['response_time'], $isHttps)
+                        : ['phase_dns_ms' => null, 'phase_tcp_ms' => null, 'phase_tls_ms' => null, 'phase_ttfb_ms' => null, 'phase_transfer_ms' => null];
+
+                    return [
+                        'monitor_id' => $monitor->id,
+                        'status' => $hb['status'],
+                        'status_code' => $hb['status_code'] ?? null,
+                        'response_time' => $hb['response_time'] ?? null,
+                        'phase_dns_ms' => $phases['phase_dns_ms'],
+                        'phase_tcp_ms' => $phases['phase_tcp_ms'],
+                        'phase_tls_ms' => $phases['phase_tls_ms'],
+                        'phase_ttfb_ms' => $phases['phase_ttfb_ms'],
+                        'phase_transfer_ms' => $phases['phase_transfer_ms'],
+                        'message' => $hb['message'] ?? null,
+                        'created_at' => $hb['created_at'] instanceof Carbon
+                            ? $hb['created_at']->toDateTimeString()
+                            : $hb['created_at'],
+                    ];
+                }, $heartbeats);
 
                 foreach (array_chunk($rows, 500) as $chunk) {
                     DB::table('heartbeats')->insert($chunk);
@@ -181,6 +195,36 @@ class MonitorSeeder extends Seeder
             'response_time' => null,
             'message' => $message,
             'created_at' => $at->copy(),
+        ];
+    }
+
+    /**
+     * Split a total response time across the curl phase counters with realistic
+     * proportions so the Response tab has demo-quality phase data.
+     *
+     * @return array{phase_dns_ms: int, phase_tcp_ms: int, phase_tls_ms: ?int, phase_ttfb_ms: int, phase_transfer_ms: int}
+     */
+    private static function syntheticPhases(int $totalMs, bool $isHttps): array
+    {
+        $totalMs = max(1, $totalMs);
+        $dnsPct = mt_rand(5, 12) / 100;
+        $tcpPct = mt_rand(5, 12) / 100;
+        $tlsPct = $isHttps ? mt_rand(12, 22) / 100 : 0;
+        $ttfbPct = mt_rand(45, 60) / 100;
+
+        $dns = max(1, (int) round($totalMs * $dnsPct));
+        $tcp = max(1, (int) round($totalMs * $tcpPct));
+        $tls = $isHttps ? max(1, (int) round($totalMs * $tlsPct)) : null;
+        $ttfb = max(1, (int) round($totalMs * $ttfbPct));
+        $allocated = $dns + $tcp + ($tls ?? 0) + $ttfb;
+        $transfer = max(1, $totalMs - $allocated);
+
+        return [
+            'phase_dns_ms' => $dns,
+            'phase_tcp_ms' => $tcp,
+            'phase_tls_ms' => $tls,
+            'phase_ttfb_ms' => $ttfb,
+            'phase_transfer_ms' => $transfer,
         ];
     }
 

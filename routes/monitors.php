@@ -12,6 +12,7 @@ use App\Http\Controllers\MonitorController;
 use App\Http\Controllers\MonitorGroupController;
 use App\Http\Controllers\MonitorGroupReorderController;
 use App\Http\Controllers\MonitorNotificationDeliveryController;
+use App\Http\Controllers\MonitorPhaseTimingsController;
 use App\Http\Controllers\MonitorRestoreController;
 use App\Http\Controllers\MonitorToggleController;
 use App\Http\Controllers\NotificationChannelController;
@@ -52,6 +53,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('notification-deliveries/fired-today', FiredTodayDeliveriesController::class)->name('notification-deliveries.fired-today');
 
     Route::get('monitors/{monitor}/notification-deliveries', [MonitorNotificationDeliveryController::class, 'index'])->name('monitors.notification-deliveries.index');
+    Route::get('monitors/{monitor}/phase-timings', MonitorPhaseTimingsController::class)->name('monitors.phase-timings');
 
     Route::post('monitors/{monitor}/notification-routes', [NotificationRouteController::class, 'store'])->name('monitors.notification-routes.store');
     Route::patch('monitors/{monitor}/notification-routes/{notificationRoute}', [NotificationRouteController::class, 'update'])->name('monitors.notification-routes.update');
