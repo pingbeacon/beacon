@@ -197,4 +197,38 @@ class Monitor extends Model
             ->limit($count)
             ->get();
     }
+
+    /**
+     * Uptime percentage computed from already-loaded heartbeats.
+     *
+     * Falls back to 100.0 when the heartbeats relation is empty so freshly
+     * created monitors don't render as 0%.
+     */
+    public function uptimePercentageFromLoaded(): float
+    {
+        $heartbeats = $this->relationLoaded('heartbeats') ? $this->heartbeats : collect();
+
+        if ($heartbeats->isEmpty()) {
+            return 100.0;
+        }
+
+        $upCount = $heartbeats->where('status', 'up')->count();
+
+        return round(($upCount / $heartbeats->count()) * 100, 2);
+    }
+
+    public function averageResponseTimeFromLoaded(): ?float
+    {
+        $heartbeats = $this->relationLoaded('heartbeats') ? $this->heartbeats : collect();
+
+        $values = $heartbeats
+            ->whereNotNull('response_time')
+            ->pluck('response_time');
+
+        if ($values->isEmpty()) {
+            return null;
+        }
+
+        return round($values->avg(), 2);
+    }
 }
