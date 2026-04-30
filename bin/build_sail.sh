@@ -123,6 +123,17 @@ if [ -f package.json ]; then
     ok "npm deps installed"
 fi
 
+# --- Playwright browsers (Pest browser tests) ---
+if [ -f node_modules/.bin/playwright ]; then
+    if [ ! -d node_modules/playwright-core/.local-browsers ]; then
+        info "Installing Playwright Chromium (one-time, ~120MB)..."
+        $SAIL exec -T laravel.test bash -c 'PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --force'
+        ok "Playwright Chromium installed"
+    else
+        ok "Playwright browsers already present"
+    fi
+fi
+
 # --- Summary ---
 echo ""
 ok "Sail stack ready."
