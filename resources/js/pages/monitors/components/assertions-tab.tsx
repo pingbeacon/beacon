@@ -157,7 +157,7 @@ function AssertionsSummary({ assertions }: { assertions: AssertionRowPayload[] }
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4" data-slot="assertions-summary">
       {items.map((it) => (
         <div key={it.label} className="rounded-lg border border-border bg-card px-4 py-3">
-          <div className="text-muted-foreground text-[10px] uppercase tracking-wider">
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
             {it.label}
           </div>
           <div
