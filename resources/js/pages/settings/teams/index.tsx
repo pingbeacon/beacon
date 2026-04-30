@@ -1,10 +1,10 @@
+import { Head, Link } from "@inertiajs/react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Heading } from "@/components/ui/heading"
 import AppLayout from "@/layouts/app-layout"
 import SettingsLayout from "@/layouts/settings-layout"
-import { Head, Link } from "@inertiajs/react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Heading } from "@/components/ui/heading"
 import type { Team } from "@/types/monitor"
 
 interface Props {

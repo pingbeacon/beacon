@@ -1,14 +1,14 @@
 import { useForm } from "@inertiajs/react"
 import { Form } from "react-aria-components"
-import { TextField } from "@/components/ui/text-field"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { FieldError, Label } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
 import { NumberField, NumberInput } from "@/components/ui/number-field"
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
+import { TextField } from "@/components/ui/text-field"
 import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
-import type { Monitor, MonitorGroup, Tag, NotificationChannel } from "@/types/monitor"
+import type { Monitor, MonitorGroup, NotificationChannel, Tag } from "@/types/monitor"
 
 interface MonitorFormProps {
   monitor?: Monitor

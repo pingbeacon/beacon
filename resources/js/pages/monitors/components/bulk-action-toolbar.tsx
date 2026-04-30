@@ -1,8 +1,8 @@
+import { PauseIcon, PlayIcon, TrashIcon, XMarkIcon } from "@heroicons/react/20/solid"
+import { router } from "@inertiajs/react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { router } from "@inertiajs/react"
 import { Button } from "@/components/ui/button"
-import { PauseIcon, PlayIcon, TrashIcon, XMarkIcon } from "@heroicons/react/20/solid"
 import {
   Modal,
   ModalBody,
@@ -83,7 +83,7 @@ export default function BulkActionToolbar({ selectedIds, onClear }: BulkActionTo
         aria-label="Bulk actions"
         className="flex items-center gap-3 rounded-xl border bg-background px-5 py-3 shadow-2xl"
       >
-        <span className="text-sm font-medium tabular-nums" aria-live="polite" aria-atomic="true">
+        <span className="font-medium text-sm tabular-nums" aria-live="polite" aria-atomic="true">
           {count} monitor{count > 1 ? "s" : ""} selected
         </span>
         <div className="h-5 w-px bg-border" />

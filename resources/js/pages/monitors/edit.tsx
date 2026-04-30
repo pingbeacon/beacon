@@ -1,7 +1,7 @@
-import AppLayout from "@/layouts/app-layout"
 import { Head } from "@inertiajs/react"
+import AppLayout from "@/layouts/app-layout"
+import type { Monitor, MonitorGroup, NotificationChannel, Tag } from "@/types/monitor"
 import MonitorWizard from "./components/monitor-wizard"
-import type { Monitor, MonitorGroup, Tag, NotificationChannel } from "@/types/monitor"
 
 interface Props {
   monitor: Monitor

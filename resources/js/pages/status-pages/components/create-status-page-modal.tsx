@@ -1,20 +1,20 @@
+import { PlusIcon } from "@heroicons/react/20/solid"
+import { router, useForm } from "@inertiajs/react"
 import { useState } from "react"
-import { useForm, router } from "@inertiajs/react"
 import { Form } from "react-aria-components"
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  ModalBody,
-  ModalFooter,
-} from "@/components/ui/modal"
-import { TextField } from "@/components/ui/text-field"
 import { Button } from "@/components/ui/button"
 import { FieldError, Label } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import {
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+} from "@/components/ui/modal"
+import { TextField } from "@/components/ui/text-field"
 import { Textarea } from "@/components/ui/textarea"
-import { PlusIcon } from "@heroicons/react/20/solid"
 
 interface CreateStatusPageModalProps {
   children?: React.ReactNode

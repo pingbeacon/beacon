@@ -1,4 +1,3 @@
-import { router } from "@inertiajs/react"
 import {
   BellAlertIcon,
   ChartBarIcon,
@@ -8,6 +7,7 @@ import {
   PlusCircleIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline"
+import { router } from "@inertiajs/react"
 import {
   CommandMenu,
   CommandMenuItem,

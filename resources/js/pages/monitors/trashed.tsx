@@ -1,13 +1,13 @@
-import AppLayout from "@/layouts/app-layout"
 import { Head, router } from "@inertiajs/react"
-import { Container } from "@/components/ui/container"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import ConfirmDeleteModal from "@/components/confirm-delete-modal"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Container } from "@/components/ui/container"
 import { Link } from "@/components/ui/link"
+import AppLayout from "@/layouts/app-layout"
 import type { Monitor } from "@/types/monitor"
-import ConfirmDeleteModal from "@/components/confirm-delete-modal"
 
 interface TrashedMonitor extends Monitor {
   deleted_at: string

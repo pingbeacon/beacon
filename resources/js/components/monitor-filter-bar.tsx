@@ -1,9 +1,9 @@
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid"
-import { TextField } from "@/components/ui/text-field"
 import { Input, InputGroup } from "@/components/ui/input"
-import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select"
-import type { Tag } from "@/types/monitor"
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
+import { TextField } from "@/components/ui/text-field"
 import type { StatusFilterValue } from "@/hooks/use-monitor-filters"
+import type { Tag } from "@/types/monitor"
 
 interface MonitorFilterBarProps {
   searchQuery: string

@@ -1,9 +1,9 @@
-import AppLayout from "@/layouts/app-layout"
 import { Head } from "@inertiajs/react"
-import { Container } from "@/components/ui/container"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import MaintenanceWindowForm from "./components/maintenance-window-form"
+import { Container } from "@/components/ui/container"
+import AppLayout from "@/layouts/app-layout"
 import type { MaintenanceWindow, Monitor, MonitorGroup } from "@/types/monitor"
+import MaintenanceWindowForm from "./components/maintenance-window-form"
 
 interface Props {
   maintenanceWindow: MaintenanceWindow

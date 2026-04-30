@@ -1,12 +1,12 @@
-import AppLayout from "@/layouts/app-layout"
-import SettingsLayout from "@/layouts/settings-layout"
 import { Head, Link, router } from "@inertiajs/react"
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Label } from "@/components/ui/field"
 import { Heading } from "@/components/ui/heading"
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
-import { Label } from "@/components/ui/field"
+import AppLayout from "@/layouts/app-layout"
+import SettingsLayout from "@/layouts/settings-layout"
 import type { AuditLog } from "@/types/monitor"
 
 interface PaginatedData<T> {
