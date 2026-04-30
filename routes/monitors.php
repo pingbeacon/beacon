@@ -5,11 +5,13 @@ use App\Http\Controllers\BulkPauseMonitorsController;
 use App\Http\Controllers\BulkResumeMonitorsController;
 use App\Http\Controllers\CheckSslCertificateController;
 use App\Http\Controllers\ExportMonitorsController;
+use App\Http\Controllers\FiredTodayDeliveriesController;
 use App\Http\Controllers\ImportMonitorsController;
 use App\Http\Controllers\MaintenanceWindowController;
 use App\Http\Controllers\MonitorController;
 use App\Http\Controllers\MonitorGroupController;
 use App\Http\Controllers\MonitorGroupReorderController;
+use App\Http\Controllers\MonitorNotificationDeliveryController;
 use App\Http\Controllers\MonitorRestoreController;
 use App\Http\Controllers\MonitorToggleController;
 use App\Http\Controllers\NotificationChannelController;
@@ -46,6 +48,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('notification-channels', NotificationChannelController::class)->except(['show']);
     Route::post('notification-channels/{notificationChannel}/test', NotificationChannelTestController::class)->name('notification-channels.test');
+
+    Route::get('notification-deliveries/fired-today', FiredTodayDeliveriesController::class)->name('notification-deliveries.fired-today');
+
+    Route::get('monitors/{monitor}/notification-deliveries', [MonitorNotificationDeliveryController::class, 'index'])->name('monitors.notification-deliveries.index');
 
     Route::post('monitors/{monitor}/notification-routes', [NotificationRouteController::class, 'store'])->name('monitors.notification-routes.store');
     Route::patch('monitors/{monitor}/notification-routes/{notificationRoute}', [NotificationRouteController::class, 'update'])->name('monitors.notification-routes.update');

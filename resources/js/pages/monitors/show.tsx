@@ -30,6 +30,7 @@ import AppLayout from "@/layouts/app-layout"
 import { statusBadgeIntent, uptimeColor } from "@/lib/color"
 import { formatInterval, heartbeatsToTracker } from "@/lib/heartbeats"
 import { EscalationTimeline } from "@/pages/monitors/components/escalation-timeline"
+import { NotificationDeliveryLog } from "@/pages/monitors/components/notification-delivery-log"
 import { RoutingRulesTable } from "@/pages/monitors/components/routing-rules-table"
 import monitorRoutes from "@/routes/monitors"
 import { hydrate, subscribeToEvents, useMonitor } from "@/stores/monitor-realtime"
@@ -1026,6 +1027,7 @@ export default function MonitorsShow({
                 channels={teamNotificationChannels ?? []}
                 active={activeEscalation ?? null}
               />
+              <NotificationDeliveryLog monitorId={monitor.id} />
             </div>
           </TabPanel>
         </Tabs>
