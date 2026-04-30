@@ -35,4 +35,22 @@ describe("HeartbeatStrip", () => {
     const { getByText } = render(<HeartbeatStrip buckets={[]} emptyLabel="no data" />)
     expect(getByText("no data")).toBeInTheDocument()
   })
+
+  it("exposes bucket title as aria-label and role=img for screen readers", () => {
+    const { container } = render(
+      <HeartbeatStrip
+        buckets={[
+          { status: "up", title: "12:00 — up" },
+          { status: "down", title: "12:01 — down" },
+          { status: "up" },
+        ]}
+      />,
+    )
+    const bars = container.querySelectorAll(".heartbeat-bar")
+    expect(bars[0]).toHaveAttribute("aria-label", "12:00 — up")
+    expect(bars[0]).toHaveAttribute("role", "img")
+    expect(bars[1]).toHaveAttribute("aria-label", "12:01 — down")
+    expect(bars[2]).not.toHaveAttribute("aria-label")
+    expect(bars[2]).not.toHaveAttribute("role")
+  })
 })

@@ -84,7 +84,13 @@ export function HeartbeatStrip({
       {...props}
     >
       {buckets.map((bucket, i) => (
-        <HeartbeatBar key={i} status={bucket.status} title={bucket.title} />
+        <HeartbeatBar
+          key={i}
+          status={bucket.status}
+          title={bucket.title}
+          role={bucket.title ? "img" : undefined}
+          aria-label={bucket.title}
+        />
       ))}
     </div>
   )
