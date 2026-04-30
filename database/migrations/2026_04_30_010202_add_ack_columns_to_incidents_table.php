@@ -27,6 +27,7 @@ return new class extends Migration
             });
 
         Schema::table('incidents', function (Blueprint $table) {
+            $table->string('ack_token', 64)->nullable(false)->change();
             $table->unique('ack_token');
         });
     }
