@@ -58,6 +58,11 @@ export interface Heartbeat {
     status: HeartbeatStatus
     status_code: number | null
     response_time: number | null
+    phase_dns_ms: number | null
+    phase_tcp_ms: number | null
+    phase_tls_ms: number | null
+    phase_ttfb_ms: number | null
+    phase_transfer_ms: number | null
     message: string | null
     created_at: string
 }

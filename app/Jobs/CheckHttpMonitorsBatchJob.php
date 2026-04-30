@@ -7,6 +7,7 @@ use App\DTOs\CheckResult;
 use App\Events\HeartbeatRecorded;
 use App\Events\MonitorChecking;
 use App\Models\Monitor;
+use App\Services\PhaseTimingCapture;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Http\Client\Pool;
@@ -59,6 +60,11 @@ class CheckHttpMonitorsBatchJob implements ShouldQueue
                 'status' => $result->status,
                 'status_code' => $result->statusCode,
                 'response_time' => $result->responseTime,
+                'phase_dns_ms' => $result->phaseDnsMs,
+                'phase_tcp_ms' => $result->phaseTcpMs,
+                'phase_tls_ms' => $result->phaseTlsMs,
+                'phase_ttfb_ms' => $result->phaseTtfbMs,
+                'phase_transfer_ms' => $result->phaseTransferMs,
                 'message' => $result->message,
             ]);
 
@@ -90,23 +96,18 @@ class CheckHttpMonitorsBatchJob implements ShouldQueue
         $responseTime = isset($stats['total_time'])
             ? (int) round($stats['total_time'] * 1000)
             : 0;
+        $timing = PhaseTimingCapture::fromHandlerStats($stats);
 
         $statusCode = $response->status();
         $acceptedCodes = $monitor->accepted_status_codes ?? [200];
+        $status = in_array($statusCode, $acceptedCodes) ? 'up' : 'down';
+        $message = $status === 'down' ? "Unexpected status code: {$statusCode}" : null;
 
-        if (in_array($statusCode, $acceptedCodes)) {
-            return new CheckResult(
-                status: 'up',
-                responseTime: $responseTime,
-                statusCode: $statusCode,
-            );
-        }
-
-        return new CheckResult(
-            status: 'down',
+        return (new CheckResult(
+            status: $status,
             responseTime: $responseTime,
             statusCode: $statusCode,
-            message: "Unexpected status code: {$statusCode}",
-        );
+            message: $message,
+        ))->withTiming($timing);
     }
 }

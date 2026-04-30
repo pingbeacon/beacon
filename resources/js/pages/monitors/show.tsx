@@ -31,6 +31,7 @@ import { statusBadgeIntent, uptimeColor } from "@/lib/color"
 import { formatInterval, heartbeatsToTracker } from "@/lib/heartbeats"
 import { EscalationTimeline } from "@/pages/monitors/components/escalation-timeline"
 import { NotificationDeliveryLog } from "@/pages/monitors/components/notification-delivery-log"
+import { ResponseTab, type ResponseTabPeriod } from "@/pages/monitors/components/response-tab"
 import { RoutingRulesTable } from "@/pages/monitors/components/routing-rules-table"
 import monitorRoutes from "@/routes/monitors"
 import { hydrate, subscribeToEvents, useMonitor } from "@/stores/monitor-realtime"
@@ -68,6 +69,7 @@ interface Props {
   heartbeats?: { data: Heartbeat[]; links: PaginationLinks; meta: PaginationMeta }
   incidents?: Incident[]
   chartData?: ChartDataPoint[]
+  prevChartData?: ChartDataPoint[]
   uptimeStats?: UptimeStats
   sslCertificate?: SslCertificate | null
   chartPeriod?: string
@@ -135,6 +137,7 @@ export default function MonitorsShow({
   heartbeats: initialHeartbeats,
   incidents: initialIncidents,
   chartData: initialChartData,
+  prevChartData: initialPrevChartData,
   uptimeStats,
   sslCertificate,
   chartPeriod: initialChartPeriod,
@@ -157,10 +160,11 @@ export default function MonitorsShow({
   const [heartbeats, setHeartbeats] = useState(initialHeartbeats)
   const [incidents, setIncidents] = useState(initialIncidents)
   const [chartData, setChartData] = useState(initialChartData)
+  const [prevChartData, setPrevChartData] = useState(initialPrevChartData)
   const [chartPeriod, setChartPeriod] = useState(initialChartPeriod ?? "24h")
   const [scanningSSL, setScanningSSL] = useState(false)
 
-  const validTabs = ["overview", "heartbeats", "incidents", "ssl", "notifications"]
+  const validTabs = ["overview", "heartbeats", "incidents", "response", "ssl", "notifications"]
   const getInitialTab = () => {
     const tab = new URLSearchParams(window.location.search).get("tab")
     return validTabs.includes(tab ?? "") ? tab! : "overview"
@@ -187,10 +191,14 @@ export default function MonitorsShow({
     if (initialChartData) setChartData(initialChartData)
   }, [initialChartData])
 
+  useEffect(() => {
+    if (initialPrevChartData) setPrevChartData(initialPrevChartData)
+  }, [initialPrevChartData])
+
   const handlePeriodChange = (period: string) => {
     setChartPeriod(period)
     router.reload({
-      only: ["chartData"],
+      only: ["chartData", "prevChartData"],
       data: { period },
       preserveScroll: true,
     })
@@ -392,6 +400,7 @@ export default function MonitorsShow({
             <Tab id="overview">Overview</Tab>
             <Tab id="heartbeats">Heartbeats</Tab>
             <Tab id="incidents">Incidents</Tab>
+            <Tab id="response">Response</Tab>
             {monitor.type === "http" && monitor.ssl_monitoring_enabled && (
               <Tab id="ssl">SSL Certificate</Tab>
             )}
@@ -903,6 +912,18 @@ export default function MonitorsShow({
                 )}
               </WhenVisible>
             </div>
+          </TabPanel>
+
+          {/* ── Response tab ── */}
+          <TabPanel id="response" className="pt-4">
+            <ResponseTab
+              monitorId={monitor.id}
+              period={(chartPeriod as ResponseTabPeriod) ?? "24h"}
+              onPeriodChange={(p) => handlePeriodChange(p)}
+              chartData={chartData ?? []}
+              prevChartData={prevChartData ?? []}
+              heartbeats={liveHeartbeats}
+            />
           </TabPanel>
 
           {/* ── SSL tab ── */}

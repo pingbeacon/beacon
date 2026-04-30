@@ -55,6 +55,11 @@ class CheckMonitorJob implements ShouldQueue
             'status' => $result->status,
             'status_code' => $result->statusCode,
             'response_time' => $result->responseTime,
+            'phase_dns_ms' => $result->phaseDnsMs,
+            'phase_tcp_ms' => $result->phaseTcpMs,
+            'phase_tls_ms' => $result->phaseTlsMs,
+            'phase_ttfb_ms' => $result->phaseTtfbMs,
+            'phase_transfer_ms' => $result->phaseTransferMs,
             'message' => $result->message,
         ]);
 
