@@ -29,6 +29,7 @@ import { Tracker } from "@/components/ui/tracker"
 import AppLayout from "@/layouts/app-layout"
 import { statusBadgeIntent, uptimeColor } from "@/lib/color"
 import { formatInterval, heartbeatsToTracker } from "@/lib/heartbeats"
+import { NotificationDeliveryLog } from "@/pages/monitors/components/notification-delivery-log"
 import { RoutingRulesTable } from "@/pages/monitors/components/routing-rules-table"
 import monitorRoutes from "@/routes/monitors"
 import { hydrate, subscribeToEvents, useMonitor } from "@/stores/monitor-realtime"
@@ -1008,11 +1009,14 @@ export default function MonitorsShow({
 
           {/* ── Notifications tab ── */}
           <TabPanel id="notifications" className="pt-4">
-            <RoutingRulesTable
-              monitorId={monitor.id}
-              rules={notificationRoutes ?? []}
-              channels={teamNotificationChannels ?? []}
-            />
+            <div className="space-y-8">
+              <RoutingRulesTable
+                monitorId={monitor.id}
+                rules={notificationRoutes ?? []}
+                channels={teamNotificationChannels ?? []}
+              />
+              <NotificationDeliveryLog monitorId={monitor.id} />
+            </div>
           </TabPanel>
         </Tabs>
       </Container>
