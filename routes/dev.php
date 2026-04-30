@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 if (! app()->isProduction()) {
     Route::get('dev/login/{id}', function ($id = null) {
@@ -10,4 +11,7 @@ if (! app()->isProduction()) {
 
         return redirect('/');
     });
+
+    Route::get('dev/primitives', fn () => Inertia::render('dev/primitives'))
+        ->name('dev.primitives');
 }

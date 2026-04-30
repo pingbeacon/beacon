@@ -85,8 +85,12 @@ class MaintenanceWindow extends Model
         $todayStart = $now->copy()->setTimeFromTimeString($timeOfDayStart);
         $todayEnd = $now->copy()->setTimeFromTimeString($timeOfDayEnd);
 
-        if ($todayEnd->lt($todayStart)) {
-            $todayEnd->addDay();
+        if ($todayEnd->lte($todayStart)) {
+            if ($now->lt($todayStart)) {
+                $todayStart->subDay();
+            } else {
+                $todayEnd->addDay();
+            }
         }
 
         if (! $now->between($todayStart, $todayEnd)) {
