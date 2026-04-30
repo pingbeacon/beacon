@@ -234,6 +234,21 @@ export interface CheckingPayload {
     monitorId: number
 }
 
+export type NotificationDeliveryStatus = "delivered" | "failed"
+
+export interface NotificationDelivery {
+    id: number
+    channel_id: number
+    channel?: { id: number; name: string; type: string }
+    incident_id: number | null
+    incident?: { id: number; started_at: string | null; resolved_at: string | null } | null
+    event_type: string
+    status: NotificationDeliveryStatus
+    latency_ms: number | null
+    error: string | null
+    dispatched_at: string
+}
+
 export interface AuditLog {
     id: number
     team_id: number
