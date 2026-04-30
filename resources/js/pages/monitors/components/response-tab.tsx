@@ -92,7 +92,6 @@ export function ResponseTab({
   )
   const distribution = useMemo(() => computeDistribution(chartData ?? []), [chartData])
   const statusCodes = useMemo(() => computeStatusCodes(heartbeats), [heartbeats])
-  const slowest = useMemo(() => pickSlowest(heartbeats, 8), [heartbeats])
 
   return (
     <section aria-label="Response analytics" className="space-y-4">
@@ -117,7 +116,7 @@ export function ResponseTab({
 
       <StatusCodesBars buckets={statusCodes} />
       <AssertionTimelinePlaceholder />
-      <SlowestChecks rows={slowest} />
+      <SlowestChecks heartbeats={heartbeats} />
     </section>
   )
 }
@@ -672,7 +671,7 @@ function PhaseWaterfall({
                 <div
                   role="img"
                   aria-label={`${p.label} avg ${avg}ms p95 ${p95}ms`}
-                  className="relative h-[18px] rounded-sm bg-muted/30"
+                  className="relative h-[18px] rounded-sm bg-muted/40"
                 >
                   <div
                     className={`absolute inset-y-0 left-0 rounded-sm opacity-25 ${p.className}`}
@@ -841,67 +840,124 @@ function AssertionTimelinePlaceholder() {
   )
 }
 
-function pickSlowest(heartbeats: Heartbeat[], limit: number): Heartbeat[] {
-  return [...heartbeats]
-    .filter((h) => h.response_time != null)
+type SlowestMode = "slowest" | "failed" | "latest"
+
+function applySlowestMode(heartbeats: Heartbeat[], mode: SlowestMode, limit: number): Heartbeat[] {
+  const filtered = mode === "failed" ? heartbeats.filter((h) => h.status !== "up") : heartbeats
+  const withTime = filtered.filter((h) => h.response_time != null)
+  if (mode === "latest") {
+    return [...withTime]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, limit)
+  }
+  return [...withTime]
     .sort((a, b) => (b.response_time ?? 0) - (a.response_time ?? 0))
     .slice(0, limit)
 }
 
-function SlowestChecks({ rows }: { rows: Heartbeat[] }) {
+function durationIntent(ms: number | null): string {
+  if (ms == null) return "text-muted-foreground"
+  if (ms >= 2000) return "text-destructive"
+  if (ms >= 1000) return "text-warning"
+  if (ms >= 500) return "text-primary"
+  return "text-foreground"
+}
+
+const SLOWEST_LIMIT = 8
+
+function SlowestChecks({ heartbeats }: { heartbeats: Heartbeat[] }) {
+  const [mode, setMode] = useState<SlowestMode>("slowest")
+  const totalAvailable = heartbeats.length
+  const visible = useMemo(
+    () => applySlowestMode(heartbeats, mode, SLOWEST_LIMIT),
+    [heartbeats, mode],
+  )
+  const modes: Array<{ value: SlowestMode; label: string }> = [
+    { value: "slowest", label: "Slowest" },
+    { value: "failed", label: "Failed only" },
+    { value: "latest", label: "Latest" },
+  ]
   return (
     <article
       data-slot="slowest-checks"
       className="overflow-hidden rounded-lg border border-border bg-card"
     >
-      <header className="flex items-baseline justify-between border-border border-b px-5 py-4">
+      <header className="flex flex-wrap items-baseline justify-between gap-3 border-border border-b px-5 py-4">
         <div>
           <Eyebrow>slowest checks</Eyebrow>
           <p className="mt-0.5 font-semibold text-foreground text-sm">
-            top {rows.length} sorted by duration
+            top {visible.length} sorted by {mode === "latest" ? "time" : "duration"}
           </p>
         </div>
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Slowest checks filter">
+          {modes.map((m) => (
+            <button
+              key={m.value}
+              type="button"
+              data-slot="slowest-filter"
+              data-value={m.value}
+              data-selected={mode === m.value ? "" : undefined}
+              aria-pressed={mode === m.value}
+              onClick={() => setMode(m.value)}
+              className={
+                mode === m.value
+                  ? "rounded-full bg-primary px-3 py-1 font-semibold text-[10px] text-primary-foreground"
+                  : "rounded-full border border-border px-3 py-1 text-[10px] text-muted-foreground hover:text-foreground"
+              }
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
       </header>
-      {rows.length === 0 ? (
-        <p className="px-5 py-6 text-center text-muted-foreground text-sm">No checks in window.</p>
+      {visible.length === 0 ? (
+        <p className="px-5 py-6 text-center text-muted-foreground text-sm">
+          {mode === "failed" ? "No failed checks in this window." : "No checks in window."}
+        </p>
       ) : (
-        <table className="w-full text-xs" aria-label="Slowest checks">
-          <thead className="bg-muted/30 text-[10px] text-muted-foreground uppercase tracking-widest">
-            <tr>
-              <th className="px-5 py-2.5 text-left">Time</th>
-              <th className="px-5 py-2.5 text-left">Duration</th>
-              <th className="px-5 py-2.5 text-left">Status</th>
-              <th className="px-5 py-2.5 text-left">Message</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((h) => (
-              <tr
-                key={h.id}
-                data-slot="slowest-row"
-                data-id={h.id}
-                className="border-border border-t"
-              >
-                <td className="px-5 py-2.5 text-muted-foreground">
-                  {new Date(h.created_at).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit",
-                  })}
-                </td>
-                <td className="px-5 py-2.5 font-medium text-foreground">
-                  {formatMs(h.response_time)}
-                </td>
-                <td
-                  className={`px-5 py-2.5 font-semibold ${h.status === "up" ? "text-success" : "text-destructive"}`}
-                >
-                  {h.status_code ?? (h.status === "up" ? "OK" : "ERR")}
-                </td>
-                <td className="px-5 py-2.5 text-muted-foreground">{h.message ?? "—"}</td>
+        <>
+          <table className="w-full text-xs" aria-label="Slowest checks">
+            <thead className="bg-muted/30 text-[10px] text-muted-foreground uppercase tracking-widest">
+              <tr>
+                <th className="px-5 py-2.5 text-left">Time</th>
+                <th className="px-5 py-2.5 text-left">Duration</th>
+                <th className="px-5 py-2.5 text-left">Status</th>
+                <th className="px-5 py-2.5 text-left">Body preview</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {visible.map((h) => (
+                <tr
+                  key={h.id}
+                  data-slot="slowest-row"
+                  data-id={h.id}
+                  className="border-border border-t"
+                >
+                  <td className="px-5 py-2.5 text-muted-foreground">
+                    {new Date(h.created_at).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })}
+                  </td>
+                  <td className={`px-5 py-2.5 font-medium ${durationIntent(h.response_time)}`}>
+                    {formatMs(h.response_time)}
+                  </td>
+                  <td
+                    className={`px-5 py-2.5 font-semibold ${h.status === "up" ? "text-success" : "text-destructive"}`}
+                  >
+                    {h.status_code ?? (h.status === "up" ? "OK" : "ERR")}
+                  </td>
+                  <td className="truncate px-5 py-2.5 text-muted-foreground">{h.message ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="flex items-center justify-between border-border border-t px-5 py-3 text-[11px] text-muted-foreground">
+            <span>showing {visible.length}</span>
+            <span className="text-primary">view all {totalAvailable} →</span>
+          </div>
+        </>
       )}
     </article>
   )

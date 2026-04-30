@@ -254,4 +254,61 @@ describe("ResponseTab", () => {
     expect(rows[1]).toHaveAttribute("data-id", "3")
     expect(rows[2]).toHaveAttribute("data-id", "1")
   })
+
+  it("Failed only filter narrows the slowest-checks table to non-up rows", async () => {
+    const fetcher = vi.fn().mockResolvedValue(buildPayload())
+    render(
+      <ResponseTab
+        monitorId={7}
+        period="24h"
+        onPeriodChange={() => {}}
+        chartData={sampleChart()}
+        prevChartData={sampleChart()}
+        heartbeats={[
+          sampleHeartbeat({ id: 1, response_time: 200 }),
+          sampleHeartbeat({ id: 2, response_time: 4500, status_code: 503, status: "down" }),
+          sampleHeartbeat({ id: 3, response_time: 800 }),
+        ]}
+        fetcher={fetcher}
+      />,
+    )
+    await waitFor(() => expect(fetcher).toHaveBeenCalled())
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Failed only" }))
+    })
+
+    const rows = screen.getAllByRole("row").slice(1)
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toHaveAttribute("data-id", "2")
+  })
+
+  it("Latest filter sorts by created_at descending", async () => {
+    const fetcher = vi.fn().mockResolvedValue(buildPayload())
+    render(
+      <ResponseTab
+        monitorId={7}
+        period="24h"
+        onPeriodChange={() => {}}
+        chartData={sampleChart()}
+        prevChartData={sampleChart()}
+        heartbeats={[
+          sampleHeartbeat({ id: 1, created_at: "2026-04-30T10:00:00Z", response_time: 4000 }),
+          sampleHeartbeat({ id: 2, created_at: "2026-04-30T11:00:00Z", response_time: 100 }),
+          sampleHeartbeat({ id: 3, created_at: "2026-04-30T12:00:00Z", response_time: 500 }),
+        ]}
+        fetcher={fetcher}
+      />,
+    )
+    await waitFor(() => expect(fetcher).toHaveBeenCalled())
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Latest" }))
+    })
+
+    const rows = screen.getAllByRole("row").slice(1)
+    expect(rows[0]).toHaveAttribute("data-id", "3")
+    expect(rows[1]).toHaveAttribute("data-id", "2")
+    expect(rows[2]).toHaveAttribute("data-id", "1")
+  })
 })
