@@ -489,7 +489,9 @@ function MonitorTable({
           .filter((g) => !groupedMonitors[g.id]?.length)
           .map((group) => (
             <MonitorGroupSection key={group.id} group={group} monitorCount={0}>
-              <p className="py-4 text-center text-muted-foreground text-sm">No monitors in this group.</p>
+              <p className="py-4 text-center text-muted-foreground text-sm">
+                No monitors in this group.
+              </p>
             </MonitorGroupSection>
           ))}
     </div>
@@ -539,7 +541,8 @@ export default function MonitorsIndex({
         <div className="flex items-center justify-between gap-4 border-border border-b px-6 py-5">
           <div>
             <h1 className="font-medium text-2xl text-foreground tracking-tight">
-              Monitors <span className="font-normal text-lg text-muted-foreground">· {totalCount}</span>
+              Monitors{" "}
+              <span className="font-normal text-lg text-muted-foreground">· {totalCount}</span>
             </h1>
           </div>
           <div className="flex items-center gap-2">

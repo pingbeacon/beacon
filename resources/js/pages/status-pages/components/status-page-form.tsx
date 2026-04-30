@@ -1,12 +1,12 @@
 import { useForm } from "@inertiajs/react"
-import ConfirmDeleteModal from "@/components/confirm-delete-modal"
 import { Form } from "react-aria-components"
-import { TextField } from "@/components/ui/text-field"
+import ConfirmDeleteModal from "@/components/confirm-delete-modal"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { FieldError, Label } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { TextField } from "@/components/ui/text-field"
 import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
 import type { Monitor, StatusPage } from "@/types/monitor"
 
 interface StatusPageFormProps {

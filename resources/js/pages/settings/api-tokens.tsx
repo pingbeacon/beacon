@@ -231,7 +231,9 @@ export default function ApiTokensPage({ tokens }: Props) {
                       ))}
                     </CheckboxGroup>
                     {(errors.scopes ?? errors["scopes.0"]) && (
-                      <p className="text-destructive text-sm">{errors.scopes ?? errors["scopes.0"]}</p>
+                      <p className="text-destructive text-sm">
+                        {errors.scopes ?? errors["scopes.0"]}
+                      </p>
                     )}
                   </div>
                 </ModalBody>

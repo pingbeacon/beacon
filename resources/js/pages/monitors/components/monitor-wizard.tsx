@@ -185,7 +185,9 @@ export default function MonitorWizard({
       <div className="flex gap-0">
         {/* step rail */}
         <aside className="sticky top-[73px] h-[calc(100dvh-73px)] w-64 shrink-0 overflow-y-auto border-border border-r p-5">
-          <p className="mb-3 text-[11px] text-muted-foreground uppercase tracking-widest">{"// setup"}</p>
+          <p className="mb-3 text-[11px] text-muted-foreground uppercase tracking-widest">
+            {"// setup"}
+          </p>
           <div className="flex flex-col gap-0.5">
             {visibleSteps.map((s) => {
               const state = stepState(s.key)
@@ -224,7 +226,9 @@ export default function MonitorWizard({
                     >
                       {s.title}
                     </p>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground leading-relaxed">{s.blurb}</p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground leading-relaxed">
+                      {s.blurb}
+                    </p>
                   </div>
                 </button>
               )
@@ -314,7 +318,9 @@ export default function MonitorWizard({
                         )}
                       </div>
                     </div>
-                    <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">{t.desc}</p>
+                    <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
+                      {t.desc}
+                    </p>
                   </button>
                 ))}
               </div>
@@ -678,7 +684,9 @@ export default function MonitorWizard({
                             </div>
                             <div className="min-w-0 flex-1">
                               <p className="font-medium text-foreground text-sm">{channel.name}</p>
-                              <p className="text-muted-foreground text-xs capitalize">{channel.type}</p>
+                              <p className="text-muted-foreground text-xs capitalize">
+                                {channel.type}
+                              </p>
                             </div>
                           </div>
                         )
@@ -687,7 +695,9 @@ export default function MonitorWizard({
                   </fieldset>
                 ) : (
                   <div className="rounded-lg rounded-lg border border-border bg-sidebar p-5 text-center">
-                    <p className="text-muted-foreground text-sm">No notification channels configured.</p>
+                    <p className="text-muted-foreground text-sm">
+                      No notification channels configured.
+                    </p>
                     <Link
                       href="/notification-channels/create"
                       className="mt-2 block text-primary text-xs hover:underline"

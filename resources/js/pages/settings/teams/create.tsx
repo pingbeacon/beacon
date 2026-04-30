@@ -1,13 +1,13 @@
+import { Head, useForm } from "@inertiajs/react"
+import { Form } from "react-aria-components"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { FieldError, Label } from "@/components/ui/field"
+import { Heading } from "@/components/ui/heading"
+import { Input } from "@/components/ui/input"
+import { TextField } from "@/components/ui/text-field"
 import AppLayout from "@/layouts/app-layout"
 import SettingsLayout from "@/layouts/settings-layout"
-import { Head, useForm } from "@inertiajs/react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Heading } from "@/components/ui/heading"
-import { Form } from "react-aria-components"
-import { TextField } from "@/components/ui/text-field"
-import { Button } from "@/components/ui/button"
-import { FieldError, Label } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 
 export default function TeamsCreate() {
   const { data, setData, post, errors, processing } = useForm({
@@ -22,7 +22,9 @@ export default function TeamsCreate() {
   return (
     <>
       <Head title="Create Team" />
-      <Heading level={2} className="mb-6">Create Team</Heading>
+      <Heading level={2} className="mb-6">
+        Create Team
+      </Heading>
       <Card>
         <CardContent className="pt-6">
           <Form validationErrors={errors} onSubmit={submit} className="max-w-lg space-y-6">

@@ -1,12 +1,12 @@
 import { useForm } from "@inertiajs/react"
-import ConfirmDeleteModal from "@/components/confirm-delete-modal"
 import { Form } from "react-aria-components"
-import { TextField } from "@/components/ui/text-field"
+import ConfirmDeleteModal from "@/components/confirm-delete-modal"
 import { Button } from "@/components/ui/button"
 import { FieldError, Label } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
+import { TextField } from "@/components/ui/text-field"
+import { Textarea } from "@/components/ui/textarea"
 import type { NotificationChannel } from "@/types/monitor"
 
 type ChannelType = "email" | "slack" | "discord" | "telegram" | "webhook"
@@ -28,7 +28,10 @@ function getSearchParams(): URLSearchParams {
   return new URLSearchParams(window.location.search)
 }
 
-function getInitialConfig(params: URLSearchParams | null, type: ChannelType): Record<string, string> {
+function getInitialConfig(
+  params: URLSearchParams | null,
+  type: ChannelType,
+): Record<string, string> {
   const base = defaultConfigs[type]
   if (!params) return base
   const config = { ...base }

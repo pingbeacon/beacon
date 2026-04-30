@@ -1,10 +1,9 @@
-import { useState } from "react"
-import { router } from "@inertiajs/react"
-import { Button } from "@/components/ui/button"
 import { ChevronDownIcon, ChevronRightIcon, PencilIcon, TrashIcon } from "@heroicons/react/20/solid"
+import { useState } from "react"
+import ConfirmDeleteModal from "@/components/confirm-delete-modal"
+import { Button } from "@/components/ui/button"
 import type { MonitorGroup } from "@/types/monitor"
 import MonitorGroupModal from "./monitor-group-modal"
-import ConfirmDeleteModal from "@/components/confirm-delete-modal"
 
 interface MonitorGroupSectionProps {
   group: MonitorGroup
@@ -12,7 +11,11 @@ interface MonitorGroupSectionProps {
   monitorCount: number
 }
 
-export default function MonitorGroupSection({ group, children, monitorCount }: MonitorGroupSectionProps) {
+export default function MonitorGroupSection({
+  group,
+  children,
+  monitorCount,
+}: MonitorGroupSectionProps) {
   const [collapsed, setCollapsed] = useState(group.is_collapsed)
 
   return (
@@ -29,7 +32,7 @@ export default function MonitorGroupSection({ group, children, monitorCount }: M
             <ChevronDownIcon className="size-5" />
           )}
         </button>
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <span className="font-medium text-sm">{group.name}</span>
           <span className="ml-2 text-muted-foreground text-xs">({monitorCount})</span>
           {group.description && (

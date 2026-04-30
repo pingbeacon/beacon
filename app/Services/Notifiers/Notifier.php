@@ -7,5 +7,5 @@ use App\Models\NotificationChannel;
 
 interface Notifier
 {
-    public function send(NotificationChannel $channel, Monitor $monitor, string $status, ?string $message = null): void;
+    public function send(NotificationChannel $channel, Monitor $monitor, string $status, ?string $message = null, ?string $ackUrl = null): void;
 }

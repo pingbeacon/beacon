@@ -1,20 +1,20 @@
+import { PlusIcon } from "@heroicons/react/20/solid"
+import { router, useForm } from "@inertiajs/react"
 import { useState } from "react"
-import { useForm, router } from "@inertiajs/react"
 import { Form } from "react-aria-components"
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  ModalBody,
-  ModalFooter,
-} from "@/components/ui/modal"
-import { TextField } from "@/components/ui/text-field"
 import { Button } from "@/components/ui/button"
 import { FieldError, Label } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import {
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+} from "@/components/ui/modal"
+import { TextField } from "@/components/ui/text-field"
 import { Textarea } from "@/components/ui/textarea"
-import { PlusIcon } from "@heroicons/react/20/solid"
 
 interface CreateStatusPageModalProps {
   children?: React.ReactNode
@@ -72,7 +72,12 @@ export default function CreateStatusPageModal({ children }: CreateStatusPageModa
           <ModalTitle>New Status Page</ModalTitle>
         </ModalHeader>
         <ModalBody>
-          <Form validationErrors={errors} onSubmit={submit} className="space-y-4" id="create-status-page-form">
+          <Form
+            validationErrors={errors}
+            onSubmit={submit}
+            className="space-y-4"
+            id="create-status-page-form"
+          >
             <TextField value={data.title} onChange={handleTitleChange} autoFocus>
               <Label>Title</Label>
               <Input placeholder="My Service Status" />

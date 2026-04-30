@@ -26,12 +26,16 @@ class HandleStatusChangeAction
             return;
         }
 
+        $incidentId = null;
+
         if ($newStatus === 'down' && $oldStatus !== 'down') {
-            Incident::create([
+            $incident = Incident::create([
                 'monitor_id' => $monitor->id,
                 'started_at' => now(),
                 'cause' => $message,
             ]);
+
+            $incidentId = $incident->id;
         }
 
         if ($newStatus === 'up' && $oldStatus === 'down') {
@@ -45,10 +49,11 @@ class HandleStatusChangeAction
             type: 'status_flip',
             newStatus: $newStatus,
             previousStatus: $oldStatus,
+            incidentId: $incidentId,
         );
 
         foreach ($this->router->route($event) as $channel) {
-            SendNotificationJob::dispatch($channel, $monitor, $newStatus, $message)
+            SendNotificationJob::dispatch($channel, $monitor, $newStatus, $message, $incidentId)
                 ->onQueue('notifications');
         }
     }
