@@ -27,7 +27,7 @@ class DashboardController extends Controller
             $stats30d = Heartbeat::query()
                 ->whereIn('monitor_id', $activeMonitorIds)
                 ->where('created_at', '>=', now()->subHours(720))
-                ->selectRaw('COUNT(*) as total, SUM(CASE WHEN status = "up" THEN 1 ELSE 0 END) as up_count')
+                ->selectRaw('COUNT(*) as total, SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as up_count', ['up'])
                 ->first();
 
             if ($stats30d && $stats30d->total > 0) {
