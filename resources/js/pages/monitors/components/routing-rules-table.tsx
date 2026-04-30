@@ -191,7 +191,10 @@ export function RoutingRulesTable({ monitorId, rules, channels }: Props) {
         channels={channels}
         isOpen={isOpen}
         onOpenChange={setIsOpen}
-        nextPriority={(rules.at(-1)?.priority ?? 0) + 10}
+        nextPriority={(() => {
+          const maxPriority = Math.max(0, ...rules.map((r) => Number(r.priority) || 0))
+          return maxPriority + 10
+        })()}
         editingRule={editingRule}
       />
     </div>
@@ -368,6 +371,14 @@ function RuleModal({
                 )}
               </div>
               <FieldError>{errors.channel_ids}</FieldError>
+              {(() => {
+                const nestedChannelErrors = Object.keys(errors)
+                  .filter((k) => k.startsWith("channel_ids."))
+                  .map((k) => (errors as Record<string, string>)[k])
+                return nestedChannelErrors.map((msg, idx) => (
+                  <FieldError key={idx}>{msg}</FieldError>
+                ))
+              })()}
             </div>
           </Form>
         </ModalBody>
