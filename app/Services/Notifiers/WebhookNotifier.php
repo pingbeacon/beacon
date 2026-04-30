@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 
 class WebhookNotifier implements Notifier
 {
-    public function send(NotificationChannel $channel, Monitor $monitor, string $status, ?string $message = null): void
+    public function send(NotificationChannel $channel, Monitor $monitor, string $status, ?string $message = null, ?string $ackUrl = null): void
     {
         $url = $channel->configuration['url'];
         $secret = $channel->configuration['secret'] ?? null;
@@ -26,6 +26,7 @@ class WebhookNotifier implements Notifier
             'current_status' => $status,
             'message' => $message ?? "Monitor \"{$monitor->name}\" is now {$status}.",
             'timestamp' => now()->toISOString(),
+            'ack_url' => $ackUrl,
         ];
 
         $headers = array_merge($customHeaders, [

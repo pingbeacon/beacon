@@ -22,12 +22,16 @@ class HandleStatusChangeAction
             return;
         }
 
+        $incidentId = null;
+
         if ($newStatus === 'down' && $oldStatus !== 'down') {
-            Incident::create([
+            $incident = Incident::create([
                 'monitor_id' => $monitor->id,
                 'started_at' => now(),
                 'cause' => $message,
             ]);
+
+            $incidentId = $incident->id;
         }
 
         if ($newStatus === 'up' && $oldStatus === 'down') {
@@ -37,7 +41,7 @@ class HandleStatusChangeAction
         }
 
         foreach ($monitor->notificationChannels as $channel) {
-            SendNotificationJob::dispatch($channel, $monitor, $newStatus, $message)
+            SendNotificationJob::dispatch($channel, $monitor, $newStatus, $message, $incidentId)
                 ->onQueue('notifications');
         }
     }

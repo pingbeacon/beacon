@@ -56,6 +56,7 @@ class DashboardController extends Controller
                 'monitor_name' => $i->monitor->name,
                 'started_at' => $i->started_at->toISOString(),
                 'cause' => $i->cause,
+                'acked_at' => $i->acked_at?->toISOString(),
             ]);
 
         $sslCerts = Monitor::query()

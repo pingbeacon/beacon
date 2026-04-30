@@ -19,6 +19,7 @@ import { Tracker } from "@/components/ui/tracker"
 import AppLayout from "@/layouts/app-layout"
 import { statusBadgeIntent, uptimeColor } from "@/lib/color"
 import { formatInterval, heartbeatsToTracker } from "@/lib/heartbeats"
+import incidentRoutes from "@/routes/incidents"
 import monitorRoutes from "@/routes/monitors"
 import notificationChannelRoutes from "@/routes/notification-channels"
 import {
@@ -31,12 +32,13 @@ import {
 import type { Monitor } from "@/types/monitor"
 import CreateMonitorModal from "./monitors/components/create-monitor-modal"
 
-interface OpenIncident {
+export interface OpenIncident {
   id: number
   monitor_id: number
   monitor_name: string
   started_at: string
   cause: string | null
+  acked_at: string | null
 }
 
 interface SslCert {
@@ -115,7 +117,9 @@ function KPIStrip({
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <div className="flex flex-col rounded-lg border bg-popover px-5 py-4">
-        <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Monitors</span>
+        <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
+          Monitors
+        </span>
         <span className="mt-2 font-medium font-mono text-4xl tabular-nums">{counts.total}</span>
         <span className="mt-1.5 text-muted-foreground text-xs">
           <span className="text-success">{counts.up} up</span>
@@ -130,7 +134,9 @@ function KPIStrip({
       </div>
 
       <div className="flex flex-col rounded-lg border bg-popover px-5 py-4">
-        <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Uptime · 30d</span>
+        <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
+          Uptime · 30d
+        </span>
         <span
           className={`mt-2 font-medium font-mono text-4xl tabular-nums ${teamUptime30d !== null ? uptimeColor(teamUptime30d) : "text-muted-foreground"}`}
         >
@@ -173,10 +179,11 @@ function KPIStrip({
   )
 }
 
-function ActiveIncidentBanner({ incidents }: { incidents: OpenIncident[] }) {
+export function ActiveIncidentBanner({ incidents }: { incidents: OpenIncident[] }) {
   const first = incidents[0]
   const startedAt = first?.started_at ?? null
   const [elapsed, setElapsed] = useState(() => (startedAt ? formatElapsed(startedAt) : ""))
+  const [ackPending, setAckPending] = useState(false)
 
   useEffect(() => {
     if (!startedAt) return
@@ -185,6 +192,20 @@ function ActiveIncidentBanner({ incidents }: { incidents: OpenIncident[] }) {
   }, [startedAt])
 
   if (incidents.length === 0 || !first) return null
+
+  const isAcked = first.acked_at !== null
+  const handleAck = () => {
+    if (!first || ackPending) return
+    setAckPending(true)
+    router.post(
+      incidentRoutes.acknowledge.url({ incident: first.id }),
+      {},
+      {
+        preserveScroll: true,
+        onFinish: () => setAckPending(false),
+      },
+    )
+  }
 
   return (
     <div className="rounded-lg border border-destructive/30 bg-destructive/8 px-5 py-4">
@@ -210,6 +231,18 @@ function ActiveIncidentBanner({ incidents }: { incidents: OpenIncident[] }) {
             View affected
           </Button>
         </Link>
+        {!isAcked && (
+          <Button
+            size="sm"
+            intent="warning"
+            isPending={ackPending}
+            onPress={handleAck}
+            data-testid="ack-incident"
+          >
+            <BellAlertIcon data-slot="icon" />
+            Acknowledge
+          </Button>
+        )}
       </div>
     </div>
   )
@@ -405,7 +438,9 @@ function MonitorCardImpl({ monitor }: { monitor: Monitor }) {
           </div>
         </div>
         <div>
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Last check</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wide">
+            Last check
+          </div>
           <div className="mt-0.5 font-mono text-muted-foreground text-xs">{lastChecked}</div>
         </div>
       </div>
@@ -453,7 +488,9 @@ function MonitorGrid({ monitors }: { monitors: Monitor[] }) {
               key={t.key}
               onClick={() => setFilter(t.key)}
               className={`rounded-md px-3 py-1.5 font-medium text-xs transition-colors ${
-                filter === t.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                filter === t.key
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {t.label}
@@ -559,7 +596,9 @@ function NotificationChannelsWidget({ channels }: { channels: NotifChannel[] }) 
             <span
               className={`size-2 shrink-0 rounded-full ${c.is_enabled ? "bg-success" : "bg-muted"}`}
             />
-            <span className="w-16 shrink-0 text-muted-foreground">{typeLabel[c.type] ?? c.type}</span>
+            <span className="w-16 shrink-0 text-muted-foreground">
+              {typeLabel[c.type] ?? c.type}
+            </span>
             <span className="min-w-0 truncate">{c.name}</span>
           </div>
         ))}
@@ -700,6 +739,7 @@ export default function Dashboard({
   monitors: initialMonitors,
   team_uptime_30d,
   avg_response_24h,
+  open_incidents,
   ssl_certs,
   notification_channels,
 }: Props) {
@@ -736,6 +776,7 @@ export default function Dashboard({
           monitor_name: m.name,
           started_at: outageStart ?? m.last_checked_at ?? new Date().toISOString(),
           cause: latestDownMessage,
+          acked_at: null,
         }
       })
   }, [monitors])
@@ -803,7 +844,7 @@ export default function Dashboard({
           />
         )}
 
-        {openIncidents.length > 0 && <ActiveIncidentBanner incidents={openIncidents} />}
+        {open_incidents.length > 0 && <ActiveIncidentBanner incidents={open_incidents} />}
 
         <WhenVisible
           fallback={
