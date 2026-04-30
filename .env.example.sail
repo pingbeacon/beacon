@@ -93,3 +93,10 @@ WWWGROUP=1000
 # Host port forwarded by the laravel.test container.
 APP_PORT=80
 SAIL_XDEBUG_MODE=off
+
+# --- Dev fake-server fleet (ports 9001-9020) ---
+# In the Sail stack the fleet runs as the `fake-servers` service. Other compose services
+# (queue) reach it via the `fake-servers` hostname. On host (composer run dev), unset both
+# so seeded URLs use 127.0.0.1 and the command binds to loopback.
+FAKE_SERVERS_HOST=fake-servers
+FAKE_SERVERS_BIND_HOST=0.0.0.0

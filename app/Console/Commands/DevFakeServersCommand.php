@@ -118,6 +118,15 @@ class DevFakeServersCommand extends Command
         return $registry;
     }
 
+    /**
+     * Interface to bind fake-servers to. 127.0.0.1 on host (default); 0.0.0.0 inside Sail
+     * so other compose services (queue) can resolve `fake-servers:{port}` over the network.
+     */
+    public static function bindHost(): string
+    {
+        return (string) config('services.fake_servers.bind_host', '127.0.0.1');
+    }
+
     public function handle(): int
     {
         if (! app()->environment('local')) {
@@ -134,6 +143,7 @@ class DevFakeServersCommand extends Command
         }
 
         $stream = $this->output->isVerbose();
+        $bindHost = self::bindHost();
 
         /** @var array<int, Process> $processes */
         $processes = [];
@@ -151,7 +161,7 @@ class DevFakeServersCommand extends Command
             }
 
             $process = new Process(
-                [PHP_BINARY, '-S', "127.0.0.1:{$port}", $router],
+                [PHP_BINARY, '-S', "{$bindHost}:{$port}", $router],
                 base_path(),
                 ['FAKE_SERVER_PROFILE' => json_encode($profile)],
             );
@@ -167,7 +177,7 @@ class DevFakeServersCommand extends Command
             }
 
             $processes[$port] = $process;
-            $this->line("fake-server up on 127.0.0.1:{$port} ({$profile['kind']})");
+            $this->line("fake-server up on {$bindHost}:{$port} ({$profile['kind']})");
         }
 
         $this->registerSignalHandlers($processes);
