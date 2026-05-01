@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('incidents', function (Blueprint $table) {
-            $table->string('severity', 16)->default('info')->after('cause');
+            $table->enum('severity', ['sev1','sev2','sev3','info'])->default('info')->after('cause');
             $table->index('severity');
         });
     }

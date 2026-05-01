@@ -147,6 +147,33 @@ function colorClass(n: number): string {
 }
 
 export function IncidentsHeatmap({ heatmap }: { heatmap: IncidentHeatmapPayload | null }) {
+  if (heatmap === null) {
+    return (
+      <div className="rounded-lg border border-border bg-card px-5 py-4">
+        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+          <div className="flex items-baseline gap-3">
+            <Eyebrow>{"// incident calendar"}</Eyebrow>
+            <span className="h-3 w-48 animate-pulse rounded bg-muted" />
+          </div>
+          <div className="h-3 w-32 animate-pulse rounded bg-muted" />
+        </div>
+        <div
+          role="grid"
+          aria-label="Loading incident calendar heatmap"
+          className="grid grid-flow-col gap-1"
+          style={{ gridTemplateRows: "repeat(7, 14px)" }}
+        >
+          {Array.from({ length: HEATMAP_DAYS }).map((_, idx) => (
+            <div
+              key={idx}
+              className="h-3.5 animate-pulse rounded-sm bg-[rgba(255,255,255,0.04)] border border-border"
+            />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   const days: IncidentHeatmapDay[] = heatmap?.days ?? []
   const padded = useMemo(() => {
     if (days.length >= HEATMAP_DAYS) return days.slice(-HEATMAP_DAYS)

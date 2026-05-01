@@ -37,7 +37,7 @@ test('incidents tab renders summary, heatmap, and a row that expands', function 
 
     $page = visit("/monitors/{$monitor->id}?tab=incidents");
 
-    $latest = Incident::query()->latest('id')->firstOrFail();
+    $latest = $monitor->incidents()->latest('id')->firstOrFail();
 
     $page->assertSee('// incident calendar')
         ->assertSee('6+ incidents/day')
