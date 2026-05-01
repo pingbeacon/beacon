@@ -119,6 +119,12 @@ describe('body json assertions', function () {
         $verdict = AssertionDsl::evaluate('body', '$.queue_depth < 100', payload(body: '{"queue_depth":42}'));
         expect($verdict->passed)->toBeTrue();
     });
+
+    it('reports parse error rather than runtime fail when numeric RHS is malformed', function () {
+        $verdict = AssertionDsl::evaluate('body', '$.queue_depth < nope', payload(body: '{"queue_depth":42}'));
+        expect($verdict->parseError)->not->toBeNull();
+        expect($verdict->passed)->toBeFalse();
+    });
 });
 
 describe('header assertions', function () {

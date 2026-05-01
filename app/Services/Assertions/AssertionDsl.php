@@ -144,7 +144,10 @@ final class AssertionDsl
         }
 
         // numeric comparison
-        if (! is_numeric($actual) || ! is_numeric($rhs)) {
+        if (! is_numeric($rhs)) {
+            return AssertionVerdict::parseError("expected numeric RHS for numeric comparison, got `{$rhs}`");
+        }
+        if (! is_numeric($actual)) {
             return AssertionVerdict::fail(self::scalarToString($actual));
         }
 

@@ -98,12 +98,16 @@ function stateLabel(state: AssertionState): string {
     case "fail":
       return "FAILING"
     case "warn":
-      return "FLAPPING"
+      return "WARNING"
     case "mute":
       return "MUTED"
     default:
       return "PASSING"
   }
+}
+
+function isFailingState(state: AssertionState): boolean {
+  return state === "fail" || state === "warn"
 }
 
 function bucketColor(value: number): string {
@@ -117,12 +121,12 @@ function AssertionsSummary({ assertions }: { assertions: AssertionRowPayload[] }
   const total = assertions.length
   const muted = assertions.filter((a) => a.muted).length
   const active = total - muted
-  const failing = assertions.filter((a) => a.state === "fail").length
+  const failing = assertions.filter((a) => isFailingState(a.state)).length
   const totalChecks = assertions.reduce((acc, a) => acc + a.total_24h, 0)
   const passes = assertions.reduce((acc, a) => acc + (a.total_24h - a.fail_count_24h), 0)
   const passRate = totalChecks > 0 ? ((passes / totalChecks) * 100).toFixed(2) : "—"
   const failingTypes = assertions
-    .filter((a) => a.state === "fail")
+    .filter((a) => isFailingState(a.state))
     .map((a) => a.type)
     .join(" · ")
 
@@ -551,13 +555,13 @@ export function AssertionsTab({ monitorId, assertions }: Props) {
   const list = assertions
   const counts = {
     all: list.length,
-    failing: list.filter((a) => a.state === "fail").length,
+    failing: list.filter((a) => isFailingState(a.state)).length,
     passing: list.filter((a) => a.state === "pass").length,
     muted: list.filter((a) => a.muted).length,
   }
   const filtered = list.filter((a) => {
     if (filter === "all") return true
-    if (filter === "failing") return a.state === "fail" || a.state === "warn"
+    if (filter === "failing") return isFailingState(a.state)
     if (filter === "passing") return a.state === "pass"
     if (filter === "muted") return a.muted
     return true

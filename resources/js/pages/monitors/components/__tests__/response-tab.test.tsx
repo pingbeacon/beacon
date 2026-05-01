@@ -428,11 +428,7 @@ describe("ResponseTab", () => {
 
     await waitFor(() => expect(fetcher).toHaveBeenCalled())
 
-    expect(
-      container.querySelector('[data-slot="assertion-timeline-loading"]'),
-    ).toBeInTheDocument()
-    expect(
-      screen.queryByText(/No assertions defined for this monitor/i),
-    ).not.toBeInTheDocument()
+    expect(container.querySelector('[data-slot="assertion-timeline-loading"]')).toBeInTheDocument()
+    expect(screen.queryByText(/No assertions defined for this monitor/i)).not.toBeInTheDocument()
   })
 })

@@ -918,7 +918,11 @@ function StatusCodesBars({ buckets }: { buckets: StatusBucket[] }) {
   )
 }
 
-function AssertionTimeline({ assertions }: { assertions: AssertionRowPayload[] | null | undefined }) {
+function AssertionTimeline({
+  assertions,
+}: {
+  assertions: AssertionRowPayload[] | null | undefined
+}) {
   const isLoading = assertions == null
   const list = assertions ?? []
   const totalChecks = list.reduce((acc, a) => acc + a.total_24h, 0)
@@ -983,7 +987,11 @@ function AssertionTimeline({ assertions }: { assertions: AssertionRowPayload[] |
               </div>
               <span
                 className={`text-right font-mono text-[10px] ${
-                  a.state === "fail" ? "text-destructive" : "text-muted-foreground"
+                  a.state === "fail"
+                    ? "text-destructive"
+                    : a.state === "warn"
+                      ? "text-warning"
+                      : "text-muted-foreground"
                 }`}
               >
                 {a.pass_rate !== null ? `${a.pass_rate}%` : "—"}

@@ -96,4 +96,28 @@ describe("AssertionsTab", () => {
     render(<AssertionsTab monitorId={1} assertions={[assertion]} />)
     expect(screen.queryByText("—%")).not.toBeInTheDocument()
   })
+
+  it("labels warn-state rows as WARNING (not FLAPPING)", () => {
+    const assertion = buildAssertion({ state: "warn", severity: "warning" })
+    render(<AssertionsTab monitorId={1} assertions={[assertion]} />)
+    expect(screen.getByText("WARNING")).toBeInTheDocument()
+    expect(screen.queryByText("FLAPPING")).not.toBeInTheDocument()
+  })
+
+  it("counts warn-state assertions toward both summary 'failing now' and toolbar Failing pill", () => {
+    const assertions = [
+      buildAssertion({ id: 1, state: "warn", severity: "warning" }),
+      buildAssertion({ id: 2, state: "fail" }),
+      buildAssertion({ id: 3, state: "pass", fail_count_24h: 0 }),
+    ]
+    const { container } = render(<AssertionsTab monitorId={1} assertions={assertions} />)
+
+    // toolbar Failing pill should show 2
+    const failingPill = screen.getByRole("button", { name: /Failing/ })
+    expect(failingPill).toHaveTextContent("2")
+
+    // clicking it should reveal both warn + fail rows
+    fireEvent.click(failingPill)
+    expect(container.querySelectorAll('[data-slot="assertion-row"]').length).toBe(2)
+  })
 })
