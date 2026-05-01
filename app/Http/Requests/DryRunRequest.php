@@ -30,6 +30,7 @@ class DryRunRequest extends FormRequest
             'response.latency_ms' => ['nullable', 'integer'],
             'response.body' => ['nullable', 'string'],
             'response.headers' => ['nullable', 'array'],
+            'response.headers.*' => ['nullable', 'string'],
             'response.content_type' => ['nullable', 'string'],
         ];
     }

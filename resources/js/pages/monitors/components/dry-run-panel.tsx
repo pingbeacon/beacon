@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import MonitorDryRunController from "@/actions/App/Http/Controllers/MonitorDryRunController"
 import { SegmentedToggle } from "@/components/primitives"
 import { Button } from "@/components/ui/button"
@@ -18,6 +18,9 @@ export interface DryRunVerdict {
   actual_value: string | null
   parse_error: string | null
   evaluation_ms: number
+  expected_value: string | null
+  diff: string | null
+  mismatch_part: "body" | "header" | "content_type" | null
 }
 
 export interface DryRunHeartbeat {
@@ -89,6 +92,13 @@ export function DryRunPanel({ monitorId, recentHeartbeats }: Props) {
   const [result, setResult] = useState<DryRunVerdict | null>(null)
   const [requestError, setRequestError] = useState<string | null>(null)
 
+  useEffect(() => {
+    const isStillPresent = recentHeartbeats.some((hb) => hb.id === heartbeatId)
+    if (heartbeatId === null || !isStillPresent) {
+      setHeartbeatId(recentHeartbeats[0]?.id ?? null)
+    }
+  }, [recentHeartbeats, heartbeatId])
+
   const handleTypeChange = (next: DryRunAssertionType) => {
     setType(next)
     setExpression(DEFAULT_EXPRESSIONS[next])
@@ -115,6 +125,7 @@ export function DryRunPanel({ monitorId, recentHeartbeats }: Props) {
   const run = async () => {
     setRunning(true)
     setRequestError(null)
+    setResult(null)
     try {
       const action = MonitorDryRunController(monitorId)
       const response = await fetch(action.url, {
@@ -258,25 +269,39 @@ export function DryRunPanel({ monitorId, recentHeartbeats }: Props) {
           </div>
         )}
         {result ? (
-          <div className="flex flex-wrap items-center gap-4 text-xs" data-slot="dry-run-verdict">
-            <span className="flex items-center gap-2">
-              <span className={`h-2 w-2 rounded-full ${dotClass(result.verdict)}`} />
-              <span className={`font-bold tracking-wider ${verdictClass(result.verdict)}`}>
-                {verdictLabel(result.verdict)}
+          <div className="flex flex-col gap-3" data-slot="dry-run-verdict">
+            <div className="flex flex-wrap items-center gap-4 text-xs">
+              <span className="flex items-center gap-2">
+                <span className={`h-2 w-2 rounded-full ${dotClass(result.verdict)}`} />
+                <span className={`font-bold tracking-wider ${verdictClass(result.verdict)}`}>
+                  {verdictLabel(result.verdict)}
+                </span>
               </span>
-            </span>
-            {result.parse_error ? (
-              <span className="text-warning">{result.parse_error}</span>
-            ) : (
-              <span className="text-muted-foreground">
-                actual ={" "}
-                <span className={verdictClass(result.verdict)}>{result.actual_value ?? "—"}</span> ·
-                expression <span className="text-foreground">{result.expression}</span>
+              {result.parse_error ? (
+                <span className="text-warning">{result.parse_error}</span>
+              ) : (
+                <span className="text-muted-foreground">
+                  actual ={" "}
+                  <span className={verdictClass(result.verdict)}>{result.actual_value ?? "—"}</span> ·
+                  expression <span className="text-foreground">{result.expression}</span>
+                </span>
+              )}
+              <span className="ml-auto text-muted-foreground">
+                evaluation {result.evaluation_ms.toFixed(2)}ms
               </span>
+            </div>
+            {result.diff && (
+              <div className="rounded border border-border bg-muted/20 p-3 text-xs">
+                <div className="mb-2 text-muted-foreground">
+                  {result.mismatch_part && (
+                    <span className="font-semibold">
+                      {result.mismatch_part} mismatch
+                    </span>
+                  )}
+                </div>
+                <pre className="overflow-x-auto text-foreground">{result.diff}</pre>
+              </div>
             )}
-            <span className="ml-auto text-muted-foreground">
-              evaluation {result.evaluation_ms.toFixed(2)}ms
-            </span>
           </div>
         ) : (
           <div className="text-muted-foreground text-xs" data-slot="dry-run-idle">

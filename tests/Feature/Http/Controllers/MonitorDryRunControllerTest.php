@@ -32,6 +32,7 @@ it('returns a pass verdict from a stored heartbeat source', function () {
         'actual_value' => '200',
         'parse_error' => null,
     ]);
+    $response->assertJsonStructure(['evaluation_ms']);
     expect((float) $response->json('evaluation_ms'))->toBeGreaterThanOrEqual(0.0);
 });
 
@@ -98,6 +99,39 @@ it('writes zero rows to assertion_results, incidents, notification_deliveries ac
             'expression' => $case['expression'],
             'source' => 'heartbeat',
             'heartbeat_id' => $heartbeat->id,
+        ])->assertOk();
+    }
+
+    expect(DB::table('assertion_results')->count())->toBe($before['assertion_results']);
+    expect(Incident::query()->count())->toBe($before['incidents']);
+    expect(NotificationDelivery::query()->count())->toBe($before['notification_deliveries']);
+    expect(Heartbeat::query()->count())->toBe($before['heartbeats']);
+
+    // Now test pasted source path
+    $pastedCases = [
+        [
+            'type' => 'status',
+            'expression' => 'status == 503',
+            'response' => ['status_code' => 503, 'latency_ms' => 4500],
+        ],
+        [
+            'type' => 'status',
+            'expression' => 'status == 200',
+            'response' => ['status_code' => 503, 'latency_ms' => 4500],
+        ],
+        [
+            'type' => 'latency',
+            'expression' => 'response_time_ms 2000',
+            'response' => ['status_code' => 503, 'latency_ms' => 4500],
+        ],
+    ];
+
+    foreach ($pastedCases as $pastedCase) {
+        $this->actingAs($user)->postJson(route('monitors.dry-run', $monitor), [
+            'type' => $pastedCase['type'],
+            'expression' => $pastedCase['expression'],
+            'source' => 'pasted',
+            'response' => $pastedCase['response'],
         ])->assertOk();
     }
 
