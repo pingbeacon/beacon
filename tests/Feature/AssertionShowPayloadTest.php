@@ -76,6 +76,16 @@ test('critical-severity assertion with recent failures resolves to fail state', 
         );
 });
 
+test('canUpdateAssertions is true for the monitor owner', function () {
+    $user = User::factory()->create();
+    $monitor = Monitor::factory()->for($user)->create();
+
+    $this->actingAs($user)
+        ->get("/monitors/{$monitor->id}")
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('canUpdateAssertions', true));
+});
+
 test('passing assertion resolves to pass state regardless of severity', function () {
     $user = User::factory()->create();
     $monitor = Monitor::factory()->for($user)->create();

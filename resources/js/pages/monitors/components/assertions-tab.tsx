@@ -43,6 +43,7 @@ export interface AssertionRowPayload {
 interface Props {
   monitorId: number
   assertions: AssertionRowPayload[] | null | undefined
+  canUpdate?: boolean
 }
 
 const FILTERS: Array<{ key: "all" | "failing" | "passing" | "muted"; label: string }> = [
@@ -187,11 +188,13 @@ function AssertionsToolbar({
   setFilter,
   counts,
   onCreate,
+  canUpdate,
 }: {
   filter: string
   setFilter: (f: "all" | "failing" | "passing" | "muted") => void
   counts: Record<string, number>
   onCreate: () => void
+  canUpdate: boolean
 }) {
   return (
     <div
@@ -218,9 +221,11 @@ function AssertionsToolbar({
           )
         })}
       </div>
-      <Button intent="primary" size="sm" onPress={onCreate} data-slot="new-assertion-trigger">
-        + New assertion
-      </Button>
+      {canUpdate && (
+        <Button intent="primary" size="sm" onPress={onCreate} data-slot="new-assertion-trigger">
+          + New assertion
+        </Button>
+      )}
     </div>
   )
 }
@@ -242,6 +247,7 @@ function AssertionRow({
   onEdit,
   onDelete,
   onMuteToggle,
+  canUpdate,
 }: {
   assertion: AssertionRowPayload
   expanded: boolean
@@ -249,6 +255,7 @@ function AssertionRow({
   onEdit: () => void
   onDelete: () => void
   onMuteToggle: () => void
+  canUpdate: boolean
 }) {
   return (
     <div
@@ -306,17 +313,19 @@ function AssertionRow({
             <div className="rounded-md border border-border bg-card p-4">
               <div className="mb-3 flex items-center justify-between">
                 <span className="font-semibold text-foreground text-sm">Definition</span>
-                <div className="flex gap-2 text-xs">
-                  <Button intent="outline" size="sm" onPress={onEdit}>
-                    Edit
-                  </Button>
-                  <Button intent="outline" size="sm" onPress={onMuteToggle}>
-                    {assertion.muted ? "Unmute" : "Mute"}
-                  </Button>
-                  <Button intent="danger" size="sm" onPress={onDelete}>
-                    Delete
-                  </Button>
-                </div>
+                {canUpdate && (
+                  <div className="flex gap-2 text-xs">
+                    <Button intent="outline" size="sm" onPress={onEdit}>
+                      Edit
+                    </Button>
+                    <Button intent="outline" size="sm" onPress={onMuteToggle}>
+                      {assertion.muted ? "Unmute" : "Mute"}
+                    </Button>
+                    <Button intent="danger" size="sm" onPress={onDelete}>
+                      Delete
+                    </Button>
+                  </div>
+                )}
               </div>
               <pre className="rounded border border-border bg-primary/5 px-3 py-3 font-mono text-foreground text-sm">
                 {assertion.expression}
@@ -526,7 +535,7 @@ function AssertionFormModal({
   )
 }
 
-export function AssertionsTab({ monitorId, assertions }: Props) {
+export function AssertionsTab({ monitorId, assertions, canUpdate = false }: Props) {
   const [filter, setFilter] = useState<"all" | "failing" | "passing" | "muted">("all")
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [modal, setModal] = useState<ModalState>({ open: false, editing: null })
@@ -539,15 +548,18 @@ export function AssertionsTab({ monitorId, assertions }: Props) {
           setFilter={setFilter}
           counts={{ all: 0, failing: 0, passing: 0, muted: 0 }}
           onCreate={() => setModal({ open: true, editing: null })}
+          canUpdate={canUpdate}
         />
         <div className="rounded-lg border border-border bg-card p-8">
           <div className="h-4 w-48 animate-pulse rounded bg-muted/50" />
         </div>
-        <AssertionFormModal
-          monitorId={monitorId}
-          state={modal}
-          onClose={() => setModal({ open: false, editing: null })}
-        />
+        {canUpdate && (
+          <AssertionFormModal
+            monitorId={monitorId}
+            state={modal}
+            onClose={() => setModal({ open: false, editing: null })}
+          />
+        )}
       </div>
     )
   }
@@ -575,6 +587,7 @@ export function AssertionsTab({ monitorId, assertions }: Props) {
           setFilter={setFilter}
           counts={counts}
           onCreate={() => setModal({ open: true, editing: null })}
+          canUpdate={canUpdate}
         />
         <div
           className="rounded-lg border border-border bg-card p-8 text-center"
@@ -584,11 +597,13 @@ export function AssertionsTab({ monitorId, assertions }: Props) {
             No assertions yet — add one to start checking response shape.
           </p>
         </div>
-        <AssertionFormModal
-          monitorId={monitorId}
-          state={modal}
-          onClose={() => setModal({ open: false, editing: null })}
-        />
+        {canUpdate && (
+          <AssertionFormModal
+            monitorId={monitorId}
+            state={modal}
+            onClose={() => setModal({ open: false, editing: null })}
+          />
+        )}
       </div>
     )
   }
@@ -616,6 +631,7 @@ export function AssertionsTab({ monitorId, assertions }: Props) {
         setFilter={setFilter}
         counts={counts}
         onCreate={() => setModal({ open: true, editing: null })}
+        canUpdate={canUpdate}
       />
       <div className="rounded-lg border border-border bg-card">
         <div
@@ -639,26 +655,31 @@ export function AssertionsTab({ monitorId, assertions }: Props) {
             onEdit={() => setModal({ open: true, editing: a })}
             onDelete={() => handleDelete(a)}
             onMuteToggle={() => handleMuteToggle(a)}
+            canUpdate={canUpdate}
           />
         ))}
         <div className="flex items-center justify-between border-border border-t px-4 py-3 text-muted-foreground text-xs">
           <span>
             showing {filtered.length} of {list.length}
           </span>
-          <button
-            type="button"
-            className="text-primary"
-            onClick={() => setModal({ open: true, editing: null })}
-          >
-            + add another assertion
-          </button>
+          {canUpdate && (
+            <button
+              type="button"
+              className="text-primary"
+              onClick={() => setModal({ open: true, editing: null })}
+            >
+              + add another assertion
+            </button>
+          )}
         </div>
       </div>
-      <AssertionFormModal
-        monitorId={monitorId}
-        state={modal}
-        onClose={() => setModal({ open: false, editing: null })}
-      />
+      {canUpdate && (
+        <AssertionFormModal
+          monitorId={monitorId}
+          state={modal}
+          onClose={() => setModal({ open: false, editing: null })}
+        />
+      )}
     </div>
   )
 }

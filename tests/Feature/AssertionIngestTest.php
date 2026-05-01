@@ -107,3 +107,56 @@ it('writes nothing when a monitor has no assertions', function () {
 
     expect(AssertionResult::count())->toBe(0);
 });
+
+it('persists assertion_results and a null-latency heartbeat when CheckMonitorJob enters the catch path', function () {
+    // Force the checker resolution to throw so we exercise the catch branch,
+    // which is the path CodeRabbit flagged as missing assertion-result persistence.
+    $monitor = ingestMonitor();
+    $monitor->forceFill(['type' => 'unsupported_type'])->saveQuietly();
+
+    Assertion::factory()->for($monitor)->latency(2000)->create();
+    Assertion::factory()->for($monitor)->status(200)->create();
+
+    try {
+        (new CheckMonitorJob($monitor))->handle(
+            app(HandleStatusChangeAction::class),
+            app(PersistAssertionResults::class),
+        );
+        $this->fail('Expected the job to rethrow');
+    } catch (InvalidArgumentException $e) {
+        // expected — the job records the failure heartbeat + assertion results, then rethrows
+    }
+
+    $heartbeat = $monitor->heartbeats()->latest()->first();
+    expect($heartbeat)->not->toBeNull();
+    expect($heartbeat->response_time)->toBeNull();
+    expect($heartbeat->status)->toBe('down');
+
+    $rows = AssertionResult::query()->where('heartbeat_id', $heartbeat->id)->get();
+    expect($rows)->toHaveCount(2);
+    expect($rows->where('passed', true)->count())->toBe(0);
+});
+
+it('records a null-latency heartbeat when CheckHttpMonitorsBatchJob receives no response', function () {
+    Http::fake([
+        'https://api.acme.io/health' => fn () => throw new RuntimeException('socket timed out'),
+    ]);
+
+    $monitor = ingestMonitor();
+    Assertion::factory()->for($monitor)->latency(2000)->create();
+
+    (new CheckHttpMonitorsBatchJob([$monitor->id]))->handle(
+        app(HandleStatusChangeAction::class),
+        app(PersistAssertionResults::class),
+    );
+
+    $heartbeat = $monitor->heartbeats()->latest()->first();
+    expect($heartbeat)->not->toBeNull();
+    expect($heartbeat->response_time)->toBeNull();
+
+    // a latency rule against a missing response must explicitly fail rather than
+    // silently pass on a fake 0ms reading
+    $row = AssertionResult::query()->where('heartbeat_id', $heartbeat->id)->first();
+    expect($row)->not->toBeNull();
+    expect($row->passed)->toBeFalse();
+});

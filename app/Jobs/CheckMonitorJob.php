@@ -39,9 +39,18 @@ class CheckMonitorJob implements ShouldQueue
         } catch (Throwable $e) {
             $heartbeat = $this->monitor->heartbeats()->create([
                 'status' => 'down',
-                'response_time' => 0,
+                'response_time' => null,
                 'message' => $e->getMessage(),
             ]);
+
+            // Failures (timeouts, network errors) are exactly the cases assertions
+            // need to record — surface them in assertion_results with a null payload
+            // so latency/status rules fail explicitly rather than silently disappear.
+            $persistAssertionResults->run($this->monitor, $heartbeat, new AssertionPayload(
+                statusCode: null,
+                latencyMs: null,
+                body: null,
+            ));
 
             $this->monitor->update([
                 'last_checked_at' => now(),

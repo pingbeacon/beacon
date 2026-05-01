@@ -3,9 +3,9 @@
 namespace App\Services\Assertions;
 
 use App\DTOs\AssertionPayload;
+use App\Models\AssertionResult;
 use App\Models\Heartbeat;
 use App\Models\Monitor;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Glue between the heartbeat ingest pipeline and the pure AssertionEvaluator.
@@ -39,6 +39,6 @@ final class PersistAssertionResults
             'observed_at' => $r->observedAt->format('Y-m-d H:i:s'),
         ], $results);
 
-        DB::table('assertion_results')->insert($rows);
+        AssertionResult::query()->insert($rows);
     }
 }

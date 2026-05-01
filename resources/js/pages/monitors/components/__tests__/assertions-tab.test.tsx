@@ -73,10 +73,39 @@ describe("AssertionsTab", () => {
     expect(screen.getByText(/Failure pattern/i)).toBeInTheDocument()
   })
 
-  it("opens the form modal when 'New assertion' is clicked", () => {
-    const { container } = render(<AssertionsTab monitorId={1} assertions={[]} />)
+  it("opens the form modal when 'New assertion' is clicked (canUpdate)", () => {
+    const { container } = render(
+      <AssertionsTab monitorId={1} assertions={[]} canUpdate={true} />,
+    )
     fireEvent.click(container.querySelector('[data-slot="new-assertion-trigger"]') as HTMLElement)
     expect(document.querySelector('[data-slot="assertion-form"]')).toBeInTheDocument()
+  })
+
+  it("hides mutation affordances when canUpdate is false", () => {
+    const assertion = buildAssertion()
+    const { container } = render(
+      <AssertionsTab monitorId={1} assertions={[assertion]} canUpdate={false} />,
+    )
+
+    // toolbar trigger gone
+    expect(container.querySelector('[data-slot="new-assertion-trigger"]')).not.toBeInTheDocument()
+
+    // expanding a row should not show Edit/Mute/Delete buttons
+    fireEvent.click(container.querySelector('[data-slot="assertion-row"] button') as HTMLElement)
+    expect(screen.queryByRole("button", { name: /Edit/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /Delete/i })).not.toBeInTheDocument()
+  })
+
+  it("shows mutation affordances when canUpdate is true", () => {
+    const assertion = buildAssertion()
+    const { container } = render(
+      <AssertionsTab monitorId={1} assertions={[assertion]} canUpdate={true} />,
+    )
+
+    expect(container.querySelector('[data-slot="new-assertion-trigger"]')).toBeInTheDocument()
+    fireEvent.click(container.querySelector('[data-slot="assertion-row"] button') as HTMLElement)
+    expect(screen.getByRole("button", { name: /Edit/i })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /Delete/i })).toBeInTheDocument()
   })
 
   it("renders a loading skeleton while assertions prop is undefined (deferred)", () => {

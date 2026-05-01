@@ -79,6 +79,7 @@ interface Props {
   escalationPolicy?: EscalationPolicy | null
   activeEscalation?: ActiveEscalation | null
   assertions?: AssertionRowPayload[]
+  canUpdateAssertions?: boolean
 }
 
 function formatDuration(start: string, end: string | null): string {
@@ -148,6 +149,7 @@ export default function MonitorsShow({
   escalationPolicy,
   activeEscalation,
   assertions,
+  canUpdateAssertions = false,
 }: Props) {
   useEffect(() => {
     const seed: Monitor = {
@@ -960,7 +962,11 @@ export default function MonitorsShow({
               fallback={<div className="h-64 animate-pulse rounded-sm bg-muted" />}
               data="assertions"
             >
-              <AssertionsTab monitorId={monitor.id} assertions={assertions} />
+              <AssertionsTab
+                monitorId={monitor.id}
+                assertions={assertions}
+                canUpdate={canUpdateAssertions}
+              />
             </WhenVisible>
           </TabPanel>
 

@@ -9,7 +9,7 @@ class CheckResult
      */
     public function __construct(
         public string $status, // 'up' or 'down'
-        public int $responseTime, // ms
+        public ?int $responseTime, // ms; null when no response was received (distinct from a real 0ms)
         public ?int $statusCode = null,
         public ?string $message = null,
         public ?int $phaseDnsMs = null,

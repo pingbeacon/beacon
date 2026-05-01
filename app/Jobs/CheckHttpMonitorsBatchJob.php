@@ -9,6 +9,7 @@ use App\Events\HeartbeatRecorded;
 use App\Events\MonitorChecking;
 use App\Models\Monitor;
 use App\Services\Assertions\PersistAssertionResults;
+use App\Services\Checkers\HttpChecker;
 use App\Services\PhaseTimingCapture;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -96,7 +97,7 @@ class CheckHttpMonitorsBatchJob implements ShouldQueue
         if ($response instanceof Throwable || $response === null) {
             return new CheckResult(
                 status: 'down',
-                responseTime: 0,
+                responseTime: null,
                 message: $response instanceof Throwable ? $response->getMessage() : 'No response received.',
             );
         }
@@ -105,7 +106,7 @@ class CheckHttpMonitorsBatchJob implements ShouldQueue
         $stats = $response->handlerStats();
         $responseTime = isset($stats['total_time'])
             ? (int) round($stats['total_time'] * 1000)
-            : 0;
+            : null;
         $timing = PhaseTimingCapture::fromHandlerStats($stats);
 
         $statusCode = $response->status();
@@ -125,6 +126,8 @@ class CheckHttpMonitorsBatchJob implements ShouldQueue
 
     private static function truncateBody(string $body): string
     {
-        return strlen($body) > 65_536 ? substr($body, 0, 65_536) : $body;
+        return strlen($body) > HttpChecker::BODY_CAPTURE_LIMIT
+            ? substr($body, 0, HttpChecker::BODY_CAPTURE_LIMIT)
+            : $body;
     }
 }

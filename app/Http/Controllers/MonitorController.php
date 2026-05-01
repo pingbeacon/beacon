@@ -174,6 +174,11 @@ class MonitorController extends Controller
             'escalationPolicy' => $escalationPolicy,
             'activeEscalation' => $activeEscalation,
             'chartPeriod' => $period,
+            // Show is gated by `view`, but the Assertions tab renders mutation
+            // affordances backed by the stricter `update` policy. Surface that
+            // capability up-front so read-only viewers don't see controls that
+            // only fail with a 403 when clicked.
+            'canUpdateAssertions' => auth()->user()?->can('update', $monitor) ?? false,
             'sslCertificate' => Inertia::defer(
                 fn () => $monitor->sslCertificate
             ),

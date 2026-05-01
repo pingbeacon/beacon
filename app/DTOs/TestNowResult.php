@@ -6,7 +6,7 @@ class TestNowResult
 {
     public function __construct(
         public string $status,
-        public int $responseTime,
+        public ?int $responseTime,
         public ?int $statusCode,
         public ?string $message,
         public string $startedAt,

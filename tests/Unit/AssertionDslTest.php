@@ -138,6 +138,18 @@ describe('header assertions', function () {
         expect($verdict->actualValue)->toBe('a3f7-bc12');
     });
 
+    it('matches when caller passes mixed-case header keys (DTO normalizes)', function () {
+        // The DTO accepts any case and lower-cases keys at its boundary so callers
+        // that forget to normalize still get a correct match.
+        $verdict = AssertionDsl::evaluate(
+            'header',
+            'X-Trace-Id ~ ^[a-f0-9-]+$',
+            payload(headers: ['X-Trace-Id' => 'a3f7-bc12'])
+        );
+        expect($verdict->passed)->toBeTrue();
+        expect($verdict->actualValue)->toBe('a3f7-bc12');
+    });
+
     it('fails when header is missing', function () {
         $verdict = AssertionDsl::evaluate(
             'header',
