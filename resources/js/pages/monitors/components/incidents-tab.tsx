@@ -147,6 +147,16 @@ function colorClass(n: number): string {
 }
 
 export function IncidentsHeatmap({ heatmap }: { heatmap: IncidentHeatmapPayload | null }) {
+  const days: IncidentHeatmapDay[] = heatmap?.days ?? []
+  const padded = useMemo(() => {
+    if (days.length >= HEATMAP_DAYS) return days.slice(-HEATMAP_DAYS)
+    const fill = Array.from({ length: HEATMAP_DAYS - days.length }, () => ({
+      date: "",
+      count: 0,
+    }))
+    return [...fill, ...days]
+  }, [days])
+
   if (heatmap === null) {
     return (
       <div className="rounded-lg border border-border bg-card px-5 py-4">
@@ -166,23 +176,13 @@ export function IncidentsHeatmap({ heatmap }: { heatmap: IncidentHeatmapPayload 
           {Array.from({ length: HEATMAP_DAYS }).map((_, idx) => (
             <div
               key={idx}
-              className="h-3.5 animate-pulse rounded-sm bg-[rgba(255,255,255,0.04)] border border-border"
+              className="h-3.5 animate-pulse rounded-sm border border-border bg-[rgba(255,255,255,0.04)]"
             />
           ))}
         </div>
       </div>
     )
   }
-
-  const days: IncidentHeatmapDay[] = heatmap?.days ?? []
-  const padded = useMemo(() => {
-    if (days.length >= HEATMAP_DAYS) return days.slice(-HEATMAP_DAYS)
-    const fill = Array.from({ length: HEATMAP_DAYS - days.length }, () => ({
-      date: "",
-      count: 0,
-    }))
-    return [...fill, ...days]
-  }, [days])
 
   const summary = heatmap?.summary ?? { incident_days: 0, clean_days: 0, max_day: 0, total: 0 }
   const todayIdx = padded.length - 1

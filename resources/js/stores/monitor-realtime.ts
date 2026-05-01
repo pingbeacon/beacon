@@ -124,7 +124,10 @@ export function hydrate(monitors: Monitor[] | undefined | null): void {
       changed = true
       continue
     }
-    const incomingNewer = timestamp(incoming.last_checked_at) > timestamp(existing.last_checked_at)
+    // On ties (e.g. both null last_checked_at) prefer incoming so that a
+    // richer hydration (the show controller) overrides a sparse one (sidebar
+    // stub) that landed first.
+    const incomingNewer = timestamp(incoming.last_checked_at) >= timestamp(existing.last_checked_at)
     const base = incomingNewer ? incoming : existing
     const newHeartbeats = hasNewHeartbeats(existing.heartbeats, incoming.heartbeats)
     const baseChanged = base !== existing && monitorMetaDiffers(base, existing)
