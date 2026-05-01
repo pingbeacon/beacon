@@ -31,6 +31,7 @@ import { statusBadgeIntent, uptimeColor } from "@/lib/color"
 import { formatInterval, heartbeatsToTracker } from "@/lib/heartbeats"
 import { type AssertionRowPayload, AssertionsTab } from "@/pages/monitors/components/assertions-tab"
 import { EscalationTimeline } from "@/pages/monitors/components/escalation-timeline"
+import { IncidentsTab } from "@/pages/monitors/components/incidents-tab"
 import { NotificationDeliveryLog } from "@/pages/monitors/components/notification-delivery-log"
 import { ResponseTab, type ResponseTabPeriod } from "@/pages/monitors/components/response-tab"
 import { RoutingRulesTable } from "@/pages/monitors/components/routing-rules-table"
@@ -141,6 +142,7 @@ export default function MonitorsShow({
   monitor: initialMonitor,
   heartbeats: initialHeartbeats,
   incidents: initialIncidents,
+  incidentHeatmap,
   chartData: initialChartData,
   prevChartData: initialPrevChartData,
   uptimeStats,
@@ -903,46 +905,12 @@ export default function MonitorsShow({
 
           {/* ── Incidents tab ── */}
           <TabPanel id="incidents" className="pt-4">
-            <div className="rounded-lg border border-border p-4">
-              <WhenVisible
-                fallback={<div className="h-64 animate-pulse rounded-sm bg-muted" />}
-                data="incidents"
-              >
-                {incidents && incidents.length > 0 ? (
-                  <div className="space-y-3">
-                    {incidents.map((incident) => (
-                      <div
-                        key={incident.id}
-                        className="flex items-center justify-between rounded-lg border border-border p-4"
-                      >
-                        <div>
-                          <p className="font-medium text-sm">{incident.cause ?? "Unknown cause"}</p>
-                          <p className="text-muted-foreground text-xs">
-                            Started:{" "}
-                            {new Date(incident.started_at).toLocaleString(undefined, {
-                              dateStyle: "medium",
-                              timeStyle: "short",
-                            })}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <Badge intent={incident.resolved_at ? "success" : "danger"}>
-                            {incident.resolved_at ? "Resolved" : "Ongoing"}
-                          </Badge>
-                          <p className="mt-1 text-muted-foreground text-xs">
-                            Duration: {formatDuration(incident.started_at, incident.resolved_at)}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="py-8 text-center text-muted-foreground text-sm">
-                    No incidents — this service has been running clean.
-                  </p>
-                )}
-              </WhenVisible>
-            </div>
+            <WhenVisible
+              fallback={<div className="h-64 animate-pulse rounded-sm bg-muted" />}
+              data={["incidents", "incidentHeatmap"]}
+            >
+              <IncidentsTab incidents={incidents ?? []} heatmap={incidentHeatmap ?? null} />
+            </WhenVisible>
           </TabPanel>
 
           {/* ── Response tab ── */}

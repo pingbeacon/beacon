@@ -31,7 +31,7 @@ function formatStartedAt(iso: string): string {
   if (isYesterday) return `yesterday · ${time}`
   const daysAgo = Math.floor((today.getTime() - d.getTime()) / 86_400_000)
   if (daysAgo < 30) return `${daysAgo}d ago · ${time}`
-  return d.toLocaleDateString(undefined, { day: "numeric", month: "short" }) + ` · ${time}`
+  return `${d.toLocaleDateString(undefined, { day: "numeric", month: "short" })} · ${time}`
 }
 
 const SEV_LABEL: Record<Incident["severity"], string> = {
@@ -41,10 +41,10 @@ const SEV_LABEL: Record<Incident["severity"], string> = {
   info: "INFO",
 }
 
-function severityDotStatus(severity: Incident["severity"]): "down" | "degraded" | "info" {
+function severityDotStatus(severity: Incident["severity"]): "down" | "degraded" | "unknown" {
   if (severity === "sev1" || severity === "sev2") return "down"
   if (severity === "sev3") return "degraded"
-  return "info"
+  return "unknown"
 }
 
 function severityTextClass(severity: Incident["severity"]): string {
@@ -101,7 +101,11 @@ export function IncidentsSummary({ incidents }: { incidents: Incident[] }) {
         <KpiCell
           label="Active"
           value={stats.active ? "1" : "0"}
-          sub={stats.active ? `${formatDurationSeconds(stats.active.started_at, null)} ago` : "all clear"}
+          sub={
+            stats.active
+              ? `${formatDurationSeconds(stats.active.started_at, null)} ago`
+              : "all clear"
+          }
           intent={stats.active ? "danger" : "muted"}
         />
       </div>
@@ -160,7 +164,7 @@ export function IncidentsHeatmap({ heatmap }: { heatmap: IncidentHeatmapPayload 
     <div className="rounded-lg border border-border bg-card px-5 py-4">
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <div className="flex items-baseline gap-3">
-          <Eyebrow>// incident calendar</Eyebrow>
+          <Eyebrow>{"// incident calendar"}</Eyebrow>
           <span className="text-muted-foreground text-xs">
             last 90 days · <span className="text-foreground">{summary.incident_days} bad</span> ·{" "}
             <span className="text-muted-foreground">{summary.clean_days} clean</span> · worst day{" "}
@@ -192,11 +196,15 @@ export function IncidentsHeatmap({ heatmap }: { heatmap: IncidentHeatmapPayload 
             data-count={d.count}
             data-date={d.date}
             title={d.date ? `${d.count} incident${d.count === 1 ? "" : "s"} · ${d.date}` : ""}
-            className={`relative flex h-3.5 items-center justify-center rounded-sm text-[8px] font-bold ${colorClass(d.count)} ${
+            className={`relative flex h-3.5 items-center justify-center rounded-sm font-bold text-[8px] ${colorClass(d.count)} ${
               idx === todayIdx ? "ring-1 ring-primary ring-offset-1 ring-offset-background" : ""
             }`}
           >
-            <span className={d.count >= 2 ? (d.count >= 4 ? "text-background" : "text-foreground") : "sr-only"}>
+            <span
+              className={
+                d.count >= 2 ? (d.count >= 4 ? "text-background" : "text-foreground") : "sr-only"
+              }
+            >
               {d.count >= 2 ? d.count : ""}
             </span>
           </div>
@@ -213,8 +221,9 @@ interface IncidentRowProps {
 }
 
 function IncidentRow({ incident, expanded, onToggle }: IncidentRowProps) {
-  const sev = incident.severity
+  const sev: Incident["severity"] = incident.severity ?? "info"
   const sevClass = severityTextClass(sev)
+  const sevLabel = SEV_LABEL[sev]
   const isActive = !incident.resolved_at
 
   return (
@@ -228,27 +237,30 @@ function IncidentRow({ incident, expanded, onToggle }: IncidentRowProps) {
           expanded ? "bg-primary/5" : ""
         }`}
       >
-        <StatusDot status={severityDotStatus(sev)} pulse={isActive} aria-hidden />
-        <span className={`text-[10px] font-bold tracking-wider ${sevClass}`}>{SEV_LABEL[sev]}</span>
+        <StatusDot
+          status={severityDotStatus(sev)}
+          className={isActive ? "animate-pulse" : undefined}
+        />
+        <span className={`font-bold text-[10px] tracking-wider ${sevClass}`}>{sevLabel}</span>
         <div className="min-w-0">
-          <div className="truncate text-foreground text-xs font-medium">
+          <div className="truncate font-medium text-foreground text-xs">
             {incident.cause ?? `Incident #${incident.id}`}
           </div>
           <div className="truncate text-[10px] text-muted-foreground">
             {isActive ? "ongoing" : "resolved"}
             {" · "}
-            {SEV_LABEL[sev].toLowerCase()}
+            {sevLabel.toLowerCase()}
           </div>
         </div>
         <span className="text-[11px] text-foreground">
           {formatDurationSeconds(incident.started_at, incident.resolved_at)}
         </span>
-        <span className="text-[10px] text-muted-foreground">{formatStartedAt(incident.started_at)}</span>
+        <span className="text-[10px] text-muted-foreground">
+          {formatStartedAt(incident.started_at)}
+        </span>
         <span
-          className={`rounded-sm px-1.5 py-0.5 text-center text-[9px] font-semibold tracking-wider ${
-            isActive
-              ? "bg-destructive text-background"
-              : "border border-success text-success"
+          className={`rounded-sm px-1.5 py-0.5 text-center font-semibold text-[9px] tracking-wider ${
+            isActive ? "bg-destructive text-background" : "border border-success text-success"
           }`}
         >
           {isActive ? "ACTIVE" : "RESOLVED"}
@@ -309,30 +321,29 @@ function IncidentRowDetail({ incident }: { incident: Incident }) {
     >
       <div className="rounded-md border border-border bg-background p-4">
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-foreground text-xs font-semibold">Event log</span>
+          <span className="font-semibold text-foreground text-xs">Event log</span>
           <span className="text-[10px] text-muted-foreground">{events.length} events</span>
         </div>
         <div className="grid gap-1 text-[11px]">
           {events.map((e, i) => (
             <div
               key={i}
-              className="grid grid-cols-[88px_70px_1fr] gap-2 leading-relaxed text-muted-foreground"
+              className="grid grid-cols-[88px_70px_1fr] gap-2 text-muted-foreground leading-relaxed"
             >
               <span>{e[0]}</span>
-              <span className="text-[10px] font-semibold tracking-wider text-foreground">{e[1]}</span>
+              <span className="font-semibold text-[10px] text-foreground tracking-wider">
+                {e[1]}
+              </span>
               <span>{e[2]}</span>
             </div>
           ))}
         </div>
       </div>
       <div className="rounded-md border border-border bg-background p-4">
-        <div className="mb-2 text-foreground text-xs font-semibold">Response time during incident</div>
-        <svg
-          viewBox="0 0 360 100"
-          preserveAspectRatio="none"
-          className="h-24 w-full"
-          aria-hidden
-        >
+        <div className="mb-2 font-semibold text-foreground text-xs">
+          Response time during incident
+        </div>
+        <svg viewBox="0 0 360 100" preserveAspectRatio="none" className="h-24 w-full" aria-hidden>
           {[20, 40, 60, 80].map((y) => (
             <line
               key={y}
@@ -379,7 +390,7 @@ export function IncidentsList({ incidents }: { incidents: Incident[] }) {
   return (
     <div className="rounded-lg border border-border bg-card">
       <div className="px-5 py-3">
-        <Eyebrow>// incidents</Eyebrow>
+        <Eyebrow>{"// incidents"}</Eyebrow>
       </div>
       {incidents.map((inc) => (
         <IncidentRow
