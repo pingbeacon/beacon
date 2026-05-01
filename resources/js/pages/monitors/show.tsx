@@ -41,6 +41,7 @@ import type {
   EscalationPolicy,
   Heartbeat,
   Incident,
+  IncidentHeatmapPayload,
   Monitor,
   NotificationChannel,
   NotificationRoute,
@@ -68,6 +69,7 @@ interface Props {
   monitor: Monitor
   heartbeats?: { data: Heartbeat[]; links: PaginationLinks; meta: PaginationMeta }
   incidents?: Incident[]
+  incidentHeatmap?: IncidentHeatmapPayload | null
   chartData?: ChartDataPoint[]
   prevChartData?: ChartDataPoint[]
   uptimeStats?: UptimeStats

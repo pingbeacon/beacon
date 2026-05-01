@@ -7,11 +7,15 @@ use App\Events\MonitorStatusChanged;
 use App\Jobs\SendNotificationJob;
 use App\Models\Incident;
 use App\Models\Monitor;
+use App\Services\IncidentSeverityClassifier;
 use App\Services\NotificationRouter;
 
 class HandleStatusChangeAction
 {
-    public function __construct(public NotificationRouter $router = new NotificationRouter) {}
+    public function __construct(
+        public NotificationRouter $router = new NotificationRouter,
+        public IncidentSeverityClassifier $severityClassifier = new IncidentSeverityClassifier,
+    ) {}
 
     public function execute(Monitor $monitor, string $newStatus, ?string $message = null): void
     {
@@ -29,10 +33,13 @@ class HandleStatusChangeAction
         $incidentId = null;
 
         if ($newStatus === 'down' && $oldStatus !== 'down') {
+            $heartbeat = $monitor->heartbeats()->latest('id')->first();
+
             $incident = Incident::create([
                 'monitor_id' => $monitor->id,
                 'started_at' => now(),
                 'cause' => $message,
+                'severity' => $this->severityClassifier->classify($monitor, $heartbeat)->value,
             ]);
 
             $incidentId = $incident->id;
