@@ -936,6 +936,7 @@ export default function MonitorsShow({
                 monitorId={monitor.id}
                 assertions={assertions}
                 canUpdate={canUpdateAssertions}
+                recentHeartbeats={liveHeartbeatsNewestFirst.slice(0, 25)}
               />
             </WhenVisible>
           </TabPanel>

@@ -10,6 +10,7 @@ use App\Http\Controllers\FiredTodayDeliveriesController;
 use App\Http\Controllers\ImportMonitorsController;
 use App\Http\Controllers\MaintenanceWindowController;
 use App\Http\Controllers\MonitorController;
+use App\Http\Controllers\MonitorDryRunController;
 use App\Http\Controllers\MonitorGroupController;
 use App\Http\Controllers\MonitorGroupReorderController;
 use App\Http\Controllers\MonitorIncidentHeatmapController;
@@ -61,6 +62,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('monitors/{monitor}/assertions', [AssertionController::class, 'store'])->name('monitors.assertions.store');
     Route::patch('monitors/{monitor}/assertions/{assertion}', [AssertionController::class, 'update'])->name('monitors.assertions.update');
     Route::delete('monitors/{monitor}/assertions/{assertion}', [AssertionController::class, 'destroy'])->name('monitors.assertions.destroy');
+    Route::post('monitors/{monitor}/dry-run', MonitorDryRunController::class)->name('monitors.dry-run');
 
     Route::post('monitors/{monitor}/notification-routes', [NotificationRouteController::class, 'store'])->name('monitors.notification-routes.store');
     Route::patch('monitors/{monitor}/notification-routes/{notificationRoute}', [NotificationRouteController::class, 'update'])->name('monitors.notification-routes.update');

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/modal"
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
 import { TextField } from "@/components/ui/text-field"
+import { type DryRunHeartbeat, DryRunPanel } from "@/pages/monitors/components/dry-run-panel"
 
 export type AssertionType = "status" | "latency" | "body" | "header" | "content_type"
 export type AssertionSeverity = "critical" | "warning" | "info"
@@ -44,6 +45,7 @@ interface Props {
   monitorId: number
   assertions: AssertionRowPayload[] | null | undefined
   canUpdate?: boolean
+  recentHeartbeats?: DryRunHeartbeat[]
 }
 
 const FILTERS: Array<{ key: "all" | "failing" | "passing" | "muted"; label: string }> = [
@@ -535,7 +537,12 @@ function AssertionFormModal({
   )
 }
 
-export function AssertionsTab({ monitorId, assertions, canUpdate = false }: Props) {
+export function AssertionsTab({
+  monitorId,
+  assertions,
+  canUpdate = false,
+  recentHeartbeats = [],
+}: Props) {
   const [filter, setFilter] = useState<"all" | "failing" | "passing" | "muted">("all")
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [modal, setModal] = useState<ModalState>({ open: false, editing: null })
@@ -553,6 +560,7 @@ export function AssertionsTab({ monitorId, assertions, canUpdate = false }: Prop
         <div className="rounded-lg border border-border bg-card p-8">
           <div className="h-4 w-48 animate-pulse rounded bg-muted/50" />
         </div>
+        <DryRunPanel monitorId={monitorId} recentHeartbeats={recentHeartbeats} />
         {canUpdate && (
           <AssertionFormModal
             monitorId={monitorId}
@@ -597,6 +605,7 @@ export function AssertionsTab({ monitorId, assertions, canUpdate = false }: Prop
             No assertions yet — add one to start checking response shape.
           </p>
         </div>
+        <DryRunPanel monitorId={monitorId} recentHeartbeats={recentHeartbeats} />
         {canUpdate && (
           <AssertionFormModal
             monitorId={monitorId}
@@ -673,6 +682,7 @@ export function AssertionsTab({ monitorId, assertions, canUpdate = false }: Prop
           )}
         </div>
       </div>
+      <DryRunPanel monitorId={monitorId} recentHeartbeats={recentHeartbeats} />
       {canUpdate && (
         <AssertionFormModal
           monitorId={monitorId}
