@@ -124,7 +124,17 @@ export function hydrate(monitors: Monitor[] | undefined | null): void {
       changed = true
       continue
     }
-    const incomingNewer = timestamp(incoming.last_checked_at) > timestamp(existing.last_checked_at)
+    // On ties (e.g. both null last_checked_at) prefer incoming so that a
+    // richer hydration (the show controller) overrides a sparse one (sidebar
+    // stub) that landed first.
+    const incomingTimestamp = timestamp(incoming.last_checked_at)
+    const existingTimestamp = timestamp(existing.last_checked_at)
+    const incomingNewer =
+      incomingTimestamp > existingTimestamp ||
+      (incomingTimestamp === existingTimestamp &&
+        (incoming.uptime_percentage != null ||
+          incoming.average_response_time != null ||
+          (incoming.heartbeats && incoming.heartbeats.length > 0)))
     const base = incomingNewer ? incoming : existing
     const newHeartbeats = hasNewHeartbeats(existing.heartbeats, incoming.heartbeats)
     const baseChanged = base !== existing && monitorMetaDiffers(base, existing)
@@ -154,6 +164,11 @@ export function handleHeartbeat(payload: HeartbeatPayload): void {
     ...payload.heartbeat,
     monitor_id: payload.monitorId,
     message: null,
+    phase_dns_ms: null,
+    phase_tcp_ms: null,
+    phase_tls_ms: null,
+    phase_ttfb_ms: null,
+    phase_transfer_ms: null,
   }
   const heartbeats = mergeHeartbeats(existing.heartbeats, [heartbeat])
   const updated: Monitor = {
