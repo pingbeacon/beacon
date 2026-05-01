@@ -92,6 +92,20 @@ it('forbids cross-team access', function () {
         ->assertForbidden();
 });
 
+it('rejects PATCH that changes type without supplying a matching expression', function () {
+    $user = User::factory()->create();
+    $monitor = Monitor::factory()->for($user)->create();
+    $assertion = Assertion::factory()->for($monitor)->status(200)->create();
+
+    $this->actingAs($user)
+        ->patch(route('monitors.assertions.update', [$monitor, $assertion]), [
+            'type' => 'latency',
+        ])
+        ->assertSessionHasErrors('expression');
+
+    expect($assertion->fresh()->type)->toBe('status');
+});
+
 it('rejects assertion belonging to a different monitor', function () {
     $user = User::factory()->create();
     $monitorA = Monitor::factory()->for($user)->create();

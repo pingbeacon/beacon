@@ -152,7 +152,7 @@ export function ResponseTab({
       </div>
 
       <StatusCodesBars buckets={statusCodes} />
-      <AssertionTimeline assertions={assertions ?? []} />
+      <AssertionTimeline assertions={assertions} />
       <SlowestChecks heartbeats={heartbeats} />
     </section>
   )
@@ -918,9 +918,11 @@ function StatusCodesBars({ buckets }: { buckets: StatusBucket[] }) {
   )
 }
 
-function AssertionTimeline({ assertions }: { assertions: AssertionRowPayload[] }) {
-  const totalChecks = assertions.reduce((acc, a) => acc + a.total_24h, 0)
-  const totalFails = assertions.reduce((acc, a) => acc + a.fail_count_24h, 0)
+function AssertionTimeline({ assertions }: { assertions: AssertionRowPayload[] | null | undefined }) {
+  const isLoading = assertions == null
+  const list = assertions ?? []
+  const totalChecks = list.reduce((acc, a) => acc + a.total_24h, 0)
+  const totalFails = list.reduce((acc, a) => acc + a.fail_count_24h, 0)
 
   return (
     <article
@@ -934,20 +936,25 @@ function AssertionTimeline({ assertions }: { assertions: AssertionRowPayload[] }
             per-check pass/fail · last 24h
           </p>
         </div>
-        {assertions.length > 0 && (
+        {!isLoading && list.length > 0 && (
           <p className="text-[10px] text-muted-foreground">
-            {assertions.length} rule{assertions.length === 1 ? "" : "s"} · {totalFails} fail
+            {list.length} rule{list.length === 1 ? "" : "s"} · {totalFails} fail
             {totalFails === 1 ? "" : "s"} of {totalChecks.toLocaleString()} checks
           </p>
         )}
       </header>
-      {assertions.length === 0 ? (
+      {isLoading ? (
+        <div className="mt-3 flex flex-col gap-1.5" data-slot="assertion-timeline-loading">
+          <div className="h-4 w-full animate-pulse rounded bg-muted/50" />
+          <div className="h-4 w-3/4 animate-pulse rounded bg-muted/40" />
+        </div>
+      ) : list.length === 0 ? (
         <p className="mt-3 text-muted-foreground text-sm">
           No assertions defined for this monitor — open the Assertions tab to add one.
         </p>
       ) : (
         <div className="mt-3 flex flex-col gap-1.5">
-          {assertions.map((a) => (
+          {list.map((a) => (
             <div
               key={a.id}
               data-slot="assertion-timeline-row"

@@ -35,9 +35,42 @@ final class AssertionDsl
      */
     public static function tryParse(string $type, string $expression): ?string
     {
+        if ($type === 'body') {
+            return self::parseBodyExpression($expression);
+        }
+
         $verdict = self::evaluate($type, $expression, new AssertionPayload(null, null, null));
 
         return $verdict->parseError;
+    }
+
+    /**
+     * Body expressions cannot be validated through evaluate() because evaluation
+     * exits early when the payload has no body — masking malformed RHS literals
+     * or non-numeric numeric comparisons. Parse the structure independently.
+     */
+    private static function parseBodyExpression(string $expression): ?string
+    {
+        if (! preg_match('/^\s*(\$[A-Za-z0-9_\-$.\[\]"\' ]*)\s*(==|!=|<=|>=|<|>)\s*(.+?)\s*$/', $expression, $m)) {
+            return 'expected `$<jsonpath> <op> <literal|number>`';
+        }
+
+        $op = $m[2];
+        $rhs = trim($m[3]);
+
+        if ($op === '==' || $op === '!=') {
+            if (self::parseLiteral($rhs) === self::PARSE_ERROR) {
+                return "bad literal: {$rhs}";
+            }
+
+            return null;
+        }
+
+        if (! is_numeric($rhs)) {
+            return 'expected numeric RHS for numeric comparison';
+        }
+
+        return null;
     }
 
     private static function evaluateStatus(string $expression, AssertionPayload $payload): AssertionVerdict

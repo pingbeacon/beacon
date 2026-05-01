@@ -253,7 +253,7 @@ class MonitorController extends Controller
             return 'pass';
         }
 
-        return 'fail';
+        return $assertion->severity === 'warning' ? 'warn' : 'fail';
     }
 
     /**

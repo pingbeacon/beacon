@@ -135,7 +135,7 @@ function AssertionsSummary({ assertions }: { assertions: AssertionRowPayload[] }
     },
     {
       label: "pass rate · 24h",
-      value: `${passRate}%`,
+      value: passRate === "—" ? "—" : `${passRate}%`,
       sub: `${passes.toLocaleString()} of ${totalChecks.toLocaleString()}`,
       intent: "primary" as const,
     },
@@ -527,7 +527,28 @@ export function AssertionsTab({ monitorId, assertions }: Props) {
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [modal, setModal] = useState<ModalState>({ open: false, editing: null })
 
-  const list = assertions ?? []
+  if (assertions == null) {
+    return (
+      <div className="flex flex-col gap-4" data-slot="assertions-loading">
+        <AssertionsToolbar
+          filter={filter}
+          setFilter={setFilter}
+          counts={{ all: 0, failing: 0, passing: 0, muted: 0 }}
+          onCreate={() => setModal({ open: true, editing: null })}
+        />
+        <div className="rounded-lg border border-border bg-card p-8">
+          <div className="h-4 w-48 animate-pulse rounded bg-muted/50" />
+        </div>
+        <AssertionFormModal
+          monitorId={monitorId}
+          state={modal}
+          onClose={() => setModal({ open: false, editing: null })}
+        />
+      </div>
+    )
+  }
+
+  const list = assertions
   const counts = {
     all: list.length,
     failing: list.filter((a) => a.state === "fail").length,

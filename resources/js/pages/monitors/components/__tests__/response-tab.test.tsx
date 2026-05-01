@@ -410,4 +410,29 @@ describe("ResponseTab", () => {
     expect(rows[1]).toHaveAttribute("data-id", "2")
     expect(rows[2]).toHaveAttribute("data-id", "1")
   })
+
+  it("renders an assertion-timeline loading skeleton while assertions prop is undefined", async () => {
+    const fetcher = vi.fn().mockResolvedValue(buildPayload())
+    const { container } = render(
+      <ResponseTab
+        monitorId={7}
+        period="24h"
+        onPeriodChange={() => {}}
+        chartData={sampleChart()}
+        prevChartData={sampleChart(40)}
+        heartbeats={[sampleHeartbeat()]}
+        assertions={undefined}
+        fetcher={fetcher}
+      />,
+    )
+
+    await waitFor(() => expect(fetcher).toHaveBeenCalled())
+
+    expect(
+      container.querySelector('[data-slot="assertion-timeline-loading"]'),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText(/No assertions defined for this monitor/i),
+    ).not.toBeInTheDocument()
+  })
 })

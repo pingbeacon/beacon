@@ -89,10 +89,13 @@ class MonitorSeeder extends Seeder
             return;
         }
 
+        // content_type / header rules are intentionally omitted: the synthetic
+        // heartbeats here only carry status_code + response_time, so any rule
+        // we cannot back-fill from those columns would render as a permanently
+        // empty timeline strip in the demo Assertions tab.
         $rules = [
             ['type' => 'status', 'expression' => 'status == 200', 'severity' => 'critical', 'on_fail' => 'open_incident', 'tolerance' => 0, 'muted' => false],
             ['type' => 'latency', 'expression' => 'response_time_ms < 2000', 'severity' => 'warning', 'on_fail' => 'log_only', 'tolerance' => 1, 'muted' => false],
-            ['type' => 'content_type', 'expression' => 'content-type ~ ^application/json', 'severity' => 'info', 'on_fail' => 'log_only', 'tolerance' => 0, 'muted' => true],
         ];
 
         $created = [];

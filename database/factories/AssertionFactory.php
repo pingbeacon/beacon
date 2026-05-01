@@ -48,7 +48,7 @@ class AssertionFactory extends Factory
     {
         return $this->state([
             'type' => 'body',
-            'expression' => "{$path} == \"{$literal}\"",
+            'expression' => sprintf('%s == %s', $path, json_encode($literal)),
         ]);
     }
 

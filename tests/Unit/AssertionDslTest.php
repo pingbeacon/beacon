@@ -180,4 +180,24 @@ describe('parse validator', function () {
     it('returns the reason for an invalid expression', function () {
         expect(AssertionDsl::tryParse('latency', 'response_time_ms 2000'))->not->toBeNull();
     });
+
+    it('detects a malformed body equality literal independent of payload', function () {
+        // Without a parse-only path, evaluate() would short-circuit on `<no body>`
+        // and miss the bare-word RHS entirely.
+        expect(AssertionDsl::tryParse('body', '$.status == ok'))
+            ->not->toBeNull();
+    });
+
+    it('detects a non-numeric RHS for body numeric comparison', function () {
+        expect(AssertionDsl::tryParse('body', '$.queue_depth < not-a-number'))
+            ->not->toBeNull();
+    });
+
+    it('accepts a well-formed body expression with quoted literal', function () {
+        expect(AssertionDsl::tryParse('body', '$.status == "ok"'))->toBeNull();
+    });
+
+    it('accepts a well-formed body numeric comparison', function () {
+        expect(AssertionDsl::tryParse('body', '$.queue_depth < 100'))->toBeNull();
+    });
 });

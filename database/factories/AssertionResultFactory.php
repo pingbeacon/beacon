@@ -17,9 +17,13 @@ class AssertionResultFactory extends Factory
      */
     public function definition(): array
     {
+        // Anchor both foreign keys to the same monitor so factory-generated
+        // fixtures cannot accidentally mix records across monitors.
+        $heartbeat = Heartbeat::factory()->create();
+
         return [
-            'assertion_id' => Assertion::factory(),
-            'heartbeat_id' => Heartbeat::factory(),
+            'assertion_id' => Assertion::factory()->state(['monitor_id' => $heartbeat->monitor_id]),
+            'heartbeat_id' => $heartbeat->id,
             'passed' => true,
             'actual_value' => null,
             'observed_at' => now(),

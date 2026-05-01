@@ -23,9 +23,12 @@ class UpdateAssertionRequest extends FormRequest
     {
         return [
             'type' => ['sometimes', 'string', 'in:status,latency,body,header,content_type'],
-            'expression' => ['sometimes', 'string', 'max:512', function (string $attribute, mixed $value, \Closure $fail) {
+            'expression' => ['required_with:type', 'nullable', 'string', 'max:512', function (string $attribute, mixed $value, \Closure $fail) {
+                if (! is_string($value)) {
+                    return;
+                }
                 $type = $this->input('type', $this->route('assertion')?->type);
-                if (! is_string($type) || ! is_string($value)) {
+                if (! is_string($type)) {
                     return;
                 }
                 if (($error = AssertionDsl::tryParse($type, $value)) !== null) {

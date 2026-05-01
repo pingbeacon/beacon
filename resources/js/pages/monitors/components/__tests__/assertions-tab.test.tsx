@@ -78,4 +78,22 @@ describe("AssertionsTab", () => {
     fireEvent.click(container.querySelector('[data-slot="new-assertion-trigger"]') as HTMLElement)
     expect(document.querySelector('[data-slot="assertion-form"]')).toBeInTheDocument()
   })
+
+  it("renders a loading skeleton while assertions prop is undefined (deferred)", () => {
+    const { container } = render(<AssertionsTab monitorId={1} assertions={undefined} />)
+    expect(container.querySelector('[data-slot="assertions-loading"]')).toBeInTheDocument()
+    expect(container.querySelector('[data-slot="assertions-empty"]')).not.toBeInTheDocument()
+  })
+
+  it("renders the empty state only after deferred assertions resolve to an empty array", () => {
+    const { container } = render(<AssertionsTab monitorId={1} assertions={[]} />)
+    expect(container.querySelector('[data-slot="assertions-loading"]')).not.toBeInTheDocument()
+    expect(container.querySelector('[data-slot="assertions-empty"]')).toBeInTheDocument()
+  })
+
+  it("renders an em-dash without a percent sign in the pass-rate summary when no checks exist", () => {
+    const assertion = buildAssertion({ total_24h: 0, fail_count_24h: 0, pass_rate: null })
+    render(<AssertionsTab monitorId={1} assertions={[assertion]} />)
+    expect(screen.queryByText("—%")).not.toBeInTheDocument()
+  })
 })
