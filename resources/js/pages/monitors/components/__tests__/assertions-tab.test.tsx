@@ -74,9 +74,7 @@ describe("AssertionsTab", () => {
   })
 
   it("opens the form modal when 'New assertion' is clicked (canUpdate)", () => {
-    const { container } = render(
-      <AssertionsTab monitorId={1} assertions={[]} canUpdate={true} />,
-    )
+    const { container } = render(<AssertionsTab monitorId={1} assertions={[]} canUpdate={true} />)
     fireEvent.click(container.querySelector('[data-slot="new-assertion-trigger"]') as HTMLElement)
     expect(document.querySelector('[data-slot="assertion-form"]')).toBeInTheDocument()
   })
