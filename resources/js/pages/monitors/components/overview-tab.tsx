@@ -95,7 +95,10 @@ function computePercentiles(
     .map((d) => d.response_time as number)
     .sort((a, b) => a - b)
   if (!sorted.length) return null
-  const at = (p: number) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))]
+  const at = (p: number) => {
+    const idx = Math.min(sorted.length - 1, Math.max(0, Math.floor(p * (sorted.length - 1))))
+    return sorted[idx]
+  }
   return { p50: at(0.5), p90: at(0.9), p95: at(0.95), p99: at(0.99) }
 }
 
@@ -284,8 +287,33 @@ function ResponsePanel({
 }
 
 function DistributionPanel({ chartData }: { chartData: ChartDataPoint[] | undefined }) {
-  const percentiles = chartData ? computePercentiles(chartData) : null
-  const count = chartData?.filter((d) => d.response_time !== null).length ?? 0
+  if (chartData === undefined) {
+    return (
+      <div data-slot="overview-distribution" className="rounded-lg border border-border bg-card p-5">
+        <div className="flex items-center justify-between gap-4">
+          <Eyebrow>response distribution</Eyebrow>
+          <span className="h-4 w-16 animate-pulse rounded bg-muted" />
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {(["p50", "p90", "p95", "p99"] as const).map((label) => (
+            <div
+              key={label}
+              className="rounded-md border border-border p-3.5"
+              data-percentile={label}
+            >
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                {label.toUpperCase()}
+              </p>
+              <div className="mt-1.5 h-7 w-20 animate-pulse rounded bg-muted" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  const percentiles = computePercentiles(chartData)
+  const count = chartData.filter((d) => d.response_time !== null).length
 
   return (
     <div data-slot="overview-distribution" className="rounded-lg border border-border bg-card p-5">
@@ -351,7 +379,6 @@ function SslPanel({
                 {},
                 {
                   preserveScroll: true,
-                  onFinish: () => onScanSSL(false),
                 },
               )
             }}
@@ -477,31 +504,36 @@ function IncidentsPanel({ incidents }: { incidents: Incident[] | undefined }) {
   )
 }
 
-function ChannelsPanel({ monitor }: { monitor: Monitor }) {
-  if (!monitor.notification_channels || monitor.notification_channels.length === 0) return null
+function ChannelsPanel({ monitor, channels }: { monitor: Monitor; channels?: any[] }) {
+  const channelList = channels ?? monitor.notification_channels ?? []
+
   return (
     <div data-slot="overview-channels" className="rounded-lg border border-border bg-card p-5">
       <Eyebrow>notification channels</Eyebrow>
       <p className="mt-1 mb-3 text-muted-foreground text-xs">
         Fires on down, degraded, and recovery
       </p>
-      <div className="flex flex-col">
-        {monitor.notification_channels.map((ch, idx) => (
-          <div
-            key={ch.id}
-            className={`flex items-center gap-2.5 py-2 text-xs ${
-              idx > 0 ? "border-border border-t" : ""
-            }`}
-          >
-            <StatusDot status={ch.is_enabled ? "up" : "unknown"} />
-            <span className="w-20 shrink-0 truncate text-foreground">{ch.type}</span>
-            <span className="min-w-0 flex-1 truncate text-muted-foreground">{ch.name}</span>
-            <span className="text-[11px] text-muted-foreground">
-              {ch.is_enabled ? "enabled" : "disabled"}
-            </span>
-          </div>
-        ))}
-      </div>
+      {channelList.length > 0 ? (
+        <div className="flex flex-col">
+          {channelList.map((ch, idx) => (
+            <div
+              key={ch.id}
+              className={`flex items-center gap-2.5 py-2 text-xs ${
+                idx > 0 ? "border-border border-t" : ""
+              }`}
+            >
+              <StatusDot status={ch.is_enabled ? "up" : "unknown"} />
+              <span className="w-20 shrink-0 truncate text-foreground">{ch.type}</span>
+              <span className="min-w-0 flex-1 truncate text-muted-foreground">{ch.name}</span>
+              <span className="text-[11px] text-muted-foreground">
+                {ch.is_enabled ? "enabled" : "disabled"}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-muted-foreground text-sm">No notification channels configured.</p>
+      )}
     </div>
   )
 }

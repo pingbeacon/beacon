@@ -92,5 +92,6 @@ test('overview tab renders structurally even with no heartbeats or ssl', functio
         ->assertPresent('[data-slot="overview-response"]')
         ->assertPresent('[data-slot="overview-distribution"]')
         ->assertPresent('[data-slot="overview-incidents"]')
-        ->assertPresent('[data-slot="overview-live-log"]');
+        ->assertPresent('[data-slot="overview-live-log"]')
+        ->assertNotPresent('[data-slot="overview-ssl"]');
 });
