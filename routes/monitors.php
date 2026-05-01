@@ -12,6 +12,7 @@ use App\Http\Controllers\MaintenanceWindowController;
 use App\Http\Controllers\MonitorController;
 use App\Http\Controllers\MonitorGroupController;
 use App\Http\Controllers\MonitorGroupReorderController;
+use App\Http\Controllers\MonitorIncidentHeatmapController;
 use App\Http\Controllers\MonitorNotificationDeliveryController;
 use App\Http\Controllers\MonitorPhaseTimingsController;
 use App\Http\Controllers\MonitorRestoreController;
@@ -55,6 +56,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('monitors/{monitor}/notification-deliveries', [MonitorNotificationDeliveryController::class, 'index'])->name('monitors.notification-deliveries.index');
     Route::get('monitors/{monitor}/phase-timings', MonitorPhaseTimingsController::class)->name('monitors.phase-timings');
+    Route::get('monitors/{monitor}/incident-heatmap', MonitorIncidentHeatmapController::class)->name('monitors.incident-heatmap');
 
     Route::post('monitors/{monitor}/assertions', [AssertionController::class, 'store'])->name('monitors.assertions.store');
     Route::patch('monitors/{monitor}/assertions/{assertion}', [AssertionController::class, 'update'])->name('monitors.assertions.update');

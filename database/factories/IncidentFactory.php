@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\IncidentSeverity;
 use App\Models\Incident;
 use App\Models\Monitor;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -18,6 +19,7 @@ class IncidentFactory extends Factory
             'started_at' => now()->subMinutes(fake()->numberBetween(10, 120)),
             'resolved_at' => null,
             'cause' => fake()->sentence(),
+            'severity' => IncidentSeverity::Sev2,
         ];
     }
 
@@ -26,5 +28,10 @@ class IncidentFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'resolved_at' => now(),
         ]);
+    }
+
+    public function severity(IncidentSeverity $severity): static
+    {
+        return $this->state(fn () => ['severity' => $severity]);
     }
 }

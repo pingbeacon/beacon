@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\IncidentSeverity;
 use Database\Factories\IncidentFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,6 +20,7 @@ class Incident extends Model
         'started_at',
         'resolved_at',
         'cause',
+        'severity',
         'acked_at',
         'acked_by',
         'ack_token',
@@ -30,6 +32,7 @@ class Incident extends Model
             'started_at' => 'datetime',
             'resolved_at' => 'datetime',
             'acked_at' => 'datetime',
+            'severity' => IncidentSeverity::class,
         ];
     }
 

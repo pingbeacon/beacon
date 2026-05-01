@@ -16,7 +16,9 @@ use App\Models\MonitorGroup;
 use App\Models\NotificationChannel;
 use App\Models\NotificationRoute;
 use App\Models\Tag;
+use App\Services\HeatmapAggregator;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
@@ -191,6 +193,24 @@ class MonitorController extends Controller
             'incidents' => Inertia::defer(
                 fn () => $monitor->incidents()->latest('started_at')->get()
             ),
+            'incidentHeatmap' => Inertia::defer(function () use ($monitor) {
+                $aggregator = new HeatmapAggregator;
+                $to = CarbonImmutable::now();
+                $from = $to->subDays(89);
+                $rows = $aggregator->dailyIncidentCounts($monitor, $from, $to);
+                $counts = array_column($rows, 'count');
+                $incidentDays = count(array_filter($counts, fn ($n) => $n > 0));
+
+                return [
+                    'days' => $rows,
+                    'summary' => [
+                        'incident_days' => $incidentDays,
+                        'clean_days' => count($rows) - $incidentDays,
+                        'max_day' => $counts === [] ? 0 : (int) max($counts),
+                        'total' => array_sum($counts),
+                    ],
+                ];
+            }),
             'chartData' => Inertia::defer(fn () => $this->getChartData($monitor, $period, $cutoff)),
             'prevChartData' => Inertia::defer(function () use ($monitor, $period, $cutoff) {
                 $previousCutoff = $this->previousCutoffFor($period, $cutoff);

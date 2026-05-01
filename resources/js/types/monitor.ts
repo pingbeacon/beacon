@@ -108,14 +108,32 @@ export interface NotificationRoute {
     updated_at: string
 }
 
+export type IncidentSeverity = "sev1" | "sev2" | "sev3" | "info"
+
 export interface Incident {
     id: number
     monitor_id: number
     started_at: string
     resolved_at: string | null
     cause: string | null
+    severity: IncidentSeverity
     created_at: string
     updated_at: string
+}
+
+export interface IncidentHeatmapDay {
+    date: string
+    count: number
+}
+
+export interface IncidentHeatmapPayload {
+    days: IncidentHeatmapDay[]
+    summary: {
+        incident_days: number
+        clean_days: number
+        max_day: number
+        total: number
+    }
 }
 
 export interface EscalationStep {
