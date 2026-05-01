@@ -3,10 +3,13 @@
 namespace App\Jobs;
 
 use App\Actions\HandleStatusChangeAction;
+use App\DTOs\AssertionPayload;
 use App\DTOs\CheckResult;
 use App\Events\HeartbeatRecorded;
 use App\Events\MonitorChecking;
 use App\Models\Monitor;
+use App\Services\Assertions\PersistAssertionResults;
+use App\Services\Checkers\HttpChecker;
 use App\Services\PhaseTimingCapture;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -27,7 +30,7 @@ class CheckHttpMonitorsBatchJob implements ShouldQueue
         $this->onQueue('monitors');
     }
 
-    public function handle(HandleStatusChangeAction $handleStatusChange): void
+    public function handle(HandleStatusChangeAction $handleStatusChange, PersistAssertionResults $persistAssertionResults): void
     {
         $monitors = Monitor::query()
             ->whereIn('id', $this->monitorIds)
@@ -68,6 +71,14 @@ class CheckHttpMonitorsBatchJob implements ShouldQueue
                 'message' => $result->message,
             ]);
 
+            $persistAssertionResults->run($monitor, $heartbeat, new AssertionPayload(
+                statusCode: $result->statusCode,
+                latencyMs: $result->responseTime,
+                body: $result->responseBody,
+                headers: $result->responseHeaders,
+                contentType: $result->contentType,
+            ));
+
             $previousStatus = $monitor->status;
             $monitor->update(['last_checked_at' => now()]);
 
@@ -86,7 +97,7 @@ class CheckHttpMonitorsBatchJob implements ShouldQueue
         if ($response instanceof Throwable || $response === null) {
             return new CheckResult(
                 status: 'down',
-                responseTime: 0,
+                responseTime: null,
                 message: $response instanceof Throwable ? $response->getMessage() : 'No response received.',
             );
         }
@@ -95,7 +106,7 @@ class CheckHttpMonitorsBatchJob implements ShouldQueue
         $stats = $response->handlerStats();
         $responseTime = isset($stats['total_time'])
             ? (int) round($stats['total_time'] * 1000)
-            : 0;
+            : null;
         $timing = PhaseTimingCapture::fromHandlerStats($stats);
 
         $statusCode = $response->status();
@@ -108,6 +119,15 @@ class CheckHttpMonitorsBatchJob implements ShouldQueue
             responseTime: $responseTime,
             statusCode: $statusCode,
             message: $message,
-        ))->withTiming($timing);
+        ))
+            ->withTiming($timing)
+            ->withResponse(self::truncateBody((string) $response->body()), $response->headers());
+    }
+
+    private static function truncateBody(string $body): string
+    {
+        return strlen($body) > HttpChecker::BODY_CAPTURE_LIMIT
+            ? substr($body, 0, HttpChecker::BODY_CAPTURE_LIMIT)
+            : $body;
     }
 }

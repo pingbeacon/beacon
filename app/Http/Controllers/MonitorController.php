@@ -6,6 +6,8 @@ use App\Http\Requests\StoreMonitorRequest;
 use App\Http\Requests\UpdateMonitorRequest;
 use App\Http\Resources\HeartbeatResource;
 use App\Jobs\CheckSslCertificateJob;
+use App\Models\Assertion;
+use App\Models\AssertionResult;
 use App\Models\EscalationFire;
 use App\Models\EscalationPolicy;
 use App\Models\Incident;
@@ -172,6 +174,11 @@ class MonitorController extends Controller
             'escalationPolicy' => $escalationPolicy,
             'activeEscalation' => $activeEscalation,
             'chartPeriod' => $period,
+            // Show is gated by `view`, but the Assertions tab renders mutation
+            // affordances backed by the stricter `update` policy. Surface that
+            // capability up-front so read-only viewers don't see controls that
+            // only fail with a 403 when clicked.
+            'canUpdateAssertions' => auth()->user()?->can('update', $monitor) ?? false,
             'sslCertificate' => Inertia::defer(
                 fn () => $monitor->sslCertificate
             ),
@@ -191,7 +198,108 @@ class MonitorController extends Controller
                 return $this->getChartData($monitor, $period, $previousCutoff, $cutoff);
             }),
             'uptimeStats' => Inertia::defer(fn () => $monitor->uptimeStats()),
+            'assertions' => Inertia::defer(fn () => $this->buildAssertionPayload($monitor)),
         ]);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildAssertionPayload(Monitor $monitor): array
+    {
+        $assertions = $monitor->assertions()->orderBy('id')->get();
+        if ($assertions->isEmpty()) {
+            return [];
+        }
+
+        $since = now()->subDay();
+        $resultsByAssertion = AssertionResult::query()
+            ->whereIn('assertion_id', $assertions->pluck('id'))
+            ->where('observed_at', '>=', $since)
+            ->orderBy('observed_at')
+            ->get()
+            ->groupBy('assertion_id');
+
+        return $assertions->map(function (Assertion $a) use ($resultsByAssertion) {
+            $results = $resultsByAssertion->get($a->id, collect());
+            $passCount = $results->where('passed', true)->count();
+            $total = $results->count();
+            $failed = $results->where('passed', false);
+            $lastFail = $failed->last();
+
+            return [
+                'id' => $a->id,
+                'type' => $a->type,
+                'expression' => $a->expression,
+                'name' => $a->name,
+                'severity' => $a->severity,
+                'on_fail' => $a->on_fail,
+                'muted' => $a->muted,
+                'tolerance' => $a->tolerance,
+                'created_at' => optional($a->created_at)->toISOString(),
+                'updated_at' => optional($a->updated_at)->toISOString(),
+                'pass_rate' => $total > 0 ? round(($passCount / $total) * 100, 2) : null,
+                'fail_count_24h' => $failed->count(),
+                'total_24h' => $total,
+                'last_fail_at' => optional(optional($lastFail)->observed_at)->toISOString(),
+                'last_fail_actual' => $lastFail?->actual_value,
+                'state' => $this->deriveAssertionState($a, $failed),
+                'buckets' => $this->bucketResultsForLastDay($results),
+            ];
+        })->all();
+    }
+
+    private function deriveAssertionState(Assertion $assertion, Collection $recentFailures): string
+    {
+        if ($assertion->muted) {
+            return 'mute';
+        }
+        if ($recentFailures->isEmpty()) {
+            return 'pass';
+        }
+
+        return $assertion->severity === 'warning' ? 'warn' : 'fail';
+    }
+
+    /**
+     * @param  Collection<int, AssertionResult>  $results
+     * @return array<int, int> 60 buckets, -1 = no data, 0 = pass, 2 = fail
+     */
+    private function bucketResultsForLastDay(Collection $results): array
+    {
+        $buckets = array_fill(0, 60, -1);
+        if ($results->isEmpty()) {
+            return $buckets;
+        }
+
+        $windowStart = now()->subDay()->getTimestamp();
+        $windowSeconds = 86_400;
+        $bucketSeconds = $windowSeconds / 60;
+
+        foreach ($results as $row) {
+            $observed = $row->observed_at;
+            if ($observed === null) {
+                continue;
+            }
+            $offset = $observed->getTimestamp() - $windowStart;
+            if ($offset < 0 || $offset >= $windowSeconds) {
+                continue;
+            }
+            $idx = (int) floor($offset / $bucketSeconds);
+            if ($idx < 0 || $idx >= 60) {
+                continue;
+            }
+            // a single failure dominates a bucket
+            if ($row->passed) {
+                if ($buckets[$idx] === -1) {
+                    $buckets[$idx] = 0;
+                }
+            } else {
+                $buckets[$idx] = 2;
+            }
+        }
+
+        return $buckets;
     }
 
     private function previousCutoffFor(string $period, Carbon $cutoff): Carbon

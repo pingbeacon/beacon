@@ -10,6 +10,8 @@ use Throwable;
 
 class HttpChecker implements MonitorChecker
 {
+    public const BODY_CAPTURE_LIMIT = 65_536;
+
     public function check(Monitor $monitor): CheckResult
     {
         $start = microtime(true);
@@ -33,7 +35,9 @@ class HttpChecker implements MonitorChecker
                 responseTime: $responseTime,
                 statusCode: $statusCode,
                 message: $message,
-            ))->withTiming($timing);
+            ))
+                ->withTiming($timing)
+                ->withResponse(self::truncateBody((string) $response->body()), $response->headers());
         } catch (Throwable $e) {
             $responseTime = (int) round((microtime(true) - $start) * 1000);
 
@@ -43,5 +47,12 @@ class HttpChecker implements MonitorChecker
                 message: $e->getMessage(),
             );
         }
+    }
+
+    private static function truncateBody(string $body): string
+    {
+        return strlen($body) > self::BODY_CAPTURE_LIMIT
+            ? substr($body, 0, self::BODY_CAPTURE_LIMIT)
+            : $body;
     }
 }

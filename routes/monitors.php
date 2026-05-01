@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AssertionController;
 use App\Http\Controllers\BulkDeleteMonitorsController;
 use App\Http\Controllers\BulkPauseMonitorsController;
 use App\Http\Controllers\BulkResumeMonitorsController;
@@ -54,6 +55,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('monitors/{monitor}/notification-deliveries', [MonitorNotificationDeliveryController::class, 'index'])->name('monitors.notification-deliveries.index');
     Route::get('monitors/{monitor}/phase-timings', MonitorPhaseTimingsController::class)->name('monitors.phase-timings');
+
+    Route::post('monitors/{monitor}/assertions', [AssertionController::class, 'store'])->name('monitors.assertions.store');
+    Route::patch('monitors/{monitor}/assertions/{assertion}', [AssertionController::class, 'update'])->name('monitors.assertions.update');
+    Route::delete('monitors/{monitor}/assertions/{assertion}', [AssertionController::class, 'destroy'])->name('monitors.assertions.destroy');
 
     Route::post('monitors/{monitor}/notification-routes', [NotificationRouteController::class, 'store'])->name('monitors.notification-routes.store');
     Route::patch('monitors/{monitor}/notification-routes/{notificationRoute}', [NotificationRouteController::class, 'update'])->name('monitors.notification-routes.update');

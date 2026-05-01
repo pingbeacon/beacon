@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Console\Commands\DevFakeServersCommand;
+use App\Models\Assertion;
 use App\Models\Incident;
 use App\Models\Monitor;
 use App\Models\User;
@@ -72,6 +73,66 @@ class MonitorSeeder extends Seeder
                     $monitor->update(['last_checked_at' => $latestCreatedAt]);
                 }
             }
+
+            $this->seedAssertionsForMonitor($monitor);
+        }
+    }
+
+    /**
+     * Attach a small, deterministic set of assertions to each HTTP monitor and
+     * back-fill assertion_results aligned to its existing heartbeat history so
+     * the demo Assertions tab has realistic timeline strips out of the box.
+     */
+    private function seedAssertionsForMonitor(Monitor $monitor): void
+    {
+        if ($monitor->type !== 'http') {
+            return;
+        }
+
+        // content_type / header rules are intentionally omitted: the synthetic
+        // heartbeats here only carry status_code + response_time, so any rule
+        // we cannot back-fill from those columns would render as a permanently
+        // empty timeline strip in the demo Assertions tab.
+        $rules = [
+            ['type' => 'status', 'expression' => 'status == 200', 'severity' => 'critical', 'on_fail' => 'open_incident', 'tolerance' => 0, 'muted' => false],
+            ['type' => 'latency', 'expression' => 'response_time_ms < 2000', 'severity' => 'warning', 'on_fail' => 'log_only', 'tolerance' => 1, 'muted' => false],
+        ];
+
+        $created = [];
+        foreach ($rules as $rule) {
+            $created[] = Assertion::create([...$rule, 'monitor_id' => $monitor->id]);
+        }
+
+        $heartbeats = DB::table('heartbeats')
+            ->where('monitor_id', $monitor->id)
+            ->orderBy('created_at')
+            ->get(['id', 'status', 'status_code', 'response_time', 'created_at']);
+
+        if ($heartbeats->isEmpty()) {
+            return;
+        }
+
+        $rows = [];
+        foreach ($heartbeats as $hb) {
+            $rows[] = [
+                'assertion_id' => $created[0]->id,
+                'heartbeat_id' => $hb->id,
+                'passed' => ($hb->status_code === 200),
+                'actual_value' => (string) ($hb->status_code ?? '<no response>'),
+                'observed_at' => $hb->created_at,
+            ];
+
+            $rows[] = [
+                'assertion_id' => $created[1]->id,
+                'heartbeat_id' => $hb->id,
+                'passed' => $hb->response_time !== null && $hb->response_time < 2000,
+                'actual_value' => (string) ($hb->response_time ?? '<no response>'),
+                'observed_at' => $hb->created_at,
+            ];
+        }
+
+        foreach (array_chunk($rows, 500) as $chunk) {
+            DB::table('assertion_results')->insert($chunk);
         }
     }
 

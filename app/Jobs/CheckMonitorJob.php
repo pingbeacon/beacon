@@ -3,10 +3,12 @@
 namespace App\Jobs;
 
 use App\Actions\HandleStatusChangeAction;
+use App\DTOs\AssertionPayload;
 use App\DTOs\CheckResult;
 use App\Events\HeartbeatRecorded;
 use App\Events\MonitorChecking;
 use App\Models\Monitor;
+use App\Services\Assertions\PersistAssertionResults;
 use App\Services\Checkers\DnsChecker;
 use App\Services\Checkers\HttpChecker;
 use App\Services\Checkers\MonitorChecker;
@@ -27,7 +29,7 @@ class CheckMonitorJob implements ShouldQueue
         $this->onQueue('monitors');
     }
 
-    public function handle(HandleStatusChangeAction $handleStatusChange): void
+    public function handle(HandleStatusChangeAction $handleStatusChange, PersistAssertionResults $persistAssertionResults): void
     {
         MonitorChecking::dispatch($this->monitor);
 
@@ -37,9 +39,18 @@ class CheckMonitorJob implements ShouldQueue
         } catch (Throwable $e) {
             $heartbeat = $this->monitor->heartbeats()->create([
                 'status' => 'down',
-                'response_time' => 0,
+                'response_time' => null,
                 'message' => $e->getMessage(),
             ]);
+
+            // Failures (timeouts, network errors) are exactly the cases assertions
+            // need to record — surface them in assertion_results with a null payload
+            // so latency/status rules fail explicitly rather than silently disappear.
+            $persistAssertionResults->run($this->monitor, $heartbeat, new AssertionPayload(
+                statusCode: null,
+                latencyMs: null,
+                body: null,
+            ));
 
             $this->monitor->update([
                 'last_checked_at' => now(),
@@ -62,6 +73,14 @@ class CheckMonitorJob implements ShouldQueue
             'phase_transfer_ms' => $result->phaseTransferMs,
             'message' => $result->message,
         ]);
+
+        $persistAssertionResults->run($this->monitor, $heartbeat, new AssertionPayload(
+            statusCode: $result->statusCode,
+            latencyMs: $result->responseTime,
+            body: $result->responseBody,
+            headers: $result->responseHeaders,
+            contentType: $result->contentType,
+        ));
 
         $previousStatus = $this->monitor->status;
         $this->monitor->update(['last_checked_at' => now()]);

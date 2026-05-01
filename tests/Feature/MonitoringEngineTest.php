@@ -10,6 +10,7 @@ use App\Models\MaintenanceWindow;
 use App\Models\Monitor;
 use App\Models\NotificationChannel;
 use App\Models\User;
+use App\Services\Assertions\PersistAssertionResults;
 use App\Services\Checkers\DnsChecker;
 use App\Services\Checkers\HttpChecker;
 use App\Services\Checkers\PingChecker;
@@ -194,7 +195,7 @@ test('check monitor job creates a heartbeat record', function () {
         'retry_count' => 0,
     ]);
 
-    (new CheckMonitorJob($monitor))->handle(new HandleStatusChangeAction);
+    (new CheckMonitorJob($monitor))->handle(new HandleStatusChangeAction, app(PersistAssertionResults::class));
 
     expect($monitor->heartbeats()->count())->toBe(1);
 
@@ -217,7 +218,7 @@ test('check monitor job updates last_checked_at', function () {
         'last_checked_at' => null,
     ]);
 
-    (new CheckMonitorJob($monitor))->handle(new HandleStatusChangeAction);
+    (new CheckMonitorJob($monitor))->handle(new HandleStatusChangeAction, app(PersistAssertionResults::class));
 
     expect($monitor->fresh()->last_checked_at)->not->toBeNull();
 });
@@ -235,7 +236,7 @@ test('check monitor job detects status change from up to down and creates incide
         'retry_count' => 0,
     ]);
 
-    (new CheckMonitorJob($monitor))->handle(new HandleStatusChangeAction);
+    (new CheckMonitorJob($monitor))->handle(new HandleStatusChangeAction, app(PersistAssertionResults::class));
 
     expect(Incident::where('monitor_id', $monitor->id)->count())->toBe(1);
     expect($monitor->fresh()->status)->toBe('down');
@@ -259,7 +260,7 @@ test('check monitor job resolves incident when status changes from down to up', 
         'resolved_at' => null,
     ]);
 
-    (new CheckMonitorJob($monitor))->handle(new HandleStatusChangeAction);
+    (new CheckMonitorJob($monitor))->handle(new HandleStatusChangeAction, app(PersistAssertionResults::class));
 
     $incident = Incident::where('monitor_id', $monitor->id)->first();
     expect($incident->resolved_at)->not->toBeNull();
@@ -284,7 +285,7 @@ test('check monitor job dispatches notification for linked channels on status ch
     $channel = NotificationChannel::factory()->for($user)->create();
     $monitor->notificationChannels()->attach($channel);
 
-    (new CheckMonitorJob($monitor))->handle(new HandleStatusChangeAction);
+    (new CheckMonitorJob($monitor))->handle(new HandleStatusChangeAction, app(PersistAssertionResults::class));
 
     Queue::assertPushedOn('notifications', SendNotificationJob::class);
 });
@@ -296,7 +297,7 @@ test('check monitor job updates last_checked_at and creates down heartbeat when 
         'last_checked_at' => null,
     ]);
 
-    expect(fn () => (new CheckMonitorJob($monitor))->handle(new HandleStatusChangeAction))->toThrow(InvalidArgumentException::class);
+    expect(fn () => (new CheckMonitorJob($monitor))->handle(new HandleStatusChangeAction, app(PersistAssertionResults::class)))->toThrow(InvalidArgumentException::class);
 
     expect($monitor->fresh()->last_checked_at)->not->toBeNull();
     expect($monitor->heartbeats()->where('status', 'down')->count())->toBe(1);
@@ -339,7 +340,7 @@ test('check monitor job does not create incident when status stays down', functi
         'resolved_at' => null,
     ]);
 
-    (new CheckMonitorJob($monitor))->handle(new HandleStatusChangeAction);
+    (new CheckMonitorJob($monitor))->handle(new HandleStatusChangeAction, app(PersistAssertionResults::class));
 
     expect(Incident::where('monitor_id', $monitor->id)->count())->toBe(1);
 });
@@ -489,7 +490,7 @@ test('batch http job creates heartbeats for all monitors', function () {
     ]);
 
     (new CheckHttpMonitorsBatchJob($monitors->pluck('id')->toArray()))
-        ->handle(new HandleStatusChangeAction);
+        ->handle(new HandleStatusChangeAction, app(PersistAssertionResults::class));
 
     foreach ($monitors as $monitor) {
         expect($monitor->heartbeats()->count())->toBe(1);
@@ -510,7 +511,7 @@ test('batch http job detects status change from up to down', function () {
     ]);
 
     (new CheckHttpMonitorsBatchJob([$monitor->id]))
-        ->handle(new HandleStatusChangeAction);
+        ->handle(new HandleStatusChangeAction, app(PersistAssertionResults::class));
 
     expect($monitor->fresh()->status)->toBe('down');
     expect(Incident::where('monitor_id', $monitor->id)->count())->toBe(1);
@@ -529,7 +530,7 @@ test('batch http job handles connection failure as down', function () {
     ]);
 
     (new CheckHttpMonitorsBatchJob([$monitor->id]))
-        ->handle(new HandleStatusChangeAction);
+        ->handle(new HandleStatusChangeAction, app(PersistAssertionResults::class));
 
     $heartbeat = $monitor->heartbeats()->first();
     expect($heartbeat->status)->toBe('down');
@@ -554,7 +555,7 @@ test('batch http job dispatches notifications on status change', function () {
     $monitor->notificationChannels()->attach($channel);
 
     (new CheckHttpMonitorsBatchJob([$monitor->id]))
-        ->handle(new HandleStatusChangeAction);
+        ->handle(new HandleStatusChangeAction, app(PersistAssertionResults::class));
 
     Queue::assertPushedOn('notifications', SendNotificationJob::class);
 });
