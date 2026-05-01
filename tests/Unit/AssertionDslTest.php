@@ -218,4 +218,19 @@ describe('parse validator', function () {
     it('accepts a well-formed body numeric comparison', function () {
         expect(AssertionDsl::tryParse('body', '$.queue_depth < 100'))->toBeNull();
     });
+
+    it('rejects malformed JSONPath with unterminated bracket', function () {
+        expect(AssertionDsl::tryParse('body', '$.items[ == "first"'))
+            ->not->toBeNull();
+    });
+
+    it('rejects malformed JSONPath with bad bracket content', function () {
+        expect(AssertionDsl::tryParse('body', '$.items[bad-key] == "first"'))
+            ->not->toBeNull();
+    });
+
+    it('rejects JSONPath that does not start with $', function () {
+        expect(AssertionDsl::tryParse('body', 'items[0] == "first"'))
+            ->not->toBeNull();
+    });
 });

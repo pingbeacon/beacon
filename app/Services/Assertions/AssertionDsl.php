@@ -55,8 +55,15 @@ final class AssertionDsl
             return 'expected `$<jsonpath> <op> <literal|number>`';
         }
 
+        $path = trim($m[1]);
         $op = $m[2];
         $rhs = trim($m[3]);
+
+        // Validate the JSONPath syntax before checking the RHS
+        $pathError = self::validateJsonPath($path);
+        if ($pathError !== null) {
+            return $pathError;
+        }
 
         if ($op === '==' || $op === '!=') {
             if (self::parseLiteral($rhs) === self::PARSE_ERROR) {
@@ -215,13 +222,70 @@ final class AssertionDsl
 
     private const PARSE_ERROR = "\0__parse_error__\0";
 
-    private static function resolveJsonPath(mixed $data, string $path): mixed
+    /**
+     * Validates JSONPath syntax without traversing data.
+     * Returns null if valid, error message otherwise.
+     */
+    private static function validateJsonPath(string $path): ?string
     {
         if ($path === '$') {
-            return $data;
+            return null;
         }
         if (! str_starts_with($path, '$')) {
-            throw new \InvalidArgumentException('jsonpath must start with `$`');
+            return 'jsonpath must start with `$`';
+        }
+
+        $remaining = substr($path, 1);
+
+        while ($remaining !== '') {
+            if ($remaining[0] === '.') {
+                $remaining = substr($remaining, 1);
+                if (! preg_match('/^([A-Za-z_][A-Za-z0-9_]*)/', $remaining, $m)) {
+                    return "malformed jsonpath segment near `{$remaining}`";
+                }
+                $key = $m[1];
+                $remaining = substr($remaining, strlen($key));
+
+                continue;
+            }
+
+            if ($remaining[0] === '[') {
+                $end = strpos($remaining, ']');
+                if ($end === false) {
+                    return 'unterminated `[`';
+                }
+                $inner = substr($remaining, 1, $end - 1);
+                $remaining = substr($remaining, $end + 1);
+
+                if (preg_match('/^"(.+)"$/', $inner, $m) || preg_match("/^'(.+)'$/", $inner, $m)) {
+                    // Valid quoted key
+                    continue;
+                }
+
+                if (preg_match('/^\d+$/', $inner)) {
+                    // Valid numeric index
+                    continue;
+                }
+
+                return "bad bracket: [{$inner}]";
+            }
+
+            return "unexpected character in path near `{$remaining}`";
+        }
+
+        return null;
+    }
+
+    private static function resolveJsonPath(mixed $data, string $path): mixed
+    {
+        // Validate syntax first
+        $error = self::validateJsonPath($path);
+        if ($error !== null) {
+            throw new \InvalidArgumentException($error);
+        }
+
+        if ($path === '$') {
+            return $data;
         }
 
         $remaining = substr($path, 1);
@@ -230,9 +294,7 @@ final class AssertionDsl
         while ($remaining !== '') {
             if ($remaining[0] === '.') {
                 $remaining = substr($remaining, 1);
-                if (! preg_match('/^([A-Za-z_][A-Za-z0-9_]*)/', $remaining, $m)) {
-                    throw new \InvalidArgumentException("malformed jsonpath segment near `{$remaining}`");
-                }
+                preg_match('/^([A-Za-z_][A-Za-z0-9_]*)/', $remaining, $m);
                 $key = $m[1];
                 $remaining = substr($remaining, strlen($key));
                 if (! is_array($current) || ! array_key_exists($key, $current)) {
@@ -245,9 +307,6 @@ final class AssertionDsl
 
             if ($remaining[0] === '[') {
                 $end = strpos($remaining, ']');
-                if ($end === false) {
-                    throw new \InvalidArgumentException('unterminated `[`');
-                }
                 $inner = substr($remaining, 1, $end - 1);
                 $remaining = substr($remaining, $end + 1);
 
@@ -270,11 +329,7 @@ final class AssertionDsl
 
                     continue;
                 }
-
-                throw new \InvalidArgumentException("bad bracket: [{$inner}]");
             }
-
-            throw new \InvalidArgumentException("unexpected character in path near `{$remaining}`");
         }
 
         return $current;
