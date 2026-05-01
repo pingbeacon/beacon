@@ -136,6 +136,11 @@ class Monitor extends Model
         return $this->belongsToMany(NotificationChannel::class);
     }
 
+    public function assertions(): HasMany
+    {
+        return $this->hasMany(Assertion::class);
+    }
+
     public function statusPages(): BelongsToMany
     {
         return $this->belongsToMany(StatusPage::class, 'status_page_monitor')->withPivot('sort_order');
